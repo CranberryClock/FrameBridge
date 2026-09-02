@@ -1,0 +1,14 @@
+{
+  "task": "TCW-003",
+  "capture": "native-cube-canonical.png",
+  "sha256": "E76F53E74C171593BBF5FF7B3E23C9A1E57E3958F458C3E123ACC567A8F51229",
+  "width": 1280,
+  "height": 720,
+  "logical_frame": 30,
+  "fixed_timestep": true,
+  "rotation_degrees": 30,
+  "projection": "perspective_90deg_vertical_fov_webgpu_depth_0_to_1",
+  "pipeline": "Dawn_WGSL_D3D12",
+  "dlss": false,
+  "browser_connection": false
+}
