@@ -3,7 +3,7 @@
   "status": "BLOCKED_EXTERNAL_DEPENDENCY",
   "architecture_classification": "BLOCKED_EXTERNAL_DEPENDENCY",
   "baseline_commit": "813b7aa7308fd6e601f644c3ae9be38ea46d9f4c",
-  "implementation_commit": "PENDING_COMMIT",
+  "implementation_commit": "a3de70ddc793fe6d87f9e0a6e9fc74c087bd4277",
   "external_dependencies": {
     "streamline_root_variable": "FRAMEBRIDGE_STREAMLINE_ROOT",
     "nvidia_app_id_variable": "FRAMEBRIDGE_NVIDIA_APP_ID",
@@ -20,5 +20,12 @@
     "TCW-SL-PREFLIGHT-006": "PASS",
     "TCW-SL-PREFLIGHT-007": "PASS"
   },
-  "note": "No Streamline or DLSS runtime was loaded. No native renderer work was started."
+  "note": "No Streamline or DLSS runtime was loaded. No native renderer work was started.",
+  "evidence_files": [
+    "artifacts/tcw-004a/commands.txt",
+    "artifacts/tcw-004a/environment.json",
+    "artifacts/tcw-004a/result.json",
+    "artifacts/tcw-004a/review-summary.md",
+    "artifacts/tcw-004a/hashes.json"
+  ]
 }
