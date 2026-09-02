@@ -13,7 +13,9 @@ Run repeated diagnostics with `$env:TCW004_DURATION_SECONDS='60'; node tools/tcw
 TCW-004 is accepted. The 240 Hz human test plus deterministic 120/144 Hz tests superseded the physical 120/144 Hz requirement.
 Full browser-to-native visual continuity remains `PENDING_NATIVE_RENDERER`.
 
-No native socket endpoint, native bridge renderer, DLSS, Streamline, extension, installer, custom Three.js backend, or Unreal work is part of this task. Stop for supervisor review after TCW-004.
+TCW-005 adds the direct native C++ loopback mirror receiver and strict session/queue/acknowledgement slice. Its protocol integration is validated, but the Dawn/D3D12 native render path and comparison window are blocked until the pinned Dawn dependency is available. The current TCW-005 status is `BLOCKED_ARCHITECTURE`; see the [TCW-005 evidence manifest](artifacts/tcw-005/manifest.json) and [native mirror notes](docs/tcw005-native-mirror.md).
+
+Full browser-to-native visual continuity remains `PENDING_NATIVE_RENDERER`. DLSS, Streamline runtime integration, extension, installer, custom Three.js backend, and Unreal work remain out of scope. Stop for supervisor review after TCW-005.
 
 TCW-004A is a bounded Streamline/Dawn compatibility preflight scaffold. Its current status is
 `BLOCKED_EXTERNAL_DEPENDENCY` because the pinned NVIDIA SDK and NVIDIA application ID are not available locally; no
