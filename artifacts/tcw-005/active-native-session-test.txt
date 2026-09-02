@@ -1,1 +1,1 @@
-PASS native_session queue=2 drops=2 ack=PASS reserved_rejection=PASS
+PASS native_session checks=5 queue=2 drop_snapshot=PASS ack=PASS reserved_rejection=PASS

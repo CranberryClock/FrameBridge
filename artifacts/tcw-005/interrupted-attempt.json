@@ -1,0 +1,12 @@
+{
+  "source_commit": "35892e2807a6ec3affd7dc17250866b14ae666e5",
+  "status": "FAIL",
+  "requested_duration_seconds": 600,
+  "exit_code": 1,
+  "stderr": "FAIL stability: unexpected close",
+  "acceptance_reused": false,
+  "last_memory_sample_elapsed_seconds": 300.5121377,
+  "raw_output": "interrupted-attempt-raw.json",
+  "reason": "Agent intentionally closed the native window after a separate comparison-window test exposed incorrect shrink presentation scaling. This partial run is not acceptance evidence.",
+  "followup": "Replace source-size selection with a same-device full-buffer texture blit, inspect presentation after 640->800->640, and rerun all 600 seconds from the corrected committed source."
+}

@@ -1,0 +1,2 @@
+{"backend":"native-dawn","adapter_vendor":4318,"adapter_device":10208,"luid_low":74036,"luid_high":0,"luid_verified":true,"target_cache_capacity":2,"target_allocations":2,"swapchain_allocations":0,"dawn_validation_errors":0,"d3d12_messages":0,"dxgi_messages":0,"device_lost":false}
+FRAMEBRIDGE_TCW003_PASS resize_cycles=100 elapsed_seconds=0.500703

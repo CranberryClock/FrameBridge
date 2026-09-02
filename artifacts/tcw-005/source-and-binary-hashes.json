@@ -1,0 +1,538 @@
+{
+  "source_commit": "011174ca607ae6c24572f55a4703ea1a7c763564",
+  "source_files": [
+    {
+      "file": ".github/workflows/tcw-004.yml",
+      "sha256": "8eb42cfd6235f0b3ef922358104a19924075cf069a8c81fa3329bee346c94605"
+    },
+    {
+      "file": "CMakeLists.txt",
+      "sha256": "6ee7b02242b4a68bb5a1ba991cdf7fe958ae186d27e9d8e7de93a61283e77524"
+    },
+    {
+      "file": "apps/demo-web/src/browser.ts",
+      "sha256": "ea4e0ebfaf135a341823b34d73ac401b94c69a9f9b7ec85e2b3b68009cab9d7c"
+    },
+    {
+      "file": "docs/tcw005-native-mirror.md",
+      "sha256": "380a4cd17a8916b4dd9b3024784f38d5086d27a6b8b3e3fdc2366845004cdd06"
+    },
+    {
+      "file": "native/cube-renderer/CMakeLists.txt",
+      "sha256": "9e461550b9a763c67b325004ec7a81c08dde35826003ef7bf97ddcda6b7ed9f7"
+    },
+    {
+      "file": "native/cube-renderer/dawn-link.cmake",
+      "sha256": "6ab8111b52ecaa66283e815826994956c68f3f1f97beb70a85768ba2df834ae5"
+    },
+    {
+      "file": "native/cube-renderer/main.cpp",
+      "sha256": "f17d2fd2573bda7a0c1177bec90f0f32507dbd9aceb1197c63efad9ce32d69a1"
+    },
+    {
+      "file": "native/cube-renderer/renderer.cpp",
+      "sha256": "1ce7d7c216619338bcf9d73a384cb16689042c1702785e275ed3674b96485f39"
+    },
+    {
+      "file": "native/cube-renderer/renderer.h",
+      "sha256": "c4d76ad82b392b5311b807ae6705564a6b567a1f64358faf5bdbc3d19a89d7a8"
+    },
+    {
+      "file": "native/cube-renderer/scene_math.h",
+      "sha256": "13b66ae27e3997ce502fea1f822e97f2e1bf04c3ec4e439ba6834b914e27e7b8"
+    },
+    {
+      "file": "native/mirror-receiver/main.cpp",
+      "sha256": "9b7cb9d3721b5ef26a56fc73c8fc19c87f84b51ebee3ffa27704224447c8e379"
+    },
+    {
+      "file": "native/mirror-receiver/mirror_session.cpp",
+      "sha256": "ee89b83b92c17f4278981b0efe1b408ca9a5899986477a42a6bd8712fa52ff74"
+    },
+    {
+      "file": "native/mirror-receiver/mirror_session.h",
+      "sha256": "5e60833cafd3d4028a607dc30f1b75c3284502e95ab86226876810d39a6e23ab"
+    },
+    {
+      "file": "native/mirror-receiver/mirror_session_test.cpp",
+      "sha256": "5322f423ae7287b02e25330ce77903304e83087c1d7af507879cf0c1a529967f"
+    },
+    {
+      "file": "native/mirror-receiver/render_gate.h",
+      "sha256": "405b9ee73dfa1efce58109aed452abfcf6be1ece2f4d6947b9db7b3144c7dff6"
+    },
+    {
+      "file": "native/mirror-receiver/render_test.cpp",
+      "sha256": "b333b4055461ae75db13c7913dc13bd663e1959f6b590f3ae9f2ed2d2a804291"
+    },
+    {
+      "file": "package.json",
+      "sha256": "9f74ea7fcec4288b49b39a4b00370c7380437f1195c7858384cae861d1a87fda"
+    },
+    {
+      "file": "plan/tcw005r.md",
+      "sha256": "90192b5976f26e0252317fc12f95ba44c638c1dd265555c59e95cf17fc885c28"
+    },
+    {
+      "file": "pnpm-lock.yaml",
+      "sha256": "3e01bb9339286cb148146f03e2d4d0b97354c5a6d3c939d0c9b50ceca92ff51c"
+    },
+    {
+      "file": "tests/fixtures/tcw005/three-parity.json",
+      "sha256": "55e4874308c9dc00ddb50bd07c9ddea90b3222033e4823f996c1f6ac5ab3c8b8"
+    },
+    {
+      "file": "third_party/ixwebsocket-limits.cmake",
+      "sha256": "bb087f15f7091076e86bbb4df66dc7ff6d6691b596a2796b8bb9bd541c1afa65"
+    },
+    {
+      "file": "tools/bootstrap-dawn.ps1",
+      "sha256": "6f03e53e63add6e54dafaa5b4f47ed074b4c8ebaba7b7a96e7a79f9f29900cb6"
+    },
+    {
+      "file": "tools/msvc-env.ps1",
+      "sha256": "839de9b54af66c7e8219225979eadc9778b657238909749765eb5ae76903857d"
+    },
+    {
+      "file": "tools/start-native-demo.ps1",
+      "sha256": "5b6841b4d359cd9500d78e36992f03002563d85bcceb1a75a547bac860872b61"
+    },
+    {
+      "file": "tools/tcw005-native-integration.mjs",
+      "sha256": "998e6198b1b8505953e6ef5e5c2ae2d00189b90f5c8b60602767f86c2fd6476b"
+    },
+    {
+      "file": "tools/tcw005r-browser.mjs",
+      "sha256": "a62de56f522e37cc32e852d032a45f30ce169d2d4c27687f5331fed59c1aeb50"
+    },
+    {
+      "file": "tools/tcw005r-client.mjs",
+      "sha256": "17d9d4a799c60ee0336e2c27951cb2fcb0673057d5c60d9b5fd9e42c04bee6c0"
+    },
+    {
+      "file": "tools/tcw005r-harness-test.mjs",
+      "sha256": "01731aff3793a292fb66c7f169fb1febccdfe675ea7dd036d94fb55964b087fe"
+    },
+    {
+      "file": "tools/tcw005r-integration.mjs",
+      "sha256": "6229a44097e82237b327ae3944f9b960683dd49c4e2167303d74db9f3d1a4856"
+    },
+    {
+      "file": "tools/tcw005r-parity-oracle.mjs",
+      "sha256": "c08acbd58009720ee7460fbef21d4a06c90576513d2063e0b6e3f28600c3e022"
+    },
+    {
+      "file": "tools/tcw005r-stability.mjs",
+      "sha256": "3c5798285d3f59cecec6d055cb5516ff2bb69802cf4346cf3d37b190f9f6d55a"
+    },
+    {
+      "file": "tools/tcw005r-window-test.mjs",
+      "sha256": "18a22c1f34a9873710c7beba54936cff636537243f321fbe03a2f6fd3080000f"
+    }
+  ],
+  "binaries": [
+    {
+      "file": "build/release/framebridge-native-mirror.exe",
+      "sha256": "9402ba404f5b9d588be03a0e47075f89264384ecb1aa947dae692167f82514fc"
+    },
+    {
+      "file": "build/release/framebridge-native-cube.exe",
+      "sha256": "1d1c1de2059d831a8676177ba5ec1cb0aa1763d0b10a973c0b03c595c0607e7d"
+    },
+    {
+      "file": "build/release/framebridge-render-test.exe",
+      "sha256": "9bd23bf46062383e17a477bb2d9640565459da007d409f521c7d9bed0c3f7fb5"
+    },
+    {
+      "file": "build/release/framebridge-native-mirror-test.exe",
+      "sha256": "0c0322cc84613aecff40ffa975a46c38f175bfe9cf1f425e53b2c7103fa8d089"
+    },
+    {
+      "file": "build/release/framebridge-renderer.lib",
+      "sha256": "8f3b7a8854518dea4f527a7e5deb82a0bafe1029bde0c646d18e3ea553371ae2"
+    },
+    {
+      "file": "build/release/d3dcompiler_47.dll",
+      "sha256": "2b23efdc8b45adc4b79c1c0b940a906336628cd35ed80defd489d70d22ff6d74"
+    }
+  ],
+  "dawn_libraries": [
+    {
+      "file": "$DAWN_BUILD/src/dawn/common/dawn_common.lib",
+      "sha256": "ae285cf5d82441457c48cbd7a807c0636c34848f4ada5593708b3bc9f6ebba83"
+    },
+    {
+      "file": "$DAWN_BUILD/src/dawn/dawn_proc.lib",
+      "sha256": "2d9b3fcdab60870df6b56e653dbc603cac55e716c597d40bc88ad929a53c556d"
+    },
+    {
+      "file": "$DAWN_BUILD/src/dawn/native/dawn_native.lib",
+      "sha256": "c5fa1ab9dd4650e8c5cc80dea150574883ec09e8a549f0bb146ce6252258dbf5"
+    },
+    {
+      "file": "$DAWN_BUILD/src/dawn/platform/dawn_platform.lib",
+      "sha256": "a8d51267d2cb39227302fb6b065b30bed01ef1af823a91d5967b31d9d38b967c"
+    },
+    {
+      "file": "$DAWN_BUILD/src/dawn/utils/dawn_system_utils.lib",
+      "sha256": "78a0222ac551bc44ff6f945d1df95c8e5534939785a58787e2e509250023e625"
+    },
+    {
+      "file": "$DAWN_BUILD/src/tint/tint_api.lib",
+      "sha256": "7d9b1d1458a6e15ee780935a97b371aca02f960318e4286926c48e29236f108d"
+    },
+    {
+      "file": "$DAWN_BUILD/src/tint/tint_api_common.lib",
+      "sha256": "ceed6084205fd3052693ac75adc3e87d29b645ad56b40593ed235636c0398f5e"
+    },
+    {
+      "file": "$DAWN_BUILD/src/tint/tint_lang_core.lib",
+      "sha256": "ae2b198c5ed1723d1bb73c2371a99deabb57590f57bd719dd1361da8a227af89"
+    },
+    {
+      "file": "$DAWN_BUILD/src/tint/tint_lang_core_constant.lib",
+      "sha256": "53c6d21c4a08db08c375413ec2075ef776ef1e78bd847f3248f74967af81f55c"
+    },
+    {
+      "file": "$DAWN_BUILD/src/tint/tint_lang_core_intrinsic.lib",
+      "sha256": "7a10098809c6ed659cb466f23ca805ad202b88ca3d9382265db0aaf637352c0c"
+    },
+    {
+      "file": "$DAWN_BUILD/src/tint/tint_lang_core_ir.lib",
+      "sha256": "28724727b2fd839a87b08b92aec752785af58f81ed210c2ef4d6e0c626de2a4c"
+    },
+    {
+      "file": "$DAWN_BUILD/src/tint/tint_lang_core_ir_analysis.lib",
+      "sha256": "9644d3e3a69b600c28111294c75c83f0538862685bd31962c70db1fe75f348d5"
+    },
+    {
+      "file": "$DAWN_BUILD/src/tint/tint_lang_core_ir_transform.lib",
+      "sha256": "08914ddff99aba07c1fba47f597406b8781987dad68683fea727c01e9de66a15"
+    },
+    {
+      "file": "$DAWN_BUILD/src/tint/tint_lang_core_ir_validator.lib",
+      "sha256": "887aeb0cd7a9fc1bcd6a8fd77ff541c1e08ff7654495430807cbd88f3d94d1c4"
+    },
+    {
+      "file": "$DAWN_BUILD/src/tint/tint_lang_core_type.lib",
+      "sha256": "a4d136f1eab12ef5868190c4b51f6bf6257b85c7202669a3b547d54034347e84"
+    },
+    {
+      "file": "$DAWN_BUILD/src/tint/tint_lang_hlsl.lib",
+      "sha256": "0f43cc85b8f9a9b96197f0a69d10471bb1e1ee6dc25096c86c5039e8080837ff"
+    },
+    {
+      "file": "$DAWN_BUILD/src/tint/tint_lang_hlsl_intrinsic.lib",
+      "sha256": "583d7bf18668c3e2ec22c3d304b76dda30f1367734ea58c781888acaacac7f78"
+    },
+    {
+      "file": "$DAWN_BUILD/src/tint/tint_lang_hlsl_ir.lib",
+      "sha256": "fdef9820ade3d533598ac0dd8f73f694c492238eaac9a916b8e63bf8342abbd3"
+    },
+    {
+      "file": "$DAWN_BUILD/src/tint/tint_lang_hlsl_type.lib",
+      "sha256": "91a7bbd0fe3c8365eccfb8d31953b357aaff10079efe1fca91940e4f29229675"
+    },
+    {
+      "file": "$DAWN_BUILD/src/tint/tint_lang_hlsl_writer.lib",
+      "sha256": "b66145b80cd889a6079ffaa8a4c146ab373ac1256a47d9fdb74f93c73426252a"
+    },
+    {
+      "file": "$DAWN_BUILD/src/tint/tint_lang_hlsl_writer_common.lib",
+      "sha256": "0233d094f5d310dc933c7b6da35165262ef169da6bc766d3c0ce2b587a9cc3b2"
+    },
+    {
+      "file": "$DAWN_BUILD/src/tint/tint_lang_hlsl_writer_printer.lib",
+      "sha256": "2126160e68d1439c61c9353c1d35f088e949c60fd05659b122bad5e8f7c37e7c"
+    },
+    {
+      "file": "$DAWN_BUILD/src/tint/tint_lang_hlsl_writer_raise.lib",
+      "sha256": "ae5b187bec3ef01788280360afa030913c7503097552da010a120ab707040418"
+    },
+    {
+      "file": "$DAWN_BUILD/src/tint/tint_lang_wgsl.lib",
+      "sha256": "ba1e6a8c30239ce3f70111d759c9e7567009e2f0ef453a15b2a4d33589a67232"
+    },
+    {
+      "file": "$DAWN_BUILD/src/tint/tint_lang_wgsl_ast.lib",
+      "sha256": "31ed2381eda2aab5d66d5c625b5152d21f41b1b7e29e5891ae2d31e95e5457fd"
+    },
+    {
+      "file": "$DAWN_BUILD/src/tint/tint_lang_wgsl_inspector.lib",
+      "sha256": "bfa8a1b5d8d390f79e84420ab6c54e02a346fb873991f820f608966345db5fb5"
+    },
+    {
+      "file": "$DAWN_BUILD/src/tint/tint_lang_wgsl_intrinsic.lib",
+      "sha256": "10d2c1983d55b22a43754202850083ec6ee09f4ae6d3617c6d8ac751d11ae640"
+    },
+    {
+      "file": "$DAWN_BUILD/src/tint/tint_lang_wgsl_ir.lib",
+      "sha256": "a0d5d080912f29be673b27cbd714d810b0d292db69a15cbb271213d191105236"
+    },
+    {
+      "file": "$DAWN_BUILD/src/tint/tint_lang_wgsl_program.lib",
+      "sha256": "23d2382ec3ebc700529ce31db17e67bb19977121d80eef2b3bd9d0bbe4b7f633"
+    },
+    {
+      "file": "$DAWN_BUILD/src/tint/tint_lang_wgsl_reader.lib",
+      "sha256": "7699ebd8809699538b01dac18d8155f2bb32bf3d2c0e21b0d23355c8442be218"
+    },
+    {
+      "file": "$DAWN_BUILD/src/tint/tint_lang_wgsl_reader_lower.lib",
+      "sha256": "95be14e5e272c4a8c4787399b6663b3dcfb7d9a4f9106f14a85bc55a5a079a95"
+    },
+    {
+      "file": "$DAWN_BUILD/src/tint/tint_lang_wgsl_reader_parser.lib",
+      "sha256": "9a75ddbab281d17e4e72d5d215829bea8463026eec4332733c6f36d90411e036"
+    },
+    {
+      "file": "$DAWN_BUILD/src/tint/tint_lang_wgsl_reader_program_to_ir.lib",
+      "sha256": "3c65a6525153a50d490d2c167405b386ec638d90636770cdac70df9aaf90872e"
+    },
+    {
+      "file": "$DAWN_BUILD/src/tint/tint_lang_wgsl_resolver.lib",
+      "sha256": "53d7ed5b4be4183693ac2cd85fe0a668cacf30cbed1c8e53dde97c71a3bb5199"
+    },
+    {
+      "file": "$DAWN_BUILD/src/tint/tint_lang_wgsl_sem.lib",
+      "sha256": "1bc63b6914622312343aa4c1f816a37b48c6c68ab83017d54e85f9cdfd223741"
+    },
+    {
+      "file": "$DAWN_BUILD/src/tint/tint_lang_wgsl_writer.lib",
+      "sha256": "4e038802e232ee6ce4a6e3cc86f21b9a2ae06874fd124e0f2750993823415663"
+    },
+    {
+      "file": "$DAWN_BUILD/src/tint/tint_lang_wgsl_writer_ast_printer.lib",
+      "sha256": "f939e3f7ee9a7cab1d6baef42cc8e4e847d0ce9b21a2fbeb40be23eb256cf560"
+    },
+    {
+      "file": "$DAWN_BUILD/src/tint/tint_lang_wgsl_writer_common.lib",
+      "sha256": "fd21172cbae1d939009aa8211f2ef7e6348ad579c389e0466fd8cf5801ef5767"
+    },
+    {
+      "file": "$DAWN_BUILD/src/tint/tint_lang_wgsl_writer_ir_to_program.lib",
+      "sha256": "17e90b22ce310bbca7cead062b156e94f907c49ed28b10d0c64a09ac616d9db3"
+    },
+    {
+      "file": "$DAWN_BUILD/src/tint/tint_lang_wgsl_writer_raise.lib",
+      "sha256": "3b42c48ecd9d27feed780b0287cd96071695e565b542bdc773bef29d782a75cc"
+    },
+    {
+      "file": "$DAWN_BUILD/src/tint/tint_utils.lib",
+      "sha256": "3f9d60f64d46d00cfaa4007a9d4c51feb02e924808f1d79e1f05e311b3965995"
+    },
+    {
+      "file": "$DAWN_BUILD/src/tint/tint_utils_containers.lib",
+      "sha256": "b702b595f83a0e97cf37c006031c0ad4fdc3160a7f9644db7dbd2fa925d566c6"
+    },
+    {
+      "file": "$DAWN_BUILD/src/tint/tint_utils_diagnostic.lib",
+      "sha256": "224edabece5fb45382e612f98e7ff07048ade7cb32aa6a00fb659c59444063c2"
+    },
+    {
+      "file": "$DAWN_BUILD/src/tint/tint_utils_ice.lib",
+      "sha256": "6b2a1f6307b65d4e77f06db286432f314aa272dba3ae3736e4feabdf1a5d9c5f"
+    },
+    {
+      "file": "$DAWN_BUILD/src/tint/tint_utils_macros.lib",
+      "sha256": "f4360e16466e0f068f1d2eefa877e8c161121c743fbc11299f1f973405db146e"
+    },
+    {
+      "file": "$DAWN_BUILD/src/tint/tint_utils_math.lib",
+      "sha256": "5c65bef2ecb3afa38e1ea1a4bf1f6ab54608ed989a36511d582f7751a1570440"
+    },
+    {
+      "file": "$DAWN_BUILD/src/tint/tint_utils_memory.lib",
+      "sha256": "02b473526d7c9b31ea24777c697e9e97d19fb4b8abd05e01d28c9bcfd06c898a"
+    },
+    {
+      "file": "$DAWN_BUILD/src/tint/tint_utils_reflection.lib",
+      "sha256": "010c914af6c7a5935164ca3150f4c8e9983704d16d778f06aea287ca4ed64197"
+    },
+    {
+      "file": "$DAWN_BUILD/src/tint/tint_utils_rtti.lib",
+      "sha256": "57b7fe9f67d12ee1ec2ac6a00e9de35d22575a37652ae32160558da7d9d3a8c2"
+    },
+    {
+      "file": "$DAWN_BUILD/src/tint/tint_utils_strconv.lib",
+      "sha256": "ba6e4fc9e22367af4a130d1e237546b810ffaf7e1576be0c101df5f61d1662de"
+    },
+    {
+      "file": "$DAWN_BUILD/src/tint/tint_utils_symbol.lib",
+      "sha256": "360b396593be2f7675c981fb2e20019a535d975b528a23932af55b88f901e2dd"
+    },
+    {
+      "file": "$DAWN_BUILD/src/tint/tint_utils_system.lib",
+      "sha256": "eea288c008d3afa0f703db4bef7a5396b182065a57262fac24a1dc042eb66f4a"
+    },
+    {
+      "file": "$DAWN_BUILD/src/tint/tint_utils_text.lib",
+      "sha256": "6787ba1f8a764f87281bdcc65f64d47a5e8222729c593da02ecbea6f341f4e4b"
+    },
+    {
+      "file": "$DAWN_BUILD/src/tint/tint_utils_text_generator.lib",
+      "sha256": "1fc3d28f4c104a606181622c2139f671a12caaba1d698de70055366cedb34875"
+    },
+    {
+      "file": "$DAWN_BUILD/src/utils/dawn_shared_utils.lib",
+      "sha256": "c3e346693e22d4388d0e96b595f4215a48cc72708800f4fe7fd60cfc4300accd"
+    },
+    {
+      "file": "$DAWN_BUILD/third_party/abseil/absl/base/absl_base.lib",
+      "sha256": "831aeb094e6d6967441a9581d43a1a5402c7935054290258817c79e4db072897"
+    },
+    {
+      "file": "$DAWN_BUILD/third_party/abseil/absl/base/absl_base_cpu_detect.lib",
+      "sha256": "1bf0f28012e284fa33819e27a5cccd4cec5fb7e6b36db18125f6325877769558"
+    },
+    {
+      "file": "$DAWN_BUILD/third_party/abseil/absl/base/absl_log_severity.lib",
+      "sha256": "9155d43b84871f970715e73a47d3792f458f160ee133c5b9cec29695de5b37f2"
+    },
+    {
+      "file": "$DAWN_BUILD/third_party/abseil/absl/base/absl_malloc_internal.lib",
+      "sha256": "22269c92994c40f15f6bf69b95ccd616ee248945ecab4ecb823f9092332ee401"
+    },
+    {
+      "file": "$DAWN_BUILD/third_party/abseil/absl/base/absl_raw_logging_internal.lib",
+      "sha256": "b311dfb818439f4be3f0199664b76adc78ed325bae61687a1034e0964929a9b8"
+    },
+    {
+      "file": "$DAWN_BUILD/third_party/abseil/absl/base/absl_spinlock_wait.lib",
+      "sha256": "ea66653dc4aa36dff438124571045e2bc7f06ac537edb1c07ce2fa6c40c3d354"
+    },
+    {
+      "file": "$DAWN_BUILD/third_party/abseil/absl/base/absl_throw_delegate.lib",
+      "sha256": "659378e91a6d831240afbbc996213586f453587b70684cdbb383d84d06c03acc"
+    },
+    {
+      "file": "$DAWN_BUILD/third_party/abseil/absl/base/absl_tracing_internal.lib",
+      "sha256": "8c84447d288465f7803bc07b78eff351b6c4e405279d6aac76069117904be9ff"
+    },
+    {
+      "file": "$DAWN_BUILD/third_party/abseil/absl/container/absl_hashtablez_sampler.lib",
+      "sha256": "eb7a8d867916a606c2bc1fc438bdd50d5c0b8dcd5f853660eb213b18978c5a36"
+    },
+    {
+      "file": "$DAWN_BUILD/third_party/abseil/absl/container/absl_raw_hash_set.lib",
+      "sha256": "32e83fa85e054bf0d299453e8c22d7b58c7f11767fd6f162fd278729ab5b54e8"
+    },
+    {
+      "file": "$DAWN_BUILD/third_party/abseil/absl/crc/absl_crc32c.lib",
+      "sha256": "ee50a22e17f21591965ccae431e2fb35fe3c92c4add09d2e4a0c51a0092626a9"
+    },
+    {
+      "file": "$DAWN_BUILD/third_party/abseil/absl/crc/absl_crc_cord_state.lib",
+      "sha256": "fc4a695ec1c0cf6b0aef17d54b43ead35807b9323947d708c5a03e7b9aae62ce"
+    },
+    {
+      "file": "$DAWN_BUILD/third_party/abseil/absl/crc/absl_crc_internal.lib",
+      "sha256": "5220895587eb5aa9fcbc961732527643b8238a3293796e0c9b4422482a8433d6"
+    },
+    {
+      "file": "$DAWN_BUILD/third_party/abseil/absl/debugging/absl_debugging_internal.lib",
+      "sha256": "63f185d468fa0f43c72c89008e4897b7ae02d02bd4f9c4503344e58c15197094"
+    },
+    {
+      "file": "$DAWN_BUILD/third_party/abseil/absl/debugging/absl_decode_rust_punycode.lib",
+      "sha256": "7c1139a906e3aa7882c0cf74876bcc2ca9ac4feaf0b2d451c307633aa175204e"
+    },
+    {
+      "file": "$DAWN_BUILD/third_party/abseil/absl/debugging/absl_demangle_internal.lib",
+      "sha256": "9c27332fba4f85eb08f67ec66161f7a0bcd3732ae8ac7592437504dd3a8a58a5"
+    },
+    {
+      "file": "$DAWN_BUILD/third_party/abseil/absl/debugging/absl_demangle_rust.lib",
+      "sha256": "f8be225007cd167e3f54d43863faf5895c6922f8ff5f0d8da59f006c411549c9"
+    },
+    {
+      "file": "$DAWN_BUILD/third_party/abseil/absl/debugging/absl_stacktrace.lib",
+      "sha256": "42a1d954b725f22fda4dd938e4b836d3c986ba912e1a4edf55d23a0dc173ed8e"
+    },
+    {
+      "file": "$DAWN_BUILD/third_party/abseil/absl/debugging/absl_symbolize.lib",
+      "sha256": "6d9e95f558217ce2a45b0d9e436f3d4ba6dafcd829773ce65cccc16c8b5df338"
+    },
+    {
+      "file": "$DAWN_BUILD/third_party/abseil/absl/debugging/absl_utf8_for_code_point.lib",
+      "sha256": "44488edd928b8fd60973a421ab78c2c85a0f303f5caddeac17e1344574d533e1"
+    },
+    {
+      "file": "$DAWN_BUILD/third_party/abseil/absl/hash/absl_city.lib",
+      "sha256": "bdff8c36bffa95fbdf81ffa8f2b3ec02295b63ad0b6cbabdd4059b6dad247a3e"
+    },
+    {
+      "file": "$DAWN_BUILD/third_party/abseil/absl/hash/absl_hash.lib",
+      "sha256": "9566defd1ccdf25c57db43d404023cc9504af7149763d6aafb5f3d462ab622f7"
+    },
+    {
+      "file": "$DAWN_BUILD/third_party/abseil/absl/numeric/absl_int128.lib",
+      "sha256": "75f42b10796165d3deed512c4fcdb22ad1f52e8dd9887642cdbae86ff702b6c0"
+    },
+    {
+      "file": "$DAWN_BUILD/third_party/abseil/absl/profiling/absl_exponential_biased.lib",
+      "sha256": "3e2e923b1641445c7f59db78e18f17970157f0724baad9e573a4de6fc97fc91c"
+    },
+    {
+      "file": "$DAWN_BUILD/third_party/abseil/absl/strings/absl_cord.lib",
+      "sha256": "d032662687e0ad16769777024da82fa9e99e9b1a19909b4c6951cc612dda40df"
+    },
+    {
+      "file": "$DAWN_BUILD/third_party/abseil/absl/strings/absl_cordz_functions.lib",
+      "sha256": "94f312e21e4bd179050358c60e0f83c9efcf72b51c61374206547de564724061"
+    },
+    {
+      "file": "$DAWN_BUILD/third_party/abseil/absl/strings/absl_cordz_handle.lib",
+      "sha256": "79a1cdb33716f88d6269a5e487d94e86f894f31ca4b25d85785a7f74a9851658"
+    },
+    {
+      "file": "$DAWN_BUILD/third_party/abseil/absl/strings/absl_cordz_info.lib",
+      "sha256": "2aa60e13ca8321f8ae7a0d03f6941d4de42c4ad8886068f2adbed048492f5191"
+    },
+    {
+      "file": "$DAWN_BUILD/third_party/abseil/absl/strings/absl_cord_internal.lib",
+      "sha256": "6de84bc3079b321bbd3979fcac9bdb658fb01d9398891b02296186e0325ef1be"
+    },
+    {
+      "file": "$DAWN_BUILD/third_party/abseil/absl/strings/absl_strings.lib",
+      "sha256": "0e7c3a40baaaa383d9672ec481ab83cfd672f761640f371b75f01c3e89dea231"
+    },
+    {
+      "file": "$DAWN_BUILD/third_party/abseil/absl/strings/absl_strings_internal.lib",
+      "sha256": "4fb839fb0346c2f78fce92379e719724e05eb470841fc286c94d86df5f7ddd51"
+    },
+    {
+      "file": "$DAWN_BUILD/third_party/abseil/absl/strings/absl_str_format_internal.lib",
+      "sha256": "4714d7eead1399ce5dc6f84253262f71017a398e1b153dcc910935277ed77a76"
+    },
+    {
+      "file": "$DAWN_BUILD/third_party/abseil/absl/synchronization/absl_graphcycles_internal.lib",
+      "sha256": "ad82cce4418dd96918f3841a700f6501ff638d51810da2b9014ee8839a632163"
+    },
+    {
+      "file": "$DAWN_BUILD/third_party/abseil/absl/synchronization/absl_kernel_timeout_internal.lib",
+      "sha256": "f175547dc4e05bc11299c091567a6b49e8abdcbcde958b65b7963872aa64b0ea"
+    },
+    {
+      "file": "$DAWN_BUILD/third_party/abseil/absl/synchronization/absl_synchronization.lib",
+      "sha256": "9ece118b578cfe010859528c6137ce828c90f3d05708d57880c42ed2e3699a4d"
+    },
+    {
+      "file": "$DAWN_BUILD/third_party/abseil/absl/time/absl_civil_time.lib",
+      "sha256": "9fa42dbbbc1b30bb2713d591dbf1c2d777340fcbb6b8e626c18abc65ccdbe0da"
+    },
+    {
+      "file": "$DAWN_BUILD/third_party/abseil/absl/time/absl_time.lib",
+      "sha256": "f3ee9f27d59ec6d421beebe80fb69e5d9c6099285442a155f8170bf5448414d6"
+    },
+    {
+      "file": "$DAWN_BUILD/third_party/abseil/absl/time/absl_time_zone.lib",
+      "sha256": "89100df4670c178ffacc5de666fdfee02bb0c7b0d1e61f9dc1e60e155e0cda93"
+    },
+    {
+      "file": "$DAWN_BUILD/third_party/abseil/absl/types/absl_source_location.lib",
+      "sha256": "84d94e1effb5115e8c76a5fe18d8f88ff2bc00cf271c054bb72cb1acb1ad8f42"
+    }
+  ],
+  "lockfile_sha256": "3e01bb9339286cb148146f03e2d4d0b97354c5a6d3c939d0c9b50ceca92ff51c"
+}

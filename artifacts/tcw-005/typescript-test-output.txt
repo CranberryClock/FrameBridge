@@ -1,5 +1,5 @@
 
-> framebridge@0.1.0 test D:\FrameBridge\build\tcw005-clean-20260902
+> framebridge@0.1.0 test $CHECKOUT
 > pnpm -r test
 
 Scope: 2 of 3 workspace projects

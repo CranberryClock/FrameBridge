@@ -1,0 +1,73 @@
+[1/73] Scanning $CHECKOUT\native\mirror-receiver\mirror_session.cpp for CXX dependencies
+[2/73] Scanning $CHECKOUT\native\runtime\src\main.cpp for CXX dependencies
+[3/73] Generating CXX dyndep file CMakeFiles\framebridge-native-mirror-session.dir\CXX.dd
+[4/73] Scanning $CHECKOUT\native\mirror-receiver\mirror_session_test.cpp for CXX dependencies
+[5/73] Scanning $CHECKOUT\native\streamline-preflight\main.cpp for CXX dependencies
+[6/73] Scanning $CHECKOUT\native\bridge\codec_test.cpp for CXX dependencies
+[7/73] Generating CXX dyndep file CMakeFiles\framebridge-null-runtime.dir\CXX.dd
+[8/73] Generating CXX dyndep file CMakeFiles\framebridge-streamline-dawn-preflight.dir\CXX.dd
+[9/73] Generating CXX dyndep file CMakeFiles\framebridge-bridge-codec.dir\CXX.dd
+[10/73] Generating CXX dyndep file CMakeFiles\framebridge-native-mirror-test.dir\CXX.dd
+[11/73] Scanning $CHECKOUT\native\mirror-receiver\main.cpp for CXX dependencies
+[12/73] Scanning $CHECKOUT\native\mirror-receiver\render_test.cpp for CXX dependencies
+[13/73] Scanning $CHECKOUT\native\streamline-preflight\preflight.cpp for CXX dependencies
+[14/73] Generating CXX dyndep file CMakeFiles\framebridge-native-mirror.dir\CXX.dd
+[15/73] Generating CXX dyndep file CMakeFiles\framebridge-render-test.dir\CXX.dd
+[16/73] Scanning $CHECKOUT\native\streamline-preflight\preflight_test.cpp for CXX dependencies
+[17/73] Generating CXX dyndep file CMakeFiles\framebridge-streamline-preflight-lib.dir\CXX.dd
+[18/73] Generating CXX dyndep file CMakeFiles\framebridge-streamline-preflight-test.dir\CXX.dd
+[19/73] Building CXX object third_party\ixwebsocket\CMakeFiles\ixwebsocket.dir\ixwebsocket\IXCancellationRequest.cpp.obj
+[20/73] Building CXX object third_party\ixwebsocket\CMakeFiles\ixwebsocket.dir\ixwebsocket\IXExponentialBackoff.cpp.obj
+[21/73] Building CXX object third_party\ixwebsocket\CMakeFiles\ixwebsocket.dir\ixwebsocket\IXConnectionState.cpp.obj
+[22/73] Building CXX object third_party\ixwebsocket\CMakeFiles\ixwebsocket.dir\ixwebsocket\IXBench.cpp.obj
+[23/73] Building CXX object CMakeFiles\framebridge-native-mirror-session.dir\native\mirror-receiver\mirror_session.cpp.obj
+[24/73] Building CXX object third_party\ixwebsocket\CMakeFiles\ixwebsocket.dir\ixwebsocket\IXGzipCodec.cpp.obj
+[25/73] Building CXX object third_party\ixwebsocket\CMakeFiles\ixwebsocket.dir\ixwebsocket\IXSelectInterrupt.cpp.obj
+[26/73] Building CXX object third_party\ixwebsocket\CMakeFiles\ixwebsocket.dir\ixwebsocket\IXDNSLookup.cpp.obj
+[27/73] Building CXX object third_party\ixwebsocket\CMakeFiles\ixwebsocket.dir\ixwebsocket\IXGetFreePort.cpp.obj
+[28/73] Building CXX object third_party\ixwebsocket\CMakeFiles\ixwebsocket.dir\ixwebsocket\IXSelectInterruptPipe.cpp.obj
+[29/73] Building CXX object third_party\ixwebsocket\CMakeFiles\ixwebsocket.dir\ixwebsocket\IXNetSystem.cpp.obj
+[30/73] Building CXX object third_party\ixwebsocket\CMakeFiles\ixwebsocket.dir\ixwebsocket\IXHttp.cpp.obj
+[31/73] Building CXX object third_party\ixwebsocket\CMakeFiles\ixwebsocket.dir\ixwebsocket\IXSelectInterruptFactory.cpp.obj
+[32/73] Building CXX object third_party\ixwebsocket\CMakeFiles\ixwebsocket.dir\ixwebsocket\IXHttpServer.cpp.obj
+[33/73] Building CXX object third_party\ixwebsocket\CMakeFiles\ixwebsocket.dir\ixwebsocket\IXSetThreadName.cpp.obj
+[34/73] Building CXX object third_party\ixwebsocket\CMakeFiles\ixwebsocket.dir\ixwebsocket\IXSelectInterruptEvent.cpp.obj
+[35/73] Building CXX object third_party\ixwebsocket\CMakeFiles\ixwebsocket.dir\ixwebsocket\IXSocket.cpp.obj
+[36/73] Building CXX object third_party\ixwebsocket\CMakeFiles\ixwebsocket.dir\ixwebsocket\IXHttpClient.cpp.obj
+[37/73] Building CXX object third_party\ixwebsocket\CMakeFiles\ixwebsocket.dir\ixwebsocket\IXSocketConnect.cpp.obj
+[38/73] Building CXX object third_party\ixwebsocket\CMakeFiles\ixwebsocket.dir\ixwebsocket\IXSocketFactory.cpp.obj
+[39/73] Building CXX object third_party\ixwebsocket\CMakeFiles\ixwebsocket.dir\ixwebsocket\IXSocketTLSOptions.cpp.obj
+[40/73] Building CXX object third_party\ixwebsocket\CMakeFiles\ixwebsocket.dir\ixwebsocket\IXUrlParser.cpp.obj
+[41/73] Building CXX object third_party\ixwebsocket\CMakeFiles\ixwebsocket.dir\ixwebsocket\IXStrCaseCompare.cpp.obj
+[42/73] Building CXX object third_party\ixwebsocket\CMakeFiles\ixwebsocket.dir\ixwebsocket\IXUdpSocket.cpp.obj
+[43/73] Building CXX object third_party\ixwebsocket\CMakeFiles\ixwebsocket.dir\ixwebsocket\IXUserAgent.cpp.obj
+[44/73] Building CXX object third_party\ixwebsocket\CMakeFiles\ixwebsocket.dir\ixwebsocket\IXUuid.cpp.obj
+[45/73] Building CXX object CMakeFiles\framebridge-streamline-preflight-lib.dir\native\streamline-preflight\preflight.cpp.obj
+[46/73] Building CXX object third_party\ixwebsocket\CMakeFiles\ixwebsocket.dir\ixwebsocket\IXWebSocketCloseConstants.cpp.obj
+[47/73] Building CXX object third_party\ixwebsocket\CMakeFiles\ixwebsocket.dir\ixwebsocket\IXSocketServer.cpp.obj
+[48/73] Building CXX object third_party\ixwebsocket\CMakeFiles\ixwebsocket.dir\ixwebsocket\IXWebSocketPerMessageDeflate.cpp.obj
+[49/73] Building CXX object third_party\ixwebsocket\CMakeFiles\ixwebsocket.dir\ixwebsocket\IXWebSocketPerMessageDeflateCodec.cpp.obj
+[50/73] Building CXX object third_party\ixwebsocket\CMakeFiles\ixwebsocket.dir\ixwebsocket\IXWebSocketPerMessageDeflateOptions.cpp.obj
+[51/73] Building CXX object third_party\ixwebsocket\CMakeFiles\ixwebsocket.dir\ixwebsocket\IXWebSocketHttpHeaders.cpp.obj
+[52/73] Building CXX object third_party\ixwebsocket\CMakeFiles\ixwebsocket.dir\ixwebsocket\IXWebSocket.cpp.obj
+[53/73] Linking CXX static library framebridge-streamline-preflight-lib.lib
+[54/73] Building CXX object CMakeFiles\framebridge-null-runtime.dir\native\runtime\src\main.cpp.obj
+[55/73] Linking CXX static library framebridge-native-mirror-session.lib
+[56/73] Building CXX object third_party\ixwebsocket\CMakeFiles\ixwebsocket.dir\ixwebsocket\IXWebSocketProxyServer.cpp.obj
+[57/73] Building CXX object third_party\ixwebsocket\CMakeFiles\ixwebsocket.dir\__\__\IXWebSocketTransport.cpp.obj
+[58/73] Building CXX object third_party\ixwebsocket\CMakeFiles\ixwebsocket.dir\ixwebsocket\IXWebSocketHandshake.cpp.obj
+[59/73] Building CXX object third_party\ixwebsocket\CMakeFiles\ixwebsocket.dir\ixwebsocket\IXWebSocketServer.cpp.obj
+[60/73] Linking CXX executable framebridge-null-runtime.exe
+[61/73] Linking CXX static library third_party\ixwebsocket\ixwebsocket.lib
+[62/73] Building CXX object CMakeFiles\framebridge-native-mirror-test.dir\native\mirror-receiver\mirror_session_test.cpp.obj
+[63/73] Building CXX object CMakeFiles\framebridge-streamline-dawn-preflight.dir\native\streamline-preflight\main.cpp.obj
+[64/73] Linking CXX executable framebridge-native-mirror-test.exe
+[65/73] Linking CXX executable framebridge-streamline-dawn-preflight.exe
+[66/73] Building CXX object CMakeFiles\framebridge-bridge-codec.dir\native\bridge\codec_test.cpp.obj
+[67/73] Linking CXX executable framebridge-bridge-codec.exe
+[68/73] Building CXX object CMakeFiles\framebridge-streamline-preflight-test.dir\native\streamline-preflight\preflight_test.cpp.obj
+[69/73] Linking CXX executable framebridge-streamline-preflight-test.exe
+[70/73] Building CXX object CMakeFiles\framebridge-render-test.dir\native\mirror-receiver\render_test.cpp.obj
+[71/73] Linking CXX executable framebridge-render-test.exe
+[72/73] Building CXX object CMakeFiles\framebridge-native-mirror.dir\native\mirror-receiver\main.cpp.obj
+[73/73] Linking CXX executable framebridge-native-mirror.exe

@@ -1,0 +1,1 @@
+PASS render_gate_and_parity checks=709 cases=6 frames=60,120,180 double_tolerance=1e-12 gpu_float_tolerance=2e-6

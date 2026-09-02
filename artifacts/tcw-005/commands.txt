@@ -1,26 +1,95 @@
-Clean checkout and submodules:
-  git clone --no-local D:\FrameBridge D:\FrameBridge\build\tcw005-clean-20260902 [0]
-  git -C D:\FrameBridge\build\tcw005-clean-20260902 checkout 7a38fd42e7674d3de2e4d8f49412e62c8d246e94 [0]
-  git -C D:\FrameBridge\build\tcw005-clean-20260902 submodule update --init --recursive [0]
-  git status --porcelain [clean]
+TCW-005R validation command record
+Implementation source: 011174ca607ae6c24572f55a4703ea1a7c763564
+Initial implementation: 37046153148099ee43fce148dded6a2cea7cfe91
+Baseline: 1a5ee319a0586a73d0262b07a6368b3b12d63eb5
 
-Native clean build:
-  cmake -S D:\FrameBridge\build\tcw005-clean-20260902 -B D:\FrameBridge\build\tcw005-clean-20260902\build\release -G "Visual Studio 17 2022" -A x64 -DUSE_ZLIB=OFF -DUSE_TLS=OFF -DIXWEBSOCKET_INSTALL=OFF [0]
-  cmake --build D:\FrameBridge\build\tcw005-clean-20260902\build\release --config Release --clean-first [0]
-  ctest --test-dir D:\FrameBridge\build\tcw005-clean-20260902\build\release -C Release --output-on-failure [0, 3 tests]
+Local absolute paths are deliberately represented by variables. $CHECKOUT is the
+detached clean checkout, $DAWN_ROOT the recovered pinned cache, $PYTHON the local
+Python executable, $GO_BIN its Go companion, $CHROME the installed Chrome for
+Testing executable, and $RAW the ignored output directory outside $CHECKOUT.
+Public build output replaces those paths with the same variables. Raw output
+hashes and public output hashes are recorded in output-integrity.json.
 
-TypeScript clean validation:
-  corepack pnpm --version [10.14.0]
-  corepack pnpm install --frozen-lockfile --ignore-scripts [0]
-  corepack pnpm build [0]
-  corepack pnpm test [0]
+Dependency verification/provisioning (before implementation commit):
+git -C $DAWN_ROOT rev-parse HEAD                                      exit 0
+  -> 34b1fca4d6c3d7025a2231d82b4fc719ca57fd71
+git -C $DAWN_ROOT status --short                                      exit 0, empty
+./tools/bootstrap-dawn.ps1 -DawnRoot $DAWN_ROOT -Python $PYTHON -GoBin $GO_BIN -SkipFetch -Jobs 10
+                                                                     exit 0
+  -> DAWN_BOOTSTRAP_PASS, RelWithDebInfo static dawn_native/dawn_proc
+  The bootstrap script records its exact CMake switches in source. No Dawn
+  download was needed: TCW-002/003's clean pinned checkout and DEPS were present.
 
-Native direct integration:
-  node tools/tcw005-native-integration.mjs .\build\release\Release\framebridge-native-mirror.exe [0]
-  native session output: PASS native_session queue=2 drops=2 ack=PASS reserved_rejection=PASS [0]
+Clean final source validation (working directory $CHECKOUT):
+git worktree add --detach .local/tcw005r-clean3 HEAD                   exit 0
+  HEAD resolved to the implementation source above.
+git submodule update --init --recursive                              exit 0
+. ./tools/msvc-env.ps1                                               success
+cmake -S . -B build/release -G Ninja -DCMAKE_BUILD_TYPE=Release -DDAWN_ROOT=$DAWN_ROOT
+                                                                     exit 0
+cmake --build build/release --parallel 8                              exit 0
+ctest --test-dir build/release --output-on-failure                     exit 0, 5/5
+corepack pnpm install --frozen-lockfile                               exit 0, pnpm 10.14.0
+corepack pnpm build                                                  exit 0
+corepack pnpm test                                                   exit 0
+corepack pnpm --filter @framebridge/demo-web exec vite build           exit 0
+./build/release/framebridge-render-test.exe                          exit 0, 709 checks
+./build/release/framebridge-render-test.exe --fail                    exit 1, expected active negative control
+./build/release/framebridge-native-mirror-test.exe                    exit 0, 5 checks
+node tools/tcw005r-integration.mjs build/release/framebridge-native-mirror.exe $RAW/captures
+                                                                     exit 0, 14 scenarios
+$env:FRAMEBRIDGE_CHROME=$CHROME
+node tools/tcw005r-browser.mjs build/release/framebridge-native-mirror.exe $RAW/browser
+                                                                     exit 0
+git status --porcelain                                               exit 0, empty before soak
+node tools/tcw005r-stability.mjs build/release/framebridge-native-mirror.exe 600
+  stdout -> $RAW/stability.json; stderr -> $RAW/stability-stderr.txt
+                                                                     exit 0
+  Actual measured duration 600.0136082 seconds; PASS; stderr empty.
 
-Not run because Dawn checkout is absent:
-  native Dawn cube/window build [BLOCKED_EXTERNAL_DEPENDENCY]
-  matrix/corner parity [BLOCKED_EXTERNAL_DEPENDENCY]
-  600-second native-renderer stability [BLOCKED_EXTERNAL_DEPENDENCY]
-  human browser/native comparison [HUMAN_REQUIRED]
+Additional final-source evidence commands:
+node tools/tcw005r-parity-oracle.mjs                                  exit 0
+git diff --exit-code -- tests/fixtures/tcw005/three-parity.json         exit 0
+git add tests/fixtures/tcw005/three-parity.json                        exit 0
+git diff --cached --exit-code                                        exit 0
+  The index refresh handles Windows CRLF normalization only; no content change.
+cmake -S . -B build/protocol -G Ninja -DCMAKE_BUILD_TYPE=Release        exit 0
+cmake --build build/protocol --parallel 8                             exit 0
+node tools/tcw005r-harness-test.mjs build/protocol/framebridge-native-mirror.exe
+                                                                     exit 0, 3 tests
+node tools/tcw005r-window-test.mjs build/release/framebridge-native-mirror.exe
+  Computer-use action: inspect frame 60 after 640->800->640, capture window,
+  Alt+F4; expect process exit 0 and joined-thread shutdown JSON.
+  Actual result: exit 0; clean_shutdown=true; owned_threads_joined=true.
+  Legacy regression executes framebridge-native-cube.exe from an ignored cwd
+  containing its own artifacts/ directory. It never overwrites accepted evidence.
+  & $CHECKOUT/build/release/framebridge-native-cube.exe               exit 0
+  Get-FileHash artifacts/native-cube-canonical.png                    success
+  SHA256 86a7cc833484d175765763909cc6fbd639647df72318fbe8eaf6b3d288ee6b01
+  Exact match to accepted TCW-003 reference after 100 resize cycles.
+
+Prior failed acceptance attempt:
+source 37046153148099ee43fce148dded6a2cea7cfe91
+node tools/tcw005r-stability.mjs build/release/framebridge-native-mirror.exe 600
+                                                                     exit 1, memory limits
+That attempt is not acceptance evidence. The then-current script threw before
+serializing measurements. The corrected script retains all measured gate results.
+
+Second interrupted attempt:
+source 35892e2807a6ec3affd7dc17250866b14ae666e5
+node tools/tcw005r-stability.mjs build/release/framebridge-native-mirror.exe 600
+                                                                     exit 1, unexpected close
+Intentionally stopped around 300 seconds after a separate window inspection
+revealed incorrect scaling after shrinking the viewport. This is NOT acceptance.
+See interrupted-attempt.json and interrupted-attempt-raw.json.
+
+Shell setup correction during final validation: one ctest invocation omitted the
+VS environment import and PowerShell reported CommandNotFoundException. No tests
+ran in that invocation; its wrapper incorrectly returned zero. The full sequence
+was rerun with ErrorActionPreference=Stop and tools/msvc-env.ps1 imported. Only
+the actual CTest output (5/5) is retained as the successful test result.
+
+Capture commands redirect stdout and stderr into ignored $RAW files. Raw JSON
+is copied byte-for-byte into result.json/native-integration-raw.json and
+stability-run.json. Explanatory metadata is separate. Runtime READY/token lines
+are consumed in test-client memory and never written to these files.

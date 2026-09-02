@@ -10,6 +10,6 @@
 -- Check for working C compiler: $VS_ROOT/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/cl.exe - skipped
 -- Detecting C compile features
 -- Detecting C compile features - done
--- Configuring done (1.9s)
--- Generating done (0.1s)
--- Build files have been written to: $CHECKOUT/build/release
+-- Configuring done (1.6s)
+-- Generating done (0.0s)
+-- Build files have been written to: $CHECKOUT/build/protocol

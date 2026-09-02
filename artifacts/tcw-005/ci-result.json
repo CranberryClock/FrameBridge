@@ -1,0 +1,115 @@
+{
+  "source_commit": "011174ca607ae6c24572f55a4703ea1a7c763564",
+  "status": "PASS",
+  "run_id": 33686292843,
+  "url": "https://github.com/CranberryClock/FrameBridge/actions/runs/33686292843",
+  "jobs": [
+    {
+      "id": 100434479692,
+      "name": "short-validation",
+      "status": "completed",
+      "conclusion": "success",
+      "run_id": 33686292843,
+      "logs_url": null,
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2
+        },
+        {
+          "name": "Run pnpm/action-setup@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3
+        },
+        {
+          "name": "Run actions/setup-node@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4
+        },
+        {
+          "name": "Run pnpm install --frozen-lockfile",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5
+        },
+        {
+          "name": "Run pnpm -r build",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6
+        },
+        {
+          "name": "Run pnpm -r test",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7
+        },
+        {
+          "name": "Run pnpm --filter @framebridge/demo-web exec vite build",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8
+        },
+        {
+          "name": "Run cmake -S . -B out/tcw004-cpp -G \"Visual Studio 17 2022\" -A x64",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9
+        },
+        {
+          "name": "Run cmake --build out/tcw004-cpp --config Release",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10
+        },
+        {
+          "name": "Run ctest --test-dir out/tcw004-cpp -C Release --output-on-failure",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11
+        },
+        {
+          "name": "Run node tools/tcw005r-harness-test.mjs out/tcw004-cpp/Release/framebridge-native-mirror.exe",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 12
+        },
+        {
+          "name": "Post Run actions/setup-node@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 22
+        },
+        {
+          "name": "Post Run pnpm/action-setup@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 23
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 24
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 25
+        }
+      ]
+    }
+  ],
+  "scope": "Windows Release build, frozen install, TypeScript/Vite tests, CTest and explicit protocol-only harness. NVIDIA hardware gates run locally."
+}

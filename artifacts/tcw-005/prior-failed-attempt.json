@@ -1,0 +1,11 @@
+{
+  "source_commit": "37046153148099ee43fce148dded6a2cea7cfe91",
+  "status": "FAIL",
+  "requested_duration_seconds": 600,
+  "exit_code": 1,
+  "stderr": "FAIL stability: memory limits",
+  "acceptance_reused": false,
+  "measurements_retained": false,
+  "limitation": "That script threw on the memory bound before serializing its measurements. No elapsed time, frame total or memory summary is claimed for this failed attempt.",
+  "followup": "Bound target reuse and swapchain storage, retain exact active source dimensions, and repeat the full run with the unchanged memory bounds. The corrected script serializes evaluated gates even when they fail."
+}

@@ -1,0 +1,15 @@
+{
+  "status": "PASS",
+  "text_patterns_checked": [
+    "private_key",
+    "github_token",
+    "bearer",
+    "absolute_windows_path",
+    "unredacted_session_token"
+  ],
+  "artifact_files_checked": 53,
+  "accepted_tcw001_through004_evidence_unchanged": true,
+  "no_binary_dependencies_committed": true,
+  "screenshots_manually_inspected": 11,
+  "notes": "Screenshots contain only app windows; session fields are empty. Loopback 127.0.0.1 and ephemeral port are intentionally visible. This is a bounded review, not a claim of comprehensive secret detection."
+}
