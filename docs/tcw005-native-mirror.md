@@ -28,6 +28,18 @@ entry point. Its device, pipeline, shared texture, fence and capture machinery
 are shared with the canonical renderer. The old colored cube is not the parity
 reference. Native PNG readback is optional evidence capture only; presentation
 always copies on the GPU to a same-device DXGI flip-discard swapchain.
+Readback buffers are allocated lazily only for explicit captures. Live resize does
+not allocate CPU readback storage; color/depth views are reused between resizes.
+A bounded two-entry target pool (active plus one cached size) reuses native and
+Dawn targets across the two demo viewport sizes. New allocations start with
+initialized=false; reused textures retain their own successful EndAccess state.
+Dimensions outside the cache evict its oldest inactive target. The acceptance
+soak checks that the alternating demo sizes require exactly two target allocations.
+Swapchain storage grows only when required. The active presentation region and
+native client area still match each received viewport exactly. A GPU texture copy
+fills that region; SetSourceSize/GetSourceSize select and verify it on each resize.
+This avoids repeated allocation churn for the established sizes, using the
+[documented DXGI source-size path](https://learn.microsoft.com/en-us/windows/win32/api/dxgi1_3/nf-dxgi1_3-idxgiswapchain2-setsourcesize).
 
 ## Device and synchronization
 
@@ -38,6 +50,7 @@ identity. LUIDs can change after reboot; a historical LUID is not portable.
 Dawn Full validation and D3D12 debug/InfoQueue are required, with every attributable
 warning/error failing rendering. Device loss also fails. GPU waits time out after
 10 seconds. The Windows SDK FXC DLL is copied to the ignored executable directory.
+DXGI diagnostic storage is also bounded and drained; its warnings/errors fail.
 
 Every new imported color texture starts initialized=false; BeginAccess uses that
 state; only successful EndAccess makes it true. EndAccess flushes Dawn, followed
@@ -107,6 +120,7 @@ mismatched checkouts by refusing to overwrite them. Configure never fetches Dawn
 FRAMEBRIDGE_CHROME points browser tests at an installed Chrome executable.
 The stability run requires a committed clean tracked source checkout. Its bounds
 are 512 MiB peak working/private memory and 64 MiB private growth after warmup.
+The result records all evaluated gates and measurements even when a bound fails.
 Short CI builds run codec/session/parity and protocol-only transport tests without
 requiring NVIDIA hardware. The hardware acceptance run is recorded separately.
 

@@ -1,6 +1,8 @@
 #include <windows.h>
 #include <dxgi1_6.h>
+#include <dxgidebug.h>
 #include <atomic>
+#include <optional>
 #include <stdexcept>
 #include "renderer.h"
 #include <d3d12.h>
@@ -30,6 +32,7 @@ namespace {
 std::atomic<bool> g_badDeviceLost{false};
 std::atomic<bool> g_uncapturedError{false};
 uint32_t g_d3d12Messages = 0;
+uint32_t g_dxgiMessages = 0;
 
 void Die(const char* operation, HRESULT hr = S_OK) {
     throw std::runtime_error(std::string(operation) + " HRESULT=" + std::to_string(static_cast<unsigned long>(hr)));
@@ -106,30 +109,49 @@ class CubeRenderer {
     }
     ~CubeRenderer() { if (event_) CloseHandle(event_); }
     void Resize(uint32_t width, uint32_t height) {
-        texture_ = {}; memory_ = {}; nativeTexture_.Reset();
+        if(width_==width && height_==height) return;
+        Target previous{width_,height_,textureInitialized_,std::move(nativeTexture_),std::move(memory_),std::move(texture_),std::move(depth_),std::move(colorView_),std::move(depthView_)};
+        if(cached_ && cached_->width==width && cached_->height==height) {
+            auto next=std::move(*cached_); cached_=std::move(previous);
+            nativeTexture_=std::move(next.native); memory_=std::move(next.memory); texture_=std::move(next.texture);
+            depth_=std::move(next.depth); colorView_=std::move(next.colorView); depthView_=std::move(next.depthView);
+            textureInitialized_=next.initialized; width_=width; height_=height;
+            readback_={}; readback_.rowPitch=(width*4+255)&~255u; return;
+        }
+        cached_=std::move(previous);
         width_ = width; height_ = height; depth_ = {}; readback_ = {}; textureInitialized_ = false;
+        ++targetAllocations_;
         D3D12_RESOURCE_DESC desc{}; desc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D; desc.Width = width; desc.Height = height; desc.DepthOrArraySize = 1; desc.MipLevels = 1; desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM; desc.SampleDesc.Count = 1; desc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN; desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET | D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS;
         D3D12_HEAP_PROPERTIES heap{}; heap.Type = D3D12_HEAP_TYPE_DEFAULT; D3D12_CLEAR_VALUE clear{}; clear.Format = desc.Format; clear.Color[3] = 1;
         Check(d3d_->CreateCommittedResource(&heap, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_COMMON, &clear, IID_PPV_ARGS(&nativeTexture_)), "CreateCommittedResource(color)");
         dawn::native::d3d12::SharedTextureMemoryD3D12ResourceDescriptor importDesc; importDesc.resource = nativeTexture_;
         wgpu::SharedTextureMemoryDescriptor md; md.nextInChain = &importDesc; md.label = "FrameBridge native cube color"; memory_ = device_.ImportSharedTextureMemory(&md); texture_ = memory_.CreateTexture();
         wgpu::TextureDescriptor depthDesc; depthDesc.dimension = wgpu::TextureDimension::e2D; depthDesc.size = {width, height, 1}; depthDesc.format = wgpu::TextureFormat::Depth24Plus; depthDesc.usage = wgpu::TextureUsage::RenderAttachment; depth_ = device_.CreateTexture(&depthDesc);
-        readback_.rowPitch = (width * 4 + 255) & ~255u; D3D12_RESOURCE_DESC rb{}; rb.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER; rb.Width = static_cast<uint64_t>(readback_.rowPitch) * height; rb.Height = 1; rb.DepthOrArraySize = 1; rb.MipLevels = 1; rb.SampleDesc.Count = 1; rb.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR; D3D12_HEAP_PROPERTIES readHeap{}; readHeap.Type = D3D12_HEAP_TYPE_READBACK; Check(d3d_->CreateCommittedResource(&readHeap, D3D12_HEAP_FLAG_NONE, &rb, D3D12_RESOURCE_STATE_COPY_DEST, nullptr, IID_PPV_ARGS(&readback_.buffer)), "CreateCommittedResource(readback)");
+        colorView_ = texture_.CreateView(); depthView_ = depth_.CreateView();
+        readback_.rowPitch = (width * 4 + 255) & ~255u;
     }
     void Render(const Mat4& mvp, bool capture, bool canonical) {
         wgpu::SharedTextureMemoryBeginAccessDescriptor begin{}; begin.initialized = textureInitialized_; CheckStatus(memory_.BeginAccess(texture_, &begin), "BeginAccess(cube)");
         queueWeb_.WriteBuffer(uniform_, 0, mvp.v, sizeof(mvp.v));
-        wgpu::RenderPassColorAttachment color; color.view = texture_.CreateView(); color.loadOp = wgpu::LoadOp::Clear; color.storeOp = wgpu::StoreOp::Store; color.clearValue = canonical ? wgpu::Color{8.0/255,11.0/255,18.0/255,1} : wgpu::Color{0.03,0.04,0.07,1};
-        wgpu::RenderPassDepthStencilAttachment depth; depth.view = depth_.CreateView(); depth.depthLoadOp = wgpu::LoadOp::Clear; depth.depthStoreOp = wgpu::StoreOp::Store; depth.depthClearValue = 1;
+        wgpu::RenderPassColorAttachment color; color.view = colorView_; color.loadOp = wgpu::LoadOp::Clear; color.storeOp = wgpu::StoreOp::Store; color.clearValue = canonical ? wgpu::Color{8.0/255,11.0/255,18.0/255,1} : wgpu::Color{0.03,0.04,0.07,1};
+        wgpu::RenderPassDepthStencilAttachment depth; depth.view = depthView_; depth.depthLoadOp = wgpu::LoadOp::Clear; depth.depthStoreOp = wgpu::StoreOp::Store; depth.depthClearValue = 1;
         wgpu::RenderPassDescriptor pd; pd.colorAttachmentCount = 1; pd.colorAttachments = &color; pd.depthStencilAttachment = &depth; wgpu::CommandEncoder enc = device_.CreateCommandEncoder(); wgpu::RenderPassEncoder pass = enc.BeginRenderPass(&pd); pass.SetPipeline(pipeline_); pass.SetBindGroup(0, bindGroup_); pass.SetVertexBuffer(0, vertex_); pass.SetIndexBuffer(index_, wgpu::IndexFormat::Uint16); pass.DrawIndexed(36); pass.End(); wgpu::CommandBuffer cb = enc.Finish(); queueWeb_.Submit(1, &cb);
         wgpu::SharedTextureMemoryEndAccessState end{}; CheckStatus(memory_.EndAccess(texture_, &end), "EndAccess(cube)"); textureInitialized_ = true;
         uint64_t value = (serial_ += 2); Check(queue_->Signal(fence_.Get(), value), "Signal(Dawn cube boundary)"); Wait(value);
         if (capture) Capture(value);
     }
     ID3D12Resource* Resource() const { return nativeTexture_.Get(); }
+    uint64_t TargetAllocations() const { return targetAllocations_; }
     uint32_t width() const { return width_; } uint32_t height() const { return height_; }
     const std::vector<uint8_t>& pixels() const { return readback_.rgba; }
   private:
+    struct Target {
+        uint32_t width=0,height=0; bool initialized=false;
+        ComPtr<ID3D12Resource> native; wgpu::SharedTextureMemory memory;
+        wgpu::Texture texture,depth; wgpu::TextureView colorView,depthView;
+    };
+    std::optional<Target> cached_;
+    uint64_t targetAllocations_=0;
     wgpu::Buffer MakeBuffer(uint64_t size, wgpu::BufferUsage usage) { wgpu::BufferDescriptor bd; bd.size = size; bd.usage = usage; return device_.CreateBuffer(&bd); }
     void BuildPipeline(bool canonical) {
         wgpu::BindGroupLayoutEntry be; be.binding = 0; be.visibility = wgpu::ShaderStage::Vertex; be.buffer.type = wgpu::BufferBindingType::Uniform;
@@ -139,8 +161,8 @@ class CubeRenderer {
         wgpu::ShaderSourceWGSL wgsl; wgsl.code = shader.c_str(); wgpu::ShaderModuleDescriptor sd; sd.nextInChain = &wgsl; wgpu::ShaderModule sm = device_.CreateShaderModule(&sd); wgpu::VertexAttribute attrs[2]; attrs[0].format = wgpu::VertexFormat::Float32x3; attrs[0].offset = 0; attrs[0].shaderLocation = 0; attrs[1].format = wgpu::VertexFormat::Float32x3; attrs[1].offset = 12; attrs[1].shaderLocation = 1; wgpu::VertexBufferLayout vb; vb.arrayStride = 24; vb.attributeCount = 2; vb.attributes = attrs; wgpu::ColorTargetState ct; ct.format = wgpu::TextureFormat::RGBA8Unorm; wgpu::FragmentState fs; fs.module = sm; fs.entryPoint = "fs"; fs.targetCount = 1; fs.targets = &ct; wgpu::DepthStencilState ds; ds.format = wgpu::TextureFormat::Depth24Plus; ds.depthWriteEnabled = true; ds.depthCompare = wgpu::CompareFunction::Less; wgpu::RenderPipelineDescriptor rp; rp.layout = layout; rp.vertex.module = sm; rp.vertex.entryPoint = "vs"; rp.vertex.bufferCount = 1; rp.vertex.buffers = &vb; rp.fragment = &fs; rp.depthStencil = &ds; pipeline_ = device_.CreateRenderPipeline(&rp);
     }
     void Wait(uint64_t value) { if (fence_->GetCompletedValue() < value) { Check(fence_->SetEventOnCompletion(value, event_), "SetEventOnCompletion"); if (WaitForSingleObject(event_, 10000) != WAIT_OBJECT_0) Die("GPU fence timeout"); } }
-    void Capture(uint64_t value) { Check(allocator_->Reset(), "Reset(capture allocator)"); if (!list_) { Check(d3d_->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, allocator_.Get(), nullptr, IID_PPV_ARGS(&list_)), "Create(capture list)"); Check(list_->Close(), "Close(initial capture list)"); } Check(list_->Reset(allocator_.Get(), nullptr), "Reset(capture list)"); D3D12_TEXTURE_COPY_LOCATION src{}; src.pResource = nativeTexture_.Get(); src.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX; src.SubresourceIndex = 0; D3D12_TEXTURE_COPY_LOCATION dst{}; dst.pResource = readback_.buffer.Get(); dst.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT; dst.PlacedFootprint.Footprint.Format = DXGI_FORMAT_R8G8B8A8_UNORM; dst.PlacedFootprint.Footprint.Width = width_; dst.PlacedFootprint.Footprint.Height = height_; dst.PlacedFootprint.Footprint.Depth = 1; dst.PlacedFootprint.Footprint.RowPitch = readback_.rowPitch; list_->CopyTextureRegion(&dst, 0, 0, 0, &src, nullptr); Check(list_->Close(), "Close(capture list)"); ID3D12CommandList* lists[] = {list_.Get()}; queue_->ExecuteCommandLists(1, lists); uint64_t copyValue = value + 1; Check(queue_->Signal(fence_.Get(), copyValue), "Signal(capture)"); Wait(copyValue); void* mapped = nullptr; D3D12_RANGE range{0, static_cast<SIZE_T>(readback_.rowPitch) * height_}; Check(readback_.buffer->Map(0, &range, &mapped), "Map(capture)"); readback_.rgba.resize(static_cast<size_t>(width_) * height_ * 4); for (uint32_t y = 0; y < height_; ++y) std::copy_n(static_cast<uint8_t*>(mapped) + y * readback_.rowPitch, width_ * 4, readback_.rgba.begin() + y * width_ * 4); D3D12_RANGE written{0,0}; readback_.buffer->Unmap(0, &written); }
-    wgpu::Device device_; wgpu::Queue queueWeb_; ComPtr<ID3D12Device> d3d_; ComPtr<ID3D12CommandQueue> queue_; ComPtr<ID3D12Resource> nativeTexture_; wgpu::SharedTextureMemory memory_; wgpu::Texture texture_, depth_; wgpu::Buffer vertex_, index_, uniform_; wgpu::BindGroupLayout bindLayout_; wgpu::BindGroup bindGroup_; wgpu::RenderPipeline pipeline_; uint32_t width_ = 0, height_ = 0; bool textureInitialized_ = false; Readback readback_; ComPtr<ID3D12CommandAllocator> allocator_ = nullptr; ComPtr<ID3D12GraphicsCommandList> list_; ComPtr<ID3D12Fence> fence_; HANDLE event_ = nullptr; uint64_t serial_ = 0;
+    void Capture(uint64_t value) { if(!readback_.buffer) { D3D12_RESOURCE_DESC rb{}; rb.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER; rb.Width = static_cast<uint64_t>(readback_.rowPitch) * height_; rb.Height = 1; rb.DepthOrArraySize = 1; rb.MipLevels = 1; rb.SampleDesc.Count = 1; rb.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR; D3D12_HEAP_PROPERTIES readHeap{}; readHeap.Type = D3D12_HEAP_TYPE_READBACK; Check(d3d_->CreateCommittedResource(&readHeap, D3D12_HEAP_FLAG_NONE, &rb, D3D12_RESOURCE_STATE_COPY_DEST, nullptr, IID_PPV_ARGS(&readback_.buffer)), "CreateCommittedResource(readback)"); } Check(allocator_->Reset(), "Reset(capture allocator)"); if (!list_) { Check(d3d_->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, allocator_.Get(), nullptr, IID_PPV_ARGS(&list_)), "Create(capture list)"); Check(list_->Close(), "Close(initial capture list)"); } Check(list_->Reset(allocator_.Get(), nullptr), "Reset(capture list)"); D3D12_TEXTURE_COPY_LOCATION src{}; src.pResource = nativeTexture_.Get(); src.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX; src.SubresourceIndex = 0; D3D12_TEXTURE_COPY_LOCATION dst{}; dst.pResource = readback_.buffer.Get(); dst.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT; dst.PlacedFootprint.Footprint.Format = DXGI_FORMAT_R8G8B8A8_UNORM; dst.PlacedFootprint.Footprint.Width = width_; dst.PlacedFootprint.Footprint.Height = height_; dst.PlacedFootprint.Footprint.Depth = 1; dst.PlacedFootprint.Footprint.RowPitch = readback_.rowPitch; list_->CopyTextureRegion(&dst, 0, 0, 0, &src, nullptr); Check(list_->Close(), "Close(capture list)"); ID3D12CommandList* lists[] = {list_.Get()}; queue_->ExecuteCommandLists(1, lists); uint64_t copyValue = value + 1; Check(queue_->Signal(fence_.Get(), copyValue), "Signal(capture)"); Wait(copyValue); void* mapped = nullptr; D3D12_RANGE range{0, static_cast<SIZE_T>(readback_.rowPitch) * height_}; Check(readback_.buffer->Map(0, &range, &mapped), "Map(capture)"); readback_.rgba.resize(static_cast<size_t>(width_) * height_ * 4); for (uint32_t y = 0; y < height_; ++y) std::copy_n(static_cast<uint8_t*>(mapped) + y * readback_.rowPitch, width_ * 4, readback_.rgba.begin() + y * width_ * 4); D3D12_RANGE written{0,0}; readback_.buffer->Unmap(0, &written); }
+    wgpu::Device device_; wgpu::Queue queueWeb_; ComPtr<ID3D12Device> d3d_; ComPtr<ID3D12CommandQueue> queue_; ComPtr<ID3D12Resource> nativeTexture_; wgpu::SharedTextureMemory memory_; wgpu::Texture texture_, depth_; wgpu::TextureView colorView_, depthView_; wgpu::Buffer vertex_, index_, uniform_; wgpu::BindGroupLayout bindLayout_; wgpu::BindGroup bindGroup_; wgpu::RenderPipeline pipeline_; uint32_t width_ = 0, height_ = 0; bool textureInitialized_ = false; Readback readback_; ComPtr<ID3D12CommandAllocator> allocator_ = nullptr; ComPtr<ID3D12GraphicsCommandList> list_; ComPtr<ID3D12Fence> fence_; HANDLE event_ = nullptr; uint64_t serial_ = 0;
 };
 
 } // namespace
@@ -166,6 +188,7 @@ struct Renderer::Impl {
     ComPtr<ID3D12Device> native;
     ComPtr<ID3D12CommandQueue> queue;
     ComPtr<IDXGIFactory4> factory;
+    ComPtr<IDXGIInfoQueue> dxgiInfo;
     ComPtr<IDXGISwapChain3> swapchain;
     ComPtr<ID3D12CommandAllocator> allocator;
     ComPtr<ID3D12GraphicsCommandList> list;
@@ -177,6 +200,8 @@ struct Renderer::Impl {
     LUID luid{};
     uint64_t serial = 0, submitted = 0, resizeGeneration = 0, dropped = 0;
     uint32_t width = 0, height = 0;
+    uint32_t swapWidth = 0, swapHeight = 0;
+    uint64_t swapAllocations = 0;
     bool open = true, canonical = true;
 
     static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
@@ -191,6 +216,8 @@ struct Renderer::Impl {
         Check(D3D12GetDebugInterface(IID_PPV_ARGS(&debug)), "D3D12 debug layer required");
         debug->EnableDebugLayer();
         Check(CreateDXGIFactory2(DXGI_CREATE_FACTORY_DEBUG,IID_PPV_ARGS(&factory)),"CreateDXGIFactory");
+        Check(DXGIGetDebugInterface1(0,IID_PPV_ARGS(&dxgiInfo)),"DXGI InfoQueue required");
+        Check(dxgiInfo->SetMessageCountLimit(DXGI_DEBUG_DXGI,256),"DXGI message quota");
         ComPtr<IDXGIAdapter1> dxgi;
         DXGI_ADAPTER_DESC1 identity{};
         bool found = false;
@@ -270,9 +297,21 @@ struct Renderer::Impl {
     }
     void Resize(uint32_t w,uint32_t h) {
         Wait();
+        // Drop the native command recording objects before retiring swapchain buffers.
+        // This also retires debug-layer recording metadata for the old buffers.
+        list.Reset(); allocator.Reset();
+        Check(native->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT,IID_PPV_ARGS(&allocator)),"resize present allocator");
+        Check(native->CreateCommandList(0,D3D12_COMMAND_LIST_TYPE_DIRECT,allocator.Get(),nullptr,IID_PPV_ARGS(&list)),"resize present list");
+        Check(list->Close(),"resize initial list close");
         cube->Resize(w,h);
         if(window) {
-            if(swapchain) Check(swapchain->ResizeBuffers(2,w,h,DXGI_FORMAT_R8G8B8A8_UNORM,0),"ResizeBuffers");
+            if(swapchain) {
+                if(w>swapWidth || h>swapHeight) {
+                    swapWidth=std::max(w,swapWidth); swapHeight=std::max(h,swapHeight);
+                    Check(swapchain->ResizeBuffers(2,swapWidth,swapHeight,DXGI_FORMAT_R8G8B8A8_UNORM,0),"ResizeBuffers");
+                    ++swapAllocations;
+                }
+            }
             else {
                 DXGI_SWAP_CHAIN_DESC1 sd{}; sd.Width=w; sd.Height=h; sd.Format=DXGI_FORMAT_R8G8B8A8_UNORM;
                 sd.SampleDesc.Count=1; sd.BufferUsage=DXGI_USAGE_RENDER_TARGET_OUTPUT; sd.BufferCount=2;
@@ -281,7 +320,12 @@ struct Renderer::Impl {
                 Check(factory->CreateSwapChainForHwnd(queue.Get(),window,&sd,nullptr,nullptr,&sc),"CreateSwapChainForHwnd");
                 Check(sc.As(&swapchain),"Swapchain3");
                 Check(factory->MakeWindowAssociation(window,DXGI_MWA_NO_ALT_ENTER),"Window association");
+                swapWidth=w; swapHeight=h; ++swapAllocations;
             }
+            Check(swapchain->SetSourceSize(w,h),"SetSourceSize");
+            UINT sourceWidth=0,sourceHeight=0;
+            Check(swapchain->GetSourceSize(&sourceWidth,&sourceHeight),"GetSourceSize");
+            if(sourceWidth!=w || sourceHeight!=h) Die("presentation source dimensions");
             RECT area{0,0,static_cast<LONG>(w),static_cast<LONG>(h)};
             Check(AdjustWindowRect(&area,WS_OVERLAPPEDWINDOW,FALSE)?S_OK:E_FAIL,"AdjustWindowRect");
             if(!SetWindowPos(window,nullptr,0,0,area.right-area.left,area.bottom-area.top,SWP_NOMOVE|SWP_NOZORDER|SWP_NOACTIVATE)) Die("SetWindowPos");
@@ -302,7 +346,10 @@ struct Renderer::Impl {
         barrier.Transition.StateAfter=D3D12_RESOURCE_STATE_COPY_DEST;
         list->ResourceBarrier(1,&barrier);
         // Imported simultaneous-access texture is COMMON after EndAccess + same-queue fence.
-        list->CopyResource(back.Get(),cube->Resource());
+        D3D12_TEXTURE_COPY_LOCATION src{},dst{};
+        src.pResource=cube->Resource(); src.Type=D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+        dst.pResource=back.Get(); dst.Type=D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+        list->CopyTextureRegion(&dst,0,0,0,&src,nullptr);
         std::swap(barrier.Transition.StateBefore,barrier.Transition.StateAfter);
         list->ResourceBarrier(1,&barrier);
         Check(list->Close(),"present close");
@@ -313,7 +360,17 @@ struct Renderer::Impl {
     void Validate() {
         wgpu::Instance(instance->Get()).ProcessEvents();
         ReportInfoQueue(native.Get());
-        if(g_badDeviceLost || g_uncapturedError || g_d3d12Messages) Die("GPU validation");
+        const auto count=dxgiInfo->GetNumStoredMessages(DXGI_DEBUG_ALL);
+        for(UINT64 index=0;index<count;++index) {
+            SIZE_T size=0; Check(dxgiInfo->GetMessage(DXGI_DEBUG_ALL,index,nullptr,&size),"DXGI message size");
+            std::vector<uint8_t> bytes(size); auto* message=reinterpret_cast<DXGI_INFO_QUEUE_MESSAGE*>(bytes.data());
+            Check(dxgiInfo->GetMessage(DXGI_DEBUG_ALL,index,message,&size),"DXGI message");
+            if(message->Severity<=DXGI_INFO_QUEUE_MESSAGE_SEVERITY_WARNING) {
+                ++g_dxgiMessages; std::cerr<<"DXGI_VALIDATION_ERROR "<<message->pDescription<<"\n";
+            }
+        }
+        dxgiInfo->ClearStoredMessages(DXGI_DEBUG_ALL);
+        if(g_badDeviceLost || g_uncapturedError || g_d3d12Messages || g_dxgiMessages) Die("GPU validation");
         Check(native->GetDeviceRemovedReason(),"DeviceRemovedReason");
     }
 };
@@ -355,7 +412,7 @@ std::string Renderer::Adapter() const { return impl_->name; }
 std::string Renderer::Telemetry() const {
     const auto& i=*impl_; return "{\"backend\":\"native-dawn\",\"adapter_vendor\":4318,\"adapter_device\":10208,\"luid_low\":"+
     std::to_string(i.luid.LowPart)+",\"luid_high\":"+std::to_string(i.luid.HighPart)+
-    ",\"luid_verified\":true,\"dawn_validation_errors\":"+std::to_string(g_uncapturedError?1:0)+
-    ",\"d3d12_messages\":"+std::to_string(g_d3d12Messages)+",\"device_lost\":"+(g_badDeviceLost?"true":"false")+"}";
+    ",\"luid_verified\":true,\"target_cache_capacity\":2,\"target_allocations\":"+std::to_string(i.cube->TargetAllocations())+",\"swapchain_allocations\":"+std::to_string(i.swapAllocations)+",\"dawn_validation_errors\":"+std::to_string(g_uncapturedError?1:0)+
+    ",\"d3d12_messages\":"+std::to_string(g_d3d12Messages)+",\"dxgi_messages\":"+std::to_string(g_dxgiMessages)+",\"device_lost\":"+(g_badDeviceLost?"true":"false")+"}";
 }
 } // namespace framebridge::render

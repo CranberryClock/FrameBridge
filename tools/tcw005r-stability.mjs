@@ -34,15 +34,18 @@ try {
   const memory=native.events.filter(x=>x.event==='memory');const warm=memory.filter(x=>x.elapsed_seconds>=Math.min(60,duration/2));
   const peakWorking=Math.max(...memory.map(x=>x.working_set_bytes)),peakPrivate=Math.max(...memory.map(x=>x.private_bytes));
   const growth=warm.length>1?warm.at(-1).private_bytes-warm[0].private_bytes:0;
-  check(peakWorking<512*1024**2&&peakPrivate<512*1024**2&&growth<64*1024**2,'memory limits');
-  const gpu=native.events.filter(x=>x.luid_verified);check(gpu.length>=2&&gpu.every(x=>x.dawn_validation_errors===0&&x.d3d12_messages===0&&!x.device_lost),'GPU validation');
+  const gpu=native.events.filter(x=>x.luid_verified);
   const acknowledged=clients.reduce((n,c)=>n+c.count,0),dropped=clients.reduce((n,c)=>n+c.drops,0);
-  check(shutdown.submitted===acknowledged&&shutdown.acknowledged===acknowledged,'submission/ACK totals');
-  check(shutdown.max_queued_complete_frames<=2&&elapsedSeconds>=duration,'duration/queue');
-  check(acknowledged/elapsedSeconds>=55,'native cadence below 55 accepted fps');
-  console.log(JSON.stringify({suite:'tcw005r-native-stability',status:'PASS',acceptance:duration>=600,source_commit:sourceCommit,source_dirty:false,
+  const checks={memory:peakWorking<512*1024**2&&peakPrivate<512*1024**2&&growth<64*1024**2,
+    gpu:gpu.length>=2&&gpu.every(x=>x.dawn_validation_errors===0&&x.d3d12_messages===0&&(x.dxgi_messages??0)===0&&!x.device_lost),
+    correlation:shutdown.submitted===acknowledged&&shutdown.acknowledged===acknowledged,
+    render_target_pool:gpu.at(-1)?.target_cache_capacity===2&&gpu.at(-1)?.target_allocations===2&&gpu.at(-1)?.swapchain_allocations===2,
+    queue:shutdown.max_queued_complete_frames<=2,duration:elapsedSeconds>=duration,cadence:acknowledged/elapsedSeconds>=55};
+  const passed=Object.values(checks).every(Boolean);
+  console.log(JSON.stringify({suite:'tcw005r-native-stability',status:passed?'PASS':'FAIL',checks,acceptance:duration>=600&&passed,source_commit:sourceCommit,source_dirty:false,
     start_time:startTime,end_time:endTime,elapsed_seconds:elapsedSeconds,required_seconds:duration,target_hz:60,submitted_frames:shutdown.submitted,
     acknowledged_frames:acknowledged,dropped_frames:dropped,reconnect_count:reconnects,resize_count:resizeCount,final_frame:lastFrame,final_resize_generation:String(rg),
     protocol_errors:0,peak_working_set_bytes:peakWorking,peak_private_bytes:peakPrivate,private_growth_after_warmup_bytes:growth,
     memory_limits:{peak_bytes:512*1024**2,warm_private_growth_bytes:64*1024**2},memory_samples:memory,gpu,shutdown,node_role:'test_client_only'}));
-}catch(e){if(native?.child.exitCode===null)native.child.kill();console.error('FAIL stability: '+e.message);process.exitCode=1;}
+  if(!passed)process.exitCode=1;
+}catch(e){if(native?.child.exitCode===null)native.child.kill();console.log(JSON.stringify({suite:'tcw005r-native-stability',status:'FAIL',source_commit:sourceCommit,reason:e.message,telemetry:native?.events??[]}));console.error('FAIL stability: '+e.message);process.exitCode=1;}
