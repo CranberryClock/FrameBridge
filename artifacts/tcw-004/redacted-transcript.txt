@@ -1,0 +1,8 @@
+server: host=127.0.0.1 port=<ephemeral> token=<redacted>
+client -> server: bounded JSON hello origin=<configured-origin> token=<redacted>
+server -> client: JSON capabilities session_id=<redacted>
+client -> server: binary BEGIN_FRAME / END_FRAME
+server -> client: binary FRAME_ACCEPTED logical_frame=4 dropped_frames=0
+client: disconnect; browser simulation continued
+client: reconnect; full-state frame=4 accepted without reset
+secret_logging_check: PASS

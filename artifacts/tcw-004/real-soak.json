@@ -1,0 +1,248 @@
+{
+  "task": "TCW-004",
+  "status": "FAIL",
+  "start_time": "2026-09-02T04:18:15.641Z",
+  "end_time": "2026-09-02T04:48:15.673Z",
+  "elapsed_seconds": 1800.032,
+  "logical_frames": 76022,
+  "accepted_frames": 76016,
+  "dropped_frames": 0,
+  "reconnects": 1,
+  "resize_generations": 253,
+  "protocol_errors": 0,
+  "memory_samples": [
+    {
+      "elapsed_seconds": 60,
+      "logical_frame": 2801,
+      "accepted_frames": 2799,
+      "dropped_frames": 0,
+      "heap_used_bytes": 7208944,
+      "protocol_errors": 0
+    },
+    {
+      "elapsed_seconds": 120,
+      "logical_frame": 5280,
+      "accepted_frames": 5274,
+      "dropped_frames": 0,
+      "heap_used_bytes": 7698432,
+      "protocol_errors": 0
+    },
+    {
+      "elapsed_seconds": 180,
+      "logical_frame": 7620,
+      "accepted_frames": 7614,
+      "dropped_frames": 0,
+      "heap_used_bytes": 7708048,
+      "protocol_errors": 0
+    },
+    {
+      "elapsed_seconds": 240,
+      "logical_frame": 9908,
+      "accepted_frames": 9901,
+      "dropped_frames": 0,
+      "heap_used_bytes": 7848720,
+      "protocol_errors": 0
+    },
+    {
+      "elapsed_seconds": 300,
+      "logical_frame": 12328,
+      "accepted_frames": 12322,
+      "dropped_frames": 0,
+      "heap_used_bytes": 7823912,
+      "protocol_errors": 0
+    },
+    {
+      "elapsed_seconds": 360,
+      "logical_frame": 14830,
+      "accepted_frames": 14824,
+      "dropped_frames": 0,
+      "heap_used_bytes": 7925592,
+      "protocol_errors": 0
+    },
+    {
+      "elapsed_seconds": 420,
+      "logical_frame": 17168,
+      "accepted_frames": 17161,
+      "dropped_frames": 0,
+      "heap_used_bytes": 7825416,
+      "protocol_errors": 0
+    },
+    {
+      "elapsed_seconds": 480,
+      "logical_frame": 19725,
+      "accepted_frames": 19719,
+      "dropped_frames": 0,
+      "heap_used_bytes": 7692104,
+      "protocol_errors": 0
+    },
+    {
+      "elapsed_seconds": 540,
+      "logical_frame": 22220,
+      "accepted_frames": 22214,
+      "dropped_frames": 0,
+      "heap_used_bytes": 7677672,
+      "protocol_errors": 0
+    },
+    {
+      "elapsed_seconds": 600,
+      "logical_frame": 24763,
+      "accepted_frames": 24757,
+      "dropped_frames": 0,
+      "heap_used_bytes": 8220560,
+      "protocol_errors": 0
+    },
+    {
+      "elapsed_seconds": 660,
+      "logical_frame": 27188,
+      "accepted_frames": 27181,
+      "dropped_frames": 0,
+      "heap_used_bytes": 8241248,
+      "protocol_errors": 0
+    },
+    {
+      "elapsed_seconds": 720,
+      "logical_frame": 29700,
+      "accepted_frames": 29693,
+      "dropped_frames": 0,
+      "heap_used_bytes": 7548912,
+      "protocol_errors": 0
+    },
+    {
+      "elapsed_seconds": 780,
+      "logical_frame": 32271,
+      "accepted_frames": 32265,
+      "dropped_frames": 0,
+      "heap_used_bytes": 7580776,
+      "protocol_errors": 0
+    },
+    {
+      "elapsed_seconds": 840,
+      "logical_frame": 34850,
+      "accepted_frames": 34844,
+      "dropped_frames": 0,
+      "heap_used_bytes": 7661184,
+      "protocol_errors": 0
+    },
+    {
+      "elapsed_seconds": 900,
+      "logical_frame": 37309,
+      "accepted_frames": 37303,
+      "dropped_frames": 0,
+      "heap_used_bytes": 8142224,
+      "protocol_errors": 0
+    },
+    {
+      "elapsed_seconds": 960,
+      "logical_frame": 39829,
+      "accepted_frames": 39823,
+      "dropped_frames": 0,
+      "heap_used_bytes": 7542080,
+      "protocol_errors": 0
+    },
+    {
+      "elapsed_seconds": 1020,
+      "logical_frame": 42428,
+      "accepted_frames": 42421,
+      "dropped_frames": 0,
+      "heap_used_bytes": 7836216,
+      "protocol_errors": 0
+    },
+    {
+      "elapsed_seconds": 1080,
+      "logical_frame": 45054,
+      "accepted_frames": 45047,
+      "dropped_frames": 0,
+      "heap_used_bytes": 7642120,
+      "protocol_errors": 0
+    },
+    {
+      "elapsed_seconds": 1140,
+      "logical_frame": 47639,
+      "accepted_frames": 47633,
+      "dropped_frames": 0,
+      "heap_used_bytes": 7795080,
+      "protocol_errors": 0
+    },
+    {
+      "elapsed_seconds": 1200,
+      "logical_frame": 50042,
+      "accepted_frames": 50035,
+      "dropped_frames": 0,
+      "heap_used_bytes": 7528696,
+      "protocol_errors": 0
+    },
+    {
+      "elapsed_seconds": 1260,
+      "logical_frame": 52426,
+      "accepted_frames": 52419,
+      "dropped_frames": 0,
+      "heap_used_bytes": 7935824,
+      "protocol_errors": 0
+    },
+    {
+      "elapsed_seconds": 1320,
+      "logical_frame": 55088,
+      "accepted_frames": 55082,
+      "dropped_frames": 0,
+      "heap_used_bytes": 8127984,
+      "protocol_errors": 0
+    },
+    {
+      "elapsed_seconds": 1380,
+      "logical_frame": 57826,
+      "accepted_frames": 57820,
+      "dropped_frames": 0,
+      "heap_used_bytes": 7618304,
+      "protocol_errors": 0
+    },
+    {
+      "elapsed_seconds": 1440,
+      "logical_frame": 60210,
+      "accepted_frames": 60204,
+      "dropped_frames": 0,
+      "heap_used_bytes": 8023760,
+      "protocol_errors": 0
+    },
+    {
+      "elapsed_seconds": 1500,
+      "logical_frame": 62823,
+      "accepted_frames": 62816,
+      "dropped_frames": 0,
+      "heap_used_bytes": 7678536,
+      "protocol_errors": 0
+    },
+    {
+      "elapsed_seconds": 1560,
+      "logical_frame": 65465,
+      "accepted_frames": 65459,
+      "dropped_frames": 0,
+      "heap_used_bytes": 7644816,
+      "protocol_errors": 0
+    },
+    {
+      "elapsed_seconds": 1620,
+      "logical_frame": 68072,
+      "accepted_frames": 68065,
+      "dropped_frames": 0,
+      "heap_used_bytes": 8056880,
+      "protocol_errors": 0
+    },
+    {
+      "elapsed_seconds": 1680,
+      "logical_frame": 70631,
+      "accepted_frames": 70625,
+      "dropped_frames": 0,
+      "heap_used_bytes": 7910520,
+      "protocol_errors": 0
+    },
+    {
+      "elapsed_seconds": 1740,
+      "logical_frame": 73305,
+      "accepted_frames": 73299,
+      "dropped_frames": 0,
+      "heap_used_bytes": 8265984,
+      "protocol_errors": 0
+    }
+  ],
+  "token_logged": false
+}

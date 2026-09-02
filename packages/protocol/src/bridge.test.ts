@@ -1,30 +1,14 @@
 import assert from "node:assert/strict";
 import WebSocket from "ws";
 import { BridgeServer } from "./server.js";
-import { encode, MessageType } from "./index.js";
+import { decode, encode, encodeFrameState, MessageType, type FrameState } from "./index.js";
 
-const server = new BridgeServer();
-const port = await server.start();
-const hello = { kind: "hello", version: 0, token: server.token, origin: "http://127.0.0.1", three: { version: "0.185.0", commit: "2431a09" }, buildId: "test", requestedCapabilities: ["explicit-mirror"], byteOrder: "little" } as const;
-const connect = (): Promise<WebSocket> => new Promise((resolve, reject) => { const socket = new WebSocket(`ws://127.0.0.1:${port}`, { headers: { Origin: hello.origin } }); socket.once("open", () => { socket.send(JSON.stringify(hello)); }); socket.once("message", (data) => { assert.equal(JSON.parse(data.toString()).kind, "capabilities"); resolve(socket); }); socket.once("error", reject); });
-const socket = await connect();
-const state = (frame: bigint): Uint8Array => { const payload = new Uint8Array(8); new DataView(payload.buffer).setBigUint64(0, frame, true); return payload; };
-for (let frame = 1n; frame <= 108000n; frame++) {
-  const begin = encode({ type: MessageType.BeginFrame, sequence: frame * 2n - 1n, payload: state(frame) });
-  const end = encode({ type: MessageType.EndFrame, sequence: frame * 2n, payload: new Uint8Array() });
-  const fragmented = new Uint8Array(begin.byteLength + end.byteLength); fragmented.set(begin); fragmented.set(end, begin.byteLength);
-  socket.send(fragmented.slice(0, begin.byteLength)); socket.send(fragmented.slice(begin.byteLength));
-}
-await new Promise((resolve) => setTimeout(resolve, 100));
-assert.equal(server.acceptedFrame, 108000n);
-assert.equal(server.droppedFrames, 0);
-socket.close();
-const reconnect = await connect();
-reconnect.send(encode({ type: MessageType.BeginFrame, sequence: 216001n, payload: state(108001n) }));
-await new Promise((resolve) => setTimeout(resolve, 25));
-assert.equal(server.acceptedFrame, 108001n);
-reconnect.close();
-await server.close();
-console.log("TCW-PROTO-003_PASS");
-console.log("TCW-PROTO-004_PASS virtual_duration_seconds=1800 frames=108000 logical_frame=108001");
-console.log("TCW-CONT-001_PASS browser_authoritative_frame=108001 native_mirror_frame=108001");
+const origin = "http://127.0.0.1:5173"; const server = new BridgeServer(origin); const port = await server.start();
+const hello = { kind: "hello", version: 0, token: server.token, origin, three: { version: "0.185.0", commit: "2431a09" }, buildId: "test", requestedCapabilities: ["explicit-mirror"], byteOrder: "little" } as const;
+const connect = (): { socket: WebSocket; capabilities: Promise<void>; acks: number[] } => { const socket = new WebSocket(`ws://127.0.0.1:${port}`, { headers: { Origin: origin } }); const acks: number[] = []; const capabilities = new Promise<void>((resolve, reject) => { socket.once("open", () => socket.send(JSON.stringify(hello))); socket.once("message", (data, binary) => { if (binary) return reject(new Error("capabilities not JSON")); assert.equal(JSON.parse(data.toString()).kind, "capabilities"); resolve(); }); socket.once("error", reject); }); socket.on("message", (data, binary) => { if (binary) { const m = decode(new Uint8Array(data as Buffer)); if (m.type === MessageType.FrameAccepted) acks.push(Number(new DataView(m.payload.buffer, m.payload.byteOffset).getBigUint64(8, true))); } }); return { socket, capabilities, acks }; };
+const client = connect(); await client.capabilities;
+const makeState = (frame: bigint): FrameState => ({ frame, simulationTime: Number(frame) / 60, rotationX: Number(frame) * .01, rotationY: Number(frame) * .013, cameraZ: 3, width: 640, height: 360, resizeGeneration: 0n });
+for (let frame = 1n; frame <= 3n; frame++) { client.socket.send(encode({ type: MessageType.BeginFrame, sequence: frame * 2n - 1n, payload: encodeFrameState(makeState(frame)) })); client.socket.send(encode({ type: MessageType.EndFrame, sequence: frame * 2n, payload: new Uint8Array() })); }
+await new Promise((resolve) => setTimeout(resolve, 50)); assert.deepEqual(client.acks, [1, 2, 3]); client.socket.close(); await new Promise((resolve) => client.socket.once("close", resolve));
+const reconnect = connect(); await reconnect.capabilities; reconnect.socket.send(encode({ type: MessageType.BeginFrame, sequence: 1n, payload: encodeFrameState(makeState(4n)) })); reconnect.socket.send(encode({ type: MessageType.EndFrame, sequence: 2n, payload: new Uint8Array() })); await new Promise((resolve) => setTimeout(resolve, 50)); assert.deepEqual(reconnect.acks, [4]); reconnect.socket.close(); await server.close();
+console.log("TCW-PROTO-003_PASS real_loopback_auth_binary_ack_reconnect"); console.log("TCW-CONT-001_PASS browser_authoritative_frame=4 receiver_ack_frame=4"); console.log("TCW-PROTO-004_BLOCKED real_1800_second_soak_not_run_in_short_suite");

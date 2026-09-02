@@ -1,16 +1,15 @@
 #include "codec.hpp"
-#include <array>
+#include <fstream>
 #include <iostream>
+#include <sstream>
+#include <string>
 
 int main() {
-  constexpr std::array<uint8_t, 40> fixture{
-    0x46,0x42,0x57,0x30, 0x00,0x00, 0x20,0x00, 0x00,0x00,0x00,0x00,
-    0x04,0x00,0x00,0x00, 0x01,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-    0x07,0x00,0x00,0x00,0x00,0x00,0x00,0x00, 0x7D,0xA8,0x34,0x57,
-    0x01,0x02,0x03,0x04
-  };
-  const auto header = framebridge::protocol::DecodeHeader(fixture);
-  if (header.type != 32 || header.sequence != 1 || header.objectId != 7 || header.payloadBytes != 4) return 1;
-  std::cout << "TCW-PROTO-001_CPP_PASS\n";
-  return 0;
+  std::ifstream file("packages/protocol/fixtures/valid-begin-frame.hex"); if (!file) return 2;
+  std::string hex; file >> hex; if (hex.size() % 2 != 0) return 3;
+  std::vector<uint8_t> fixture; fixture.reserve(hex.size() / 2); for (size_t i = 0; i < hex.size(); i += 2) fixture.push_back(static_cast<uint8_t>(std::stoul(hex.substr(i, 2), nullptr, 16)));
+  const auto header = framebridge::protocol::DecodeHeader(fixture); if (header.type != 32 || header.sequence != 1 || header.payloadBytes != 48) return 4;
+  const auto encoded = framebridge::protocol::Encode(header, std::span<const uint8_t>(fixture.data() + framebridge::protocol::kHeaderBytes, header.payloadBytes)); if (encoded != fixture) return 5;
+  auto bad = fixture; bad[0] = 0; try { framebridge::protocol::DecodeHeader(bad); return 6; } catch (const std::runtime_error&) {}
+  std::cout << "TCW-PROTO-001_CPP_PASS shared_fixture=valid-begin-frame.hex\nTCW-PROTO-002_CPP_PASS malformed_magic=reject\n"; return 0;
 }

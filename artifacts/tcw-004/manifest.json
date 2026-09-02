@@ -1,0 +1,25 @@
+{
+  "task": "TCW-004",
+  "status": "BLOCKED",
+  "reviewed_base": "184bc1ff9e4d30fc421ce006ab88c0dba1e8fbdc",
+  "scope_boundary": "Node WebSocket test/developer infrastructure; no native socket listener and no native Three backend claim",
+  "gates": {
+    "TCW-BUILD-001": "PASS",
+    "TCW-PROTO-001": "PASS short shared fixture TS/C++",
+    "TCW-PROTO-002": "PASS short validation/lifecycle suite",
+    "TCW-PROTO-003": "PASS Node loopback client; browser UI evidence blocked by local-browser connectivity",
+    "TCW-PROTO-004": "BLOCKED real 1800-second run sustained 76022 frames (~42 Hz), not the required 60 Hz",
+    "TCW-CONT-001": "PASS Node loopback reconnect sample; browser screenshot evidence blocked"
+  },
+  "clean_validation": {
+    "frozen_install": {"command": "corepack pnpm install --frozen-lockfile", "exit_code": 0, "pnpm": "10.14.0"},
+    "build": {"command": "corepack pnpm -r build", "exit_code": 0},
+    "test": {"command": "corepack pnpm -r test", "exit_code": 0},
+    "vite": {"command": "corepack pnpm --filter @framebridge/demo-web exec vite build", "exit_code": 0},
+    "cpp": {"command": "cmake -S . -B out/tcw004-cpp -G Ninja -DCMAKE_BUILD_TYPE=Release && cmake --build out/tcw004-cpp --target framebridge-bridge-codec", "exit_code": 0}
+  },
+  "short_tests": ["TCW-PROTO-001_PASS shared_binary_fixture=84_bytes", "TCW-PROTO-002_PASS malformed_sequence_lifecycle_quota_state", "TCW-PROTO-003_PASS real_loopback_auth_binary_ack_reconnect", "TCW-CONT-001_PASS browser_authoritative_frame=4 receiver_ack_frame=4"],
+  "real_soak": {"path": "real-soak.json", "elapsed_seconds": 1800.032, "logical_frames": 76022, "accepted_frames": 76016, "dropped_frames": 0, "reconnects": 1, "resize_generations": 253, "protocol_errors": 0, "token_logged": false},
+  "known_limitations": ["Soak cadence is below 60 Hz and therefore TCW-PROTO-004 is not accepted.", "Browser-control provider could not reach localhost despite a local listener; no browser connection or screenshot is claimed.", "Native C++ consumer currently validates shared fixture bytes; the transport endpoint remains reserved as test/developer infrastructure."],
+  "changed_files": ["README.md", "apps/demo-web/index.html", "apps/demo-web/package.json", "apps/demo-web/src/browser.ts", "native/bridge/codec.hpp", "native/bridge/codec_test.cpp", "packages/protocol/fixtures/valid-begin-frame.hex", "packages/protocol/src/bridge.test.ts", "packages/protocol/src/index.ts", "packages/protocol/src/protocol.test.ts", "packages/protocol/src/server.ts", "pnpm-lock.yaml", "pnpm-workspace.yaml", "tools/tcw004-soak.mjs"]
+}

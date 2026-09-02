@@ -1,0 +1,7 @@
+corepack pnpm install --frozen-lockfile => exit 0
+corepack pnpm -r build => exit 0
+corepack pnpm -r test => exit 0
+corepack pnpm --filter @framebridge/demo-web exec vite build => exit 0
+cmake -S . -B out/tcw004-cpp -G Ninja -DCMAKE_BUILD_TYPE=Release => exit 0
+cmake --build out/tcw004-cpp --target framebridge-bridge-codec => exit 0
+node tools/tcw004-soak.mjs => exit 0 process, gate BLOCKED (76022 frames at 1800.032 seconds; required cadence not met)

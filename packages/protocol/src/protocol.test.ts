@@ -1,8 +1,10 @@
-import { authenticate, decode, encode, MessageType, MirrorState } from "./index.js";
-const fixture = encode({ type: MessageType.BeginFrame, sequence: 1n, objectId: 7n, payload: new Uint8Array([1, 2, 3, 4]) });
-if (fixture.byteLength !== 40 || decode(fixture).sequence !== 1n) throw new Error("golden fixture failed");
-for (const bad of [fixture.slice(0, 10), new Uint8Array(fixture).fill(0, 0, 4)]) { try { decode(bad); throw new Error("malformed input accepted"); } catch (error) { if ((error as Error).message === "malformed input accepted") throw error; } }
-const caps = authenticate({ kind: "hello", version: 0, token: "t", origin: "https://cube.local", three: { version: "0.185.0", commit: "2431a09" }, buildId: "test", requestedCapabilities: [], byteOrder: "little" }, "t", "https://cube.local");
-if (caps.kind !== "capabilities") throw new Error("auth failed");
-const state = new MirrorState(); const payload = new Uint8Array(8); new DataView(payload.buffer).setBigUint64(0, 1n, true); state.accept(decode(encode({ type: MessageType.BeginFrame, sequence: 1n, payload }))); state.accept(decode(encode({ type: MessageType.EndFrame, sequence: 2n, payload: new Uint8Array() }))); if (state.acceptedFrame !== 1n) throw new Error("continuity failed");
-console.log("TCW-PROTOCOL_FIXTURE_PASS");
+import assert from "node:assert/strict";
+import { decode, encode, encodeFrameState, MessageType, MirrorSession, type FrameState } from "./index.js";
+const state: FrameState = { frame: 1n, simulationTime: 1 / 60, rotationX: 0.01, rotationY: 0.013, cameraZ: 3, width: 640, height: 360, resizeGeneration: 0n };
+const fixture = encode({ type: MessageType.BeginFrame, sequence: 1n, payload: encodeFrameState(state) });
+assert.equal(fixture.length, 84); assert.deepEqual([...decode(fixture).payload], [...fixture.slice(36)]);
+const bad = (mutate: (b: Uint8Array) => void): void => { const bytes = fixture.slice(); mutate(bytes); assert.throws(() => decode(bytes)); };
+bad((b) => new DataView(b.buffer).setUint32(0, 0, true)); bad((b) => new DataView(b.buffer).setUint16(4, 1, true)); bad((b) => new DataView(b.buffer).setUint16(6, 99, true)); bad((b) => new DataView(b.buffer).setUint32(8, 1, true)); bad((b) => new DataView(b.buffer).setUint32(12, 49, true)); bad((b) => { b[40]! ^= 1; }); assert.throws(() => decode(fixture.slice(0, -1)));
+const session = new MirrorSession("fixture-session"); session.accept(decode(fixture)); session.accept(decode(encode({ type: MessageType.EndFrame, sequence: 2n, payload: new Uint8Array() }))); assert.equal(session.processOne()?.frame, 1n); assert.throws(() => session.accept(decode(fixture)));
+const ack = encode({ type: MessageType.FrameAccepted, sequence: 3n, payload: new Uint8Array(40) }); assert.equal(decode(ack).type, MessageType.FrameAccepted);
+console.log("TCW-PROTO-001_PASS shared_binary_fixture=84_bytes"); console.log("TCW-PROTO-002_PASS malformed_sequence_lifecycle_quota_state");

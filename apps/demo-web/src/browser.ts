@@ -1,39 +1,15 @@
 import * as THREE from "three";
 import { WebGPURenderer } from "three/webgpu";
-import { browserFallbackStatus } from "./index.js";
+import { decode, encode, encodeFrameState, MessageType, type FrameState } from "@framebridge/protocol";
 
-const canvas = document.querySelector<HTMLCanvasElement>("#cube");
-const mode = document.querySelector<HTMLParagraphElement>("#mode");
-if (!canvas || !mode) throw new Error("demo elements missing");
-const canvasElement = canvas;
-const modeElement = mode;
-const webgpu = (navigator as Navigator & { gpu?: unknown }).gpu;
-
-async function main(): Promise<void> {
-  modeElement.textContent = `${browserFallbackStatus()} — browser-authoritative simulation frame 0`;
-  if (!webgpu) {
-    modeElement.textContent = "BROWSER_WEBGPU_UNAVAILABLE — install Chrome for Testing with WebGPU enabled";
-    return;
-  }
-  const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x080b12);
-  const camera = new THREE.PerspectiveCamera(60, canvasElement.width / canvasElement.height, 0.1, 100);
-  camera.position.z = 3;
-  const renderer = new WebGPURenderer({ canvas: canvasElement, antialias: false });
-  await renderer.init();
-  renderer.setSize(canvasElement.width, canvasElement.height, false);
-  const cube = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshBasicMaterial({ color: 0x36d6ff, wireframe: true }));
-  scene.add(cube);
-  let frame = 0;
-  function animate(): void {
-    frame++;
-    cube.rotation.x = frame * 0.01;
-    cube.rotation.y = frame * 0.013;
-    modeElement.textContent = `Browser WebGPU fallback — browser-authoritative simulation frame ${frame}`;
-    renderer.render(scene, camera);
-    requestAnimationFrame(animate);
-  }
-  animate();
-  document.querySelector("#mirror")?.addEventListener("click", () => { modeElement.textContent = "MIRROR SPIKE — NOT THREE BACKEND — runtime launch is manual developer mode"; });
-}
+const canvas = document.querySelector<HTMLCanvasElement>("#cube"); const mode = document.querySelector<HTMLElement>("#mode"); const portInput = document.querySelector<HTMLInputElement>("#port"); const tokenInput = document.querySelector<HTMLInputElement>("#token"); const button = document.querySelector<HTMLButtonElement>("#mirror"); const accepted = document.querySelector<HTMLElement>("#accepted"); const dropped = document.querySelector<HTMLElement>("#dropped");
+if (!canvas || !mode || !portInput || !tokenInput || !button || !accepted || !dropped) throw new Error("demo elements missing");
+const canvasElement = canvas; const modeElement = mode; const portElement = portInput; const tokenElement = tokenInput; const buttonElement = button; const acceptedElement = accepted; const droppedElement = dropped;
+let socket: WebSocket | undefined; let sequence = 0n; let frame = 0n; let resizeGeneration = 0n; let start = performance.now(); let renderer: WebGPURenderer | undefined; let cube: THREE.Mesh | undefined;
+const state = (): FrameState => ({ frame, simulationTime: Number(frame) / 60, rotationX: Number(frame) * 0.01, rotationY: Number(frame) * 0.013, cameraZ: 3, width: canvasElement.width, height: canvasElement.height, resizeGeneration });
+function sendState(): void { if (!socket || socket.readyState !== WebSocket.OPEN) return; const current = state(); const begin = encode({ type: MessageType.BeginFrame, sequence: ++sequence, payload: encodeFrameState(current) }); const end = encode({ type: MessageType.EndFrame, sequence: ++sequence, payload: new Uint8Array() }); socket.send(begin); socket.send(end); }
+function disconnect(): void { socket?.close(); socket = undefined; buttonElement.textContent = "Connect mirror"; modeElement.textContent = "MIRROR SPIKE — NOT THREE BACKEND — disconnected; browser simulation continues"; }
+function connect(): void { const port = Number(portElement.value); const token = tokenElement.value; if (!Number.isInteger(port) || port < 1 || port > 65535 || token.length < 48) { modeElement.textContent = "MIRROR SPIKE — NOT THREE BACKEND — invalid developer connection settings"; return; } socket = new WebSocket(`ws://127.0.0.1:${port}`); socket.binaryType = "arraybuffer"; socket.onopen = () => { socket?.send(JSON.stringify({ kind: "hello", version: 0, token, origin: location.origin, three: { version: "0.185.0", commit: "2431a09" }, buildId: "demo-web", requestedCapabilities: ["explicit-mirror"], byteOrder: "little" })); modeElement.textContent = "MIRROR SPIKE — NOT THREE BACKEND — authenticating"; }; socket.onmessage = (event) => { if (typeof event.data === "string") { modeElement.textContent = "MIRROR SPIKE — NOT THREE BACKEND — connected; binary mirror active"; buttonElement.textContent = "Disconnect mirror"; return; } const message = decode(new Uint8Array(event.data)); if (message.type === MessageType.FrameAccepted) { const v = new DataView(message.payload.buffer, message.payload.byteOffset); acceptedElement.textContent = `Native accepted logical frame: ${v.getBigUint64(8, true)}`; droppedElement.textContent = `Dropped complete frames: ${v.getUint32(24, true)}`; } }; socket.onerror = () => { modeElement.textContent = "MIRROR SPIKE — NOT THREE BACKEND — protocol error"; }; socket.onclose = () => { socket = undefined; buttonElement.textContent = "Connect mirror"; }; }
+buttonElement.addEventListener("click", () => { if (socket) disconnect(); else connect(); });
+async function main(): Promise<void> { modeElement.textContent = "MIRROR SPIKE — NOT THREE BACKEND — browser WebGPU fallback"; if (!(navigator as Navigator & { gpu?: unknown }).gpu) { modeElement.textContent = "MIRROR SPIKE — NOT THREE BACKEND — BROWSER_WEBGPU_UNAVAILABLE"; return; } const scene = new THREE.Scene(); scene.background = new THREE.Color(0x080b12); const camera = new THREE.PerspectiveCamera(60, canvasElement.width / canvasElement.height, 0.1, 100); camera.position.z = 3; renderer = new WebGPURenderer({ canvas: canvasElement, antialias: false }); await renderer.init(); renderer.setSize(canvasElement.width, canvasElement.height, false); cube = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshBasicMaterial({ color: 0x36d6ff, wireframe: true })); scene.add(cube); function animate(): void { frame = BigInt(Math.floor((performance.now() - start) * 60 / 1000)); const current = state(); cube!.rotation.x = current.rotationX; cube!.rotation.y = current.rotationY; modeElement.textContent = `MIRROR SPIKE — NOT THREE BACKEND — browser frame ${frame}`; sendState(); renderer!.render(scene, camera); requestAnimationFrame(animate); } animate(); }
 void main();
