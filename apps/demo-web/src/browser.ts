@@ -7,6 +7,10 @@ const put=(id:string,value:unknown)=>{element(id).textContent=String(value);};
 let socket:WebSocket|undefined,mirror:MirrorClient|undefined;
 let viewport:ResizeState={width:640,height:360,resizeGeneration:1n};
 const start=performance.now();let frame=1n;let protocolError="";
+// Explicit deterministic capture mode; normal browser-authoritative simulation is unchanged.
+const parityValue=new URLSearchParams(location.search).get("parity");
+const parityFrame=parityValue&&["60","120","180"].includes(parityValue)?BigInt(parityValue):undefined;
+if(parityFrame)put("mode","MIRROR SPIKE — NOT THREE BACKEND | PARITY CAPTURE: frame "+parityFrame);
 let renderer:WebGPURenderer|undefined,camera:THREE.PerspectiveCamera|undefined;
 function current(){return canonicalState(frame,viewport);}
 function fail(message:string){protocolError=message;put("error",message);put("connection","protocol-error");socket?.close(1002,"protocol validation");}
@@ -54,9 +58,9 @@ async function main(){
  const scene=new THREE.Scene();scene.background=new THREE.Color(0x080b12);
  camera=new THREE.PerspectiveCamera(60,viewport.width/viewport.height,.1,100);camera.position.z=3;
  renderer=new WebGPURenderer({canvas,antialias:false});await renderer.init();renderer.setPixelRatio(1);renderer.setSize(viewport.width,viewport.height,false);
- const cube=new THREE.Mesh(new THREE.BoxGeometry(),new THREE.MeshBasicMaterial({color:0x36d6ff,wireframe:true}));scene.add(cube);
+ const cube=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),new THREE.MeshBasicMaterial({color:0x36d6ff}));scene.add(cube);
  put("renderer","browser WebGPU fallback");
- function animate(){frame=logicalFrameAt(performance.now()-start);const s=current();cube.rotation.set(s.rotationX,s.rotationY,0);camera!.position.z=s.cameraZ;
+ function animate(){frame=parityFrame??logicalFrameAt(performance.now()-start);const s=current();cube.rotation.set(s.rotationX,s.rotationY,0);camera!.position.z=s.cameraZ;
   put("browser-frame",frame);sendFrame();renderer!.render(scene,camera!);requestAnimationFrame(animate);}
  requestAnimationFrame(animate);
 }

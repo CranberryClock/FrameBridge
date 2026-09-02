@@ -27,7 +27,7 @@ SceneState MirrorSession::DecodeScene(std::span<const std::uint8_t> p) {
               s.width <= 8192 && s.height <= 8192,
           "invalid scene state");
   Require(s.simulationTime >= 0.0 && std::isfinite(s.simulationTime) &&
-              std::isfinite(s.rotationX) && std::isfinite(s.rotationY) && std::isfinite(s.cameraZ),
+              std::isfinite(s.rotationX) && std::isfinite(s.rotationY) && std::isfinite(s.cameraZ) && s.cameraZ > 0,
           "non-finite scene state");
   return s;
 }
@@ -38,6 +38,7 @@ MirrorSession::MirrorSession(std::uint64_t sessionGeneration) : generation_(sess
 
 void MirrorSession::Accept(framebridge::protocol::Message message) {
   Require(phase_ != Phase::Closed, "session closed");
+  Require(message.objectId == 0, "scene messages require session object ID zero");
   Require(message.sequence > lastSequence_, "non-monotonic sequence");
   Require(message.type != MessageType::FrameAccepted && message.type != MessageType::Error,
           "server-only message");
@@ -86,7 +87,7 @@ void MirrorSession::Accept(framebridge::protocol::Message message) {
 
 std::optional<CompleteFrame> MirrorSession::ProcessOne() {
   if (queue_.empty()) return std::nullopt;
-  auto value = queue_.front(); queue_.pop_front(); return value;
+  auto value = queue_.front(); queue_.pop_front(); value.droppedBefore = droppedFrames_; return value;
 }
 
 std::vector<std::uint8_t> MirrorSession::EncodeFrameAccepted(const CompleteFrame& frame) const {
@@ -94,7 +95,7 @@ std::vector<std::uint8_t> MirrorSession::EncodeFrameAccepted(const CompleteFrame
   framebridge::protocol::Put64(payload, 0, generation_);
   framebridge::protocol::Put64(payload, 8, frame.state.frame);
   framebridge::protocol::Put64(payload, 16, frame.endSequence);
-  framebridge::protocol::Put32(payload, 24, static_cast<std::uint32_t>(droppedFrames_));
+  framebridge::protocol::Put32(payload, 24, static_cast<std::uint32_t>(frame.droppedBefore));
   framebridge::protocol::Put32(payload, 28, 0);
   framebridge::protocol::Put64(payload, 32, frame.state.resizeGeneration);
   return framebridge::protocol::Encode({MessageType::FrameAccepted, 0, frame.endSequence, 0, payload});

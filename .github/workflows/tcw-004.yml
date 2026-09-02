@@ -8,6 +8,8 @@ jobs:
         working-directory: ${{ github.workspace }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
       - uses: pnpm/action-setup@v4
         with:
           version: 10.14.0
@@ -20,5 +22,6 @@ jobs:
       - run: pnpm -r test
       - run: pnpm --filter @framebridge/demo-web exec vite build
       - run: cmake -S . -B out/tcw004-cpp -G "Visual Studio 17 2022" -A x64
-      - run: cmake --build out/tcw004-cpp --config Release --target framebridge-bridge-codec
-      - run: .\out\tcw004-cpp\Release\framebridge-bridge-codec.exe
+      - run: cmake --build out/tcw004-cpp --config Release
+      - run: ctest --test-dir out/tcw004-cpp -C Release --output-on-failure
+      - run: node tools/tcw005r-harness-test.mjs out/tcw004-cpp/Release/framebridge-native-mirror.exe

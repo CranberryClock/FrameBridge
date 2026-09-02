@@ -1,42 +1,115 @@
-# TCW-005 — Native Mirror Cube
+# TCW-005R — Native Mirror Cube
 
-TCW-005 is a scene-state mirror spike, not a Three.js backend. The browser
-remains authoritative and sends the accepted protocol-v0 binary scene state
-directly to the C++ loopback receiver. Node remains an oracle/test client only
-and is not in the native frame path.
+MIRROR SPIKE — NOT THREE BACKEND
 
-The native receiver owns the loopback WebSocket listener, hello authentication,
-binary validation, per-session lifecycle, bounded complete-frame queue, and
-FrameAccepted transmission. IXWebSocket v12.0.1 is pinned as a submodule for
-RFC 6455 transport handling. nlohmann/json v3.11.3 is pinned for strict hello
-parsing. The receiver uses one controlling session and a worker thread for
-complete-frame processing; the queue is capped at two and drops the oldest
-complete frame on saturation.
+The browser owns logical time, rotations, cameraZ, viewport and resize generation.
+It connects directly to the C++ receiver. Node is only a test client/oracle or the
+Vite asset server. Native presentation is a separate Win32 window.
 
-Current implementation status is partial: the direct native protocol receiver,
-semantic session queue, native-dawn capability advertisement, and TypeScript
-direct-client integration are implemented. The accepted TCW-003 Dawn/D3D12
-renderer and comparison window are not yet wired because the pinned Dawn
-checkout is not available on this machine. No native-renderer, DLSS,
-Streamline, overlay, extension, installer, or general Three.js backend claim is
-made. TCW-NATIVE-MIRROR-004/007/008/009 remain blocked or human-required until
-that dependency and the hardware render path are available.
+## Canonical scene
 
-Thread ownership:
+Three.js r185, BoxGeometry(1,1,1), solid unlit cyan #36d6ff, background #080b12,
+no lights, no MSAA, pixel ratio 1. Camera is at (0,0,cameraZ), cameraZ > 0,
+looking down -Z; FOV 60 degrees, near 0.1, far 100. Euler XYZ, z rotation zero.
+The protocol carries f32 X/Y rotations and cameraZ, f64 simulation time, u64
+logical frame and resize generation. Both sides use those decoded values.
+The native renderer never derives rotations from a clock or frame number.
 
-| Item | Owner |
-| --- | --- |
-| WebSocket socket callbacks | IXWebSocket connection thread |
-| session and protocol state | receiver mutex, network callback |
-| complete-frame queue | receiver mutex, network and processing worker |
-| native processing/ack | processing worker |
-| Dawn device/surface/swapchain | reserved for render worker integration |
+Matrices are column-major, column vectors, right handed. Model = Rx * Ry * Rz;
+MVP = projection * view * model. WebGPU/D3D12 clip depth is [0,1].
+The independent oracle uses actual Three Matrix4, Euler, PerspectiveCamera with
+WebGPUCoordinateSystem, and Vector3.applyMatrix4. Native double matrices and
+all eight projected corners must match within absolute 1e-12. Float uniform
+projection must match within 2e-6 (rounding of f32 multiply/add and division).
+Fixtures cover frames 60/120/180 at both 640x360 and 800x450.
 
-Clean build requires initialized submodules:
+The extracted TCW-003 library retains its legacy colored 90-degree-FOV capture
+entry point. Its device, pipeline, shared texture, fence and capture machinery
+are shared with the canonical renderer. The old colored cube is not the parity
+reference. Native PNG readback is optional evidence capture only; presentation
+always copies on the GPU to a same-device DXGI flip-discard swapchain.
 
-```powershell
+## Device and synchronization
+
+Dawn pin: 34b1fca4d6c3d7025a2231d82b4fc719ca57fd71.
+Select TCW-002 NVIDIA vendor 0x10de/device 0x27e0 through DXGI, request that exact
+current LUID from Dawn, compare the extracted D3D12 device LUID and queue COM
+identity. LUIDs can change after reboot; a historical LUID is not portable.
+Dawn Full validation and D3D12 debug/InfoQueue are required, with every attributable
+warning/error failing rendering. Device loss also fails. GPU waits time out after
+10 seconds. The Windows SDK FXC DLL is copied to the ignored executable directory.
+
+Every new imported color texture starts initialized=false; BeginAccess uses that
+state; only successful EndAccess makes it true. EndAccess flushes Dawn, followed
+by an explicit same-queue fence/wait. Native copies to the swapchain, presents,
+waits before allocator reuse, checks validation, then permits an ACK.
+
+READY and native-dawn capabilities require successful device, target and window
+initialization. Default startup without Dawn fails. Explicit --test-protocol-only
+has backend=test-harness. --test-init-failure and --test-render-failure are
+controlled negative test hooks and always fail the relevant gate.
+
+## Ownership and limits
+
+IXWebSocket v12.0.1 and nlohmann/json v3.11.3 remain pinned submodules.
+Network callbacks validate and assemble complete frames under a short mutex.
+The process main thread owns Win32 message pumping and all Dawn/D3D12 resources.
+It dequeues under the mutex, releases it, renders/presents and sends the ACK.
+All send/close calls occur outside that mutex. Shared client ownership protects
+in-flight work, an atomic active bit suppresses obsolete session acknowledgements,
+and weak callback captures avoid socket cycles. IX joins all network threads on
+stop; there are no detached or blocking stdin threads.
+
+The queue holds at most two complete frames, dropping the oldest unprocessed
+frame on saturation. The cumulative drop count is frozen when a frame is dequeued;
+drops of later frames during rendering must appear only in a later ACK. Frames
+already in flight are neither queued nor dropped. ACK correlation is per session.
+
+At most four transport connections can wait for authentication; only one controls
+the scene. Exact launch-configured Origin is checked in both HTTP and hello.
+Hello deadline is five seconds. Hello is at most 8 KiB, binary at most 1 MiB+36.
+The reviewed build-tree quota patch in third_party/ixwebsocket-limits.cmake checks
+advertised frame and accumulated fragment sizes before receive-buffer growth,
+and bounds fragments at 256; its upstream source SHA is verified before patching.
+No upstream source is rewritten. CreateBuffer, DestroyResource and Draw are
+reserved and rejected. No arbitrary resources are allocated by protocol messages.
+Checksum detects corruption, not authentication.
+
+Disconnect ends the controlling session and clears its queue; the window remains
+available for reconnect. Closing the native window, pressing Enter in its console,
+or Ctrl+C ends the process, closes clients and joins transport threads. The browser
+continues its own simulation after disconnect or native exit.
+
+## Build and validation
+
+From a VS 2022 machine with MSVC 14.44 and SDK 10.0.26100, Python and Go:
+
+~~~powershell
 git submodule update --init --recursive
-$cmake = 'C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe'
-& $cmake -S . -B build/tcw005 -G 'Visual Studio 17 2022' -A x64 -DUSE_ZLIB=OFF -DUSE_TLS=OFF -DIXWEBSOCKET_INSTALL=OFF
-& $cmake --build build/tcw005 --config Release
-```
+./tools/bootstrap-dawn.ps1
+. ./tools/msvc-env.ps1
+cmake -S . -B build/tcw005r -G Ninja -DCMAKE_BUILD_TYPE=Release -DDAWN_ROOT=.local/dawn
+cmake --build build/tcw005r --parallel 8
+ctest --test-dir build/tcw005r --output-on-failure
+corepack pnpm install --frozen-lockfile
+corepack pnpm build
+corepack pnpm test
+corepack pnpm --filter @framebridge/demo-web exec vite build
+node tools/tcw005r-parity-oracle.mjs
+node tools/tcw005r-integration.mjs build/tcw005r/framebridge-native-mirror.exe
+node tools/tcw005r-browser.mjs build/tcw005r/framebridge-native-mirror.exe
+node tools/tcw005r-stability.mjs build/tcw005r/framebridge-native-mirror.exe 600
+~~~
+
+Bootstrap accepts -DawnRoot, -Python and -GoBin for existing caches. -SkipFetch
+reuses already fetched dependencies. It verifies the pin and preserves dirty or
+mismatched checkouts by refusing to overwrite them. Configure never fetches Dawn.
+FRAMEBRIDGE_CHROME points browser tests at an installed Chrome executable.
+The stability run requires a committed clean tracked source checkout. Its bounds
+are 512 MiB peak working/private memory and 64 MiB private growth after warmup.
+Short CI builds run codec/session/parity and protocol-only transport tests without
+requiring NVIDIA hardware. The hardware acceptance run is recorded separately.
+
+See artifacts/tcw-005/manifest.json for measured results and human-browser-steps.md
+for the final simultaneous-window visual review. No TCW-006, DLSS, Streamline,
+overlay, extension, installer or general Three backend is included.

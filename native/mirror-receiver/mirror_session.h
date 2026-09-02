@@ -20,7 +20,7 @@ struct SceneState {
   std::uint64_t resizeGeneration = 0;
 };
 
-struct CompleteFrame { SceneState state; std::uint64_t endSequence = 0; };
+struct CompleteFrame { SceneState state; std::uint64_t endSequence = 0; std::uint64_t droppedBefore = 0; };
 
 class MirrorSession {
  public:

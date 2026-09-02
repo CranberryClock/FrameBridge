@@ -20,7 +20,10 @@ int main() {
     std::vector<std::uint8_t> resize(16); protocol::Put32(resize,0,640); protocol::Put32(resize,4,360); protocol::Put64(resize,8,1); q.Accept(protocol::Decode(protocol::Encode({protocol::MessageType::Resize,0,++seq,0,resize})));
     for (std::uint64_t frame=1; frame<=4; ++frame) { q.Accept(protocol::Decode(protocol::Encode({protocol::MessageType::BeginFrame,0,++seq,0,Scene(frame)}))); q.Accept(protocol::Decode(protocol::Encode({protocol::MessageType::EndFrame,0,++seq,0,Empty()}))); }
     Check(q.queuedFrames()==2 && q.droppedFrames()==2,"queue/drop policy"); auto first=q.ProcessOne(); Check(first && first->state.frame==3,"oldest-drop frame"); auto ack=q.EncodeFrameAccepted(*first); Check(protocol::Decode(ack).type==protocol::MessageType::FrameAccepted,"ack type");
+    for(uint64_t frame=5;frame<=10;++frame) { q.Accept(protocol::Decode(protocol::Encode({protocol::MessageType::BeginFrame,0,++seq,0,Scene(frame)}))); q.Accept(protocol::Decode(protocol::Encode({protocol::MessageType::EndFrame,0,++seq,0,Empty()}))); }
+    auto lateAck=q.EncodeFrameAccepted(*first);
+    Check(protocol::Get32(protocol::Decode(lateAck).payload,24)==2 && q.droppedFrames()>2,"in-flight ACK must exclude later drops");
     bool rejected=false; try { q.Accept(protocol::Decode(protocol::Encode({protocol::MessageType::Draw,0,++seq,0,std::vector<std::uint8_t>(16)}))); } catch (...) { rejected=true; } Check(rejected,"reserved Draw accepted");
-    std::cout<<"PASS native_session queue=2 drops=2 ack=PASS reserved_rejection=PASS\n"; return 0;
+    std::cout<<"PASS native_session checks=5 queue=2 drop_snapshot=PASS ack=PASS reserved_rejection=PASS\n"; return 0;
   } catch (const std::exception& e) { std::cerr<<"FAIL "<<e.what()<<'\n'; return 1; }
 }
