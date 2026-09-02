@@ -1,0 +1,5 @@
+SOAK_PROGRESS {"elapsed_seconds":10.004629499999998,"pre_gc_heap_bytes":7504280,"heap_used_bytes":6986896,"rss_bytes":48214016,"gc_forced":true,"attempted_frames":601,"sent_frames":601,"acknowledged_frames":600}
+SOAK_PROGRESS {"elapsed_seconds":20.003125400000002,"pre_gc_heap_bytes":7932368,"heap_used_bytes":7159032,"rss_bytes":49111040,"gc_forced":true,"attempted_frames":1201,"sent_frames":1201,"acknowledged_frames":1200}
+SOAK_PROGRESS {"elapsed_seconds":30.140094,"pre_gc_heap_bytes":8244568,"heap_used_bytes":7219376,"rss_bytes":49704960,"gc_forced":true,"attempted_frames":1804,"sent_frames":1804,"acknowledged_frames":1800}
+SOAK_PROGRESS {"elapsed_seconds":40.0053249,"pre_gc_heap_bytes":7404920,"heap_used_bytes":7285480,"rss_bytes":49860608,"gc_forced":true,"attempted_frames":2396,"sent_frames":2396,"acknowledged_frames":2395}
+SOAK_PROGRESS {"elapsed_seconds":50.006862500000004,"pre_gc_heap_bytes":7632864,"heap_used_bytes":7406752,"rss_bytes":49786880,"gc_forced":true,"attempted_frames":2996,"sent_frames":2996,"acknowledged_frames":2995}

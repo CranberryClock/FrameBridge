@@ -1,0 +1,11 @@
+SOAK_PROGRESS {"elapsed_seconds":10.008386100000001,"pre_gc_heap_bytes":7475224,"heap_used_bytes":6995536,"rss_bytes":46043136,"gc_forced":true,"attempted_frames":601,"sent_frames":601,"acknowledged_frames":600}
+SOAK_PROGRESS {"elapsed_seconds":20.0080208,"pre_gc_heap_bytes":7800064,"heap_used_bytes":7154760,"rss_bytes":46882816,"gc_forced":true,"attempted_frames":1201,"sent_frames":1201,"acknowledged_frames":1200}
+SOAK_PROGRESS {"elapsed_seconds":30.0042851,"pre_gc_heap_bytes":8023864,"heap_used_bytes":7269224,"rss_bytes":47554560,"gc_forced":true,"attempted_frames":1801,"sent_frames":1801,"acknowledged_frames":1800}
+SOAK_PROGRESS {"elapsed_seconds":40.0108477,"pre_gc_heap_bytes":7637856,"heap_used_bytes":7307000,"rss_bytes":47456256,"gc_forced":true,"attempted_frames":2401,"sent_frames":2401,"acknowledged_frames":2400}
+SOAK_PROGRESS {"elapsed_seconds":50.0081975,"pre_gc_heap_bytes":7731232,"heap_used_bytes":7352968,"rss_bytes":47493120,"gc_forced":true,"attempted_frames":3001,"sent_frames":3001,"acknowledged_frames":3000}
+SOAK_PROGRESS {"elapsed_seconds":60.1365678,"pre_gc_heap_bytes":7953784,"heap_used_bytes":7332528,"rss_bytes":48164864,"gc_forced":true,"attempted_frames":3604,"sent_frames":3604,"acknowledged_frames":3600}
+SOAK_PROGRESS {"elapsed_seconds":70.00540269999999,"pre_gc_heap_bytes":7573728,"heap_used_bytes":7377256,"rss_bytes":47751168,"gc_forced":true,"attempted_frames":4196,"sent_frames":4196,"acknowledged_frames":4195}
+SOAK_PROGRESS {"elapsed_seconds":80.0071469,"pre_gc_heap_bytes":8282672,"heap_used_bytes":7440336,"rss_bytes":47968256,"gc_forced":true,"attempted_frames":4796,"sent_frames":4796,"acknowledged_frames":4795}
+SOAK_PROGRESS {"elapsed_seconds":90.0043381,"pre_gc_heap_bytes":8411368,"heap_used_bytes":7528568,"rss_bytes":47792128,"gc_forced":true,"attempted_frames":5396,"sent_frames":5396,"acknowledged_frames":5395}
+SOAK_PROGRESS {"elapsed_seconds":100.0069668,"pre_gc_heap_bytes":7878064,"heap_used_bytes":7540872,"rss_bytes":47820800,"gc_forced":true,"attempted_frames":5996,"sent_frames":5996,"acknowledged_frames":5995}
+SOAK_PROGRESS {"elapsed_seconds":110.0067897,"pre_gc_heap_bytes":7779336,"heap_used_bytes":7553920,"rss_bytes":47869952,"gc_forced":true,"attempted_frames":6596,"sent_frames":6596,"acknowledged_frames":6595}

@@ -1,0 +1,9 @@
+MSBuild version 17.14.51+25f168cee for .NET Framework
+
+  1>Checking Build System
+  Building Custom Rule D:/FrameBridge/out/tcw004-clean-final/CMakeLists.txt
+  Scanning sources for module dependencies...
+  codec_test.cpp
+  Compiling...
+  codec_test.cpp
+  framebridge-bridge-codec.vcxproj -> D:\FrameBridge\out\tcw004-clean-final\out\tcw004-validation\Release\framebridge-bridge-codec.exe

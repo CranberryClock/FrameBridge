@@ -1,0 +1,1 @@
+CPP_CODEC_OK valid=12 malformed=11 encoder_rejections=6 json_files=2

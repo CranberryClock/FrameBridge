@@ -1,0 +1,2 @@
+# Generated evidence hashes describe exact bytes; never convert its line endings.
+artifacts/tcw-004/** -text whitespace=cr-at-eol

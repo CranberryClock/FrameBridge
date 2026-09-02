@@ -1,18 +1,2164 @@
 {
   "task": "TCW-004",
-  "reviewed_base": "97a5367155d5f580e863561322eab712bd2ddb32",
-  "status": "FINAL_REWORK_VALIDATING",
-  "scope_boundary": "Node WebSocket test/developer infrastructure; no native socket listener or native Three backend claim",
-  "previous_soak": "STALE_INVALID: reconstructed fields and missing raw samples; see Git history only",
+  "status": "SUPERVISOR_REVIEW_HUMAN_REQUIRED",
+  "implementation_commit": "172fc2bff20a1a9f43e309cf7fefc6e3ca6c36ba",
   "gates": {
-    "TCW-BUILD-001": "PENDING clean checkout validation of final commit",
-    "TCW-PROTO-001": "PASS locally: 12 independent canonical fixtures in both languages",
-    "TCW-PROTO-002": "PASS locally: exhaustive short matrix",
+    "TCW-BUILD-001": "PASS",
+    "TCW-PROTO-001": "PASS",
+    "TCW-PROTO-002": "PASS",
     "TCW-PROTO-003": "HUMAN_REQUIRED",
-    "TCW-PROTO-004": "PENDING committed implementation acceptance run",
+    "TCW-PROTO-004": "PASS",
     "TCW-CONT-001": "HUMAN_REQUIRED"
   },
-  "test_counts": {"protocol": 74, "loopback": 15, "demo_identity": 3, "cpp_valid": 12, "cpp_malformed": 11, "cpp_encoder_rejections": 6},
-  "human_checklist": "human-browser-steps.md",
-  "evidence_policy": "Generated evidence will be committed separately after exact-commit validation. Raw run records are immutable."
+  "scope_boundary": "Node loopback test/developer infrastructure; browser WebGPU renderer; no native socket or renderer claim",
+  "stale_evidence": "Prior real-soak.json invalidated; retained in Git history only",
+  "fixture_counts": {
+    "valid_binary": 12,
+    "malformed_binary": 11,
+    "json": 2
+  },
+  "test_results": [
+    {
+      "suite": "protocol",
+      "status": "PASS",
+      "tests": 74,
+      "categories": {
+        "encoder-rejections": 6,
+        "fixtures": 13,
+        "malformed": 11,
+        "session": 22,
+        "json": 1,
+        "scheduling": 4,
+        "acknowledgements": 8,
+        "capabilities": 8,
+        "resize": 1
+      },
+      "valid_binary": 12,
+      "malformed_binary": 11
+    },
+    {
+      "suite": "loopback",
+      "status": "PASS",
+      "tests": 15,
+      "categories": {
+        "authentication": 7,
+        "transport-rejection": 6,
+        "continuity": 1,
+        "backpressure": 1
+      },
+      "browser_gates": "HUMAN_REQUIRED"
+    }
+  ],
+  "cpp_output": "CPP_CODEC_OK valid=12 malformed=11 encoder_rejections=6 json_files=2\r\n",
+  "validation": {
+    "path": "validation\\clean-172fc2bff20a",
+    "status": "PASS",
+    "implementation_commit": "172fc2bff20a1a9f43e309cf7fefc6e3ca6c36ba",
+    "clean_install": true,
+    "node": "v22.18.0",
+    "commands": [
+      {
+        "name": "frozen-install",
+        "executable": "cmd.exe",
+        "args": [
+          "/d",
+          "/c",
+          "corepack pnpm install --frozen-lockfile"
+        ],
+        "working_directory": "D:\\FrameBridge\\out\\tcw004-clean-final",
+        "exit_code": 0,
+        "expected_exit": 0,
+        "output": "frozen-install.txt"
+      },
+      {
+        "name": "typescript-build",
+        "executable": "cmd.exe",
+        "args": [
+          "/d",
+          "/c",
+          "corepack pnpm -r build"
+        ],
+        "working_directory": "D:\\FrameBridge\\out\\tcw004-clean-final",
+        "exit_code": 0,
+        "expected_exit": 0,
+        "output": "typescript-build.txt"
+      },
+      {
+        "name": "typescript-tests",
+        "executable": "cmd.exe",
+        "args": [
+          "/d",
+          "/c",
+          "corepack pnpm -r test"
+        ],
+        "working_directory": "D:\\FrameBridge\\out\\tcw004-clean-final",
+        "exit_code": 0,
+        "expected_exit": 0,
+        "output": "typescript-tests.txt"
+      },
+      {
+        "name": "vite-build",
+        "executable": "cmd.exe",
+        "args": [
+          "/d",
+          "/c",
+          "corepack pnpm --filter @framebridge/demo-web exec vite build"
+        ],
+        "working_directory": "D:\\FrameBridge\\out\\tcw004-clean-final",
+        "exit_code": 0,
+        "expected_exit": 0,
+        "output": "vite-build.txt"
+      },
+      {
+        "name": "native-configure",
+        "executable": "C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/bin/cmake.exe",
+        "args": [
+          "-S",
+          ".",
+          "-B",
+          "out/tcw004-validation",
+          "-G",
+          "Visual Studio 17 2022",
+          "-A",
+          "x64"
+        ],
+        "working_directory": "D:\\FrameBridge\\out\\tcw004-clean-final",
+        "exit_code": 0,
+        "expected_exit": 0,
+        "output": "native-configure.txt"
+      },
+      {
+        "name": "native-build",
+        "executable": "C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/bin/cmake.exe",
+        "args": [
+          "--build",
+          "out/tcw004-validation",
+          "--config",
+          "Release",
+          "--target",
+          "framebridge-bridge-codec"
+        ],
+        "working_directory": "D:\\FrameBridge\\out\\tcw004-clean-final",
+        "exit_code": 0,
+        "expected_exit": 0,
+        "output": "native-build.txt"
+      },
+      {
+        "name": "native-execute",
+        "executable": "D:\\FrameBridge\\out\\tcw004-clean-final\\out\\tcw004-validation\\Release\\framebridge-bridge-codec.exe",
+        "args": [],
+        "working_directory": "D:\\FrameBridge\\out\\tcw004-clean-final",
+        "exit_code": 0,
+        "expected_exit": 0,
+        "output": "native-execute.txt"
+      },
+      {
+        "name": "native-missing-fixture",
+        "executable": "D:\\FrameBridge\\out\\tcw004-clean-final\\out\\tcw004-validation\\Release\\framebridge-bridge-codec.exe",
+        "args": [
+          "packages/protocol/fixtures/does-not-exist"
+        ],
+        "working_directory": "D:\\FrameBridge\\out\\tcw004-clean-final",
+        "exit_code": 1,
+        "expected_exit": 1,
+        "output": "native-missing-fixture.txt"
+      }
+    ]
+  },
+  "diagnostics": [
+    {
+      "path": "runs/diagnostic-2026-09-02T14-45-04-215Z-oyf7UO/result.json",
+      "status": "PASS",
+      "process_exit_code": 0,
+      "elapsed_seconds": 60.018196499999995,
+      "average_attempted_hz": 59.915162562407225
+    },
+    {
+      "path": "runs/diagnostic-2026-09-02T14-46-04-668Z-ftV34c/result.json",
+      "status": "PASS",
+      "process_exit_code": 0,
+      "elapsed_seconds": 60.0102396,
+      "average_attempted_hz": 59.93977067873597
+    }
+  ],
+  "acceptance": {
+    "path": "runs/acceptance-2026-09-02T14-47-18-590Z-fveQIb/result.json",
+    "task": "TCW-004",
+    "mode": "acceptance",
+    "implementation_commit": "172fc2bff20a1a9f43e309cf7fefc6e3ca6c36ba",
+    "implementation_dirty": false,
+    "source_and_runtime_sha256": {
+      "tools/tcw004-soak.mjs": "a1450f95413adb3c70154db8ed081159a1f96e942401347ee1756bcf2c51b0d3",
+      "packages/protocol/src/bridge.test.ts": "b586144e2cb24c876f95f3bc262f483884061fb5bc7520fa66dd53ee3de112e3",
+      "packages/protocol/src/client.ts": "58bf154f75424ba6e70e7a5b7fbcc627b853cf63f0a38635b265752674c789df",
+      "packages/protocol/src/index.ts": "7f6ab738f3fe51fff7ad0be4493b8da142d29e34057d5ed613bab2ee03068999",
+      "packages/protocol/src/launch.ts": "7dbf53dafbefd0bc4b8fa4311a36808aa9ff470ce59f8f4b22a215ef64560a16",
+      "packages/protocol/src/protocol.test.ts": "1fd0cc2d41409f143ae43f9bb3625123d4ccaf9e195bfcdd549d233251273e9c",
+      "packages/protocol/src/server.ts": "7dfaebb11d84491ec892cfc63129edea442b28e25141d39be0528c454d78df5c",
+      "packages/protocol/src/transport-client.ts": "d467697672e73ed8ebd5d060de576c75c47fe8d465e1c92ce53e9ee04caaf81f",
+      "pnpm-lock.yaml": "f0ed97ebcc2818df60b9280b9db20646e57a54ccc7e7775ae732ecd09c57af83",
+      "package.json": "1e166eb257f720b414735f9138e403b225cc8b30f8774bad440e44a512f020d0",
+      "packages/protocol/package.json": "8ffd3237ce6ca6a9b12e44479dc32b725db8d33a98984c3f4e5b9181afdd842e",
+      "packages/protocol/dist/bridge.test.js": "e9df3cd711a7961a8d8be4276e67a1c544f33cc79735819e6de3ed6d555ef88b",
+      "packages/protocol/dist/client.js": "88caf4d108466282622ad2999e965a13a0509bde753208b5d12a3f2fd633f6d4",
+      "packages/protocol/dist/index.js": "b5e05a921d513a75c9af2b3a805c4297d2aad5c7b59eb7a2786d54d928b8cc66",
+      "packages/protocol/dist/launch.js": "62362e9bb3d918f31cf12a42a7171f4405bcbeb84237293e8c58cc7a1cc8f7ef",
+      "packages/protocol/dist/protocol.test.js": "95b6add43e5860fc6fbc4e853fc6928affd6eb547e991ca7fdf28846c2b0803d",
+      "packages/protocol/dist/server.js": "d2e32308e24529eabb28ba1895de22e14683dcbe73f34c7e7781ec8323bbf735",
+      "packages/protocol/dist/transport-client.js": "76120ebdf9fc416a779eaa8ba3dd5c6af3c280cf9845c1cd50ad7c0ee0269be2"
+    },
+    "hashes_unchanged": true,
+    "node": "v22.18.0",
+    "pnpm": "10.14.0",
+    "platform": "win32",
+    "architecture": "x64",
+    "inputs": {
+      "duration_seconds": 1800,
+      "target_hz": 60,
+      "minimum_attempted_hz": 59,
+      "minimum_ack_ratio": 0.99,
+      "max_catch_up": 4,
+      "reconnect_at_seconds": 900,
+      "reconnect_pause_ms": 100,
+      "resize_interval_seconds": 5,
+      "sample_interval_seconds": 10,
+      "heap_limit_bytes": 134217728,
+      "rss_limit_bytes": 268435456,
+      "heap_growth_limit_bytes": 33554432,
+      "rss_growth_limit_bytes": 67108864,
+      "max_trend_bytes_per_minute": 1048576,
+      "memory_warmup_seconds": 60,
+      "force_gc_at_samples": true,
+      "rss_max_trend_bytes_per_minute": 1048576
+    },
+    "command": "node tools/tcw004-soak.mjs",
+    "working_directory": "D:\\FrameBridge",
+    "duration_environment": "1800",
+    "process_exit_code": 0,
+    "start_time": "2026-09-02T14:47:18.667Z",
+    "end_time": "2026-09-02T15:17:18.693Z",
+    "elapsed_seconds": 1800.0237294,
+    "target_logical_frames": 108000,
+    "attempted_frames": 107995,
+    "sent_frames": 107995,
+    "eligible_sent_frames": 107995,
+    "acknowledged_frames": 107995,
+    "dropped_frames": 0,
+    "outstanding_frames": 0,
+    "skipped_logical_frames": 5,
+    "invalid_acknowledgements": 0,
+    "reconnects": 1,
+    "reconnect_downtime_ms": 126.02879999997094,
+    "reconnect_generation": "2",
+    "first_post_reconnect_sent_frame": "54006",
+    "first_post_reconnect_acknowledged_frame": "54006",
+    "first_post_reconnect_ack_generation": "2",
+    "resize_generations": 361,
+    "protocol_errors": 0,
+    "unexpected_closes": 0,
+    "final_authoritative_frame": "108000",
+    "final_acknowledged_frame": "108000",
+    "final_authoritative_resize": "361",
+    "final_acknowledged_resize": "361",
+    "memory_samples": [
+      {
+        "elapsed_seconds": 0.022799700000000003,
+        "pre_gc_heap_bytes": 7566408,
+        "heap_used_bytes": 6656368,
+        "rss_bytes": 47648768,
+        "gc_forced": true,
+        "attempted_frames": 0,
+        "sent_frames": 0,
+        "acknowledged_frames": 0
+      },
+      {
+        "elapsed_seconds": 10.0060945,
+        "pre_gc_heap_bytes": 7470800,
+        "heap_used_bytes": 6996104,
+        "rss_bytes": 48128000,
+        "gc_forced": true,
+        "attempted_frames": 601,
+        "sent_frames": 601,
+        "acknowledged_frames": 600
+      },
+      {
+        "elapsed_seconds": 20.0036841,
+        "pre_gc_heap_bytes": 7620824,
+        "heap_used_bytes": 7148352,
+        "rss_bytes": 48885760,
+        "gc_forced": true,
+        "attempted_frames": 1201,
+        "sent_frames": 1201,
+        "acknowledged_frames": 1200
+      },
+      {
+        "elapsed_seconds": 30.007276100000002,
+        "pre_gc_heap_bytes": 7802904,
+        "heap_used_bytes": 7275784,
+        "rss_bytes": 49397760,
+        "gc_forced": true,
+        "attempted_frames": 1801,
+        "sent_frames": 1801,
+        "acknowledged_frames": 1800
+      },
+      {
+        "elapsed_seconds": 40.0068171,
+        "pre_gc_heap_bytes": 8226056,
+        "heap_used_bytes": 7311208,
+        "rss_bytes": 49438720,
+        "gc_forced": true,
+        "attempted_frames": 2401,
+        "sent_frames": 2401,
+        "acknowledged_frames": 2400
+      },
+      {
+        "elapsed_seconds": 50.006814,
+        "pre_gc_heap_bytes": 8191112,
+        "heap_used_bytes": 7322808,
+        "rss_bytes": 49631232,
+        "gc_forced": true,
+        "attempted_frames": 3001,
+        "sent_frames": 3001,
+        "acknowledged_frames": 3000
+      },
+      {
+        "elapsed_seconds": 60.0123514,
+        "pre_gc_heap_bytes": 8268528,
+        "heap_used_bytes": 7471824,
+        "rss_bytes": 49917952,
+        "gc_forced": true,
+        "attempted_frames": 3601,
+        "sent_frames": 3601,
+        "acknowledged_frames": 3600
+      },
+      {
+        "elapsed_seconds": 70.0031568,
+        "pre_gc_heap_bytes": 8073344,
+        "heap_used_bytes": 7462064,
+        "rss_bytes": 49803264,
+        "gc_forced": true,
+        "attempted_frames": 4201,
+        "sent_frames": 4201,
+        "acknowledged_frames": 4200
+      },
+      {
+        "elapsed_seconds": 80.00475870000001,
+        "pre_gc_heap_bytes": 8326160,
+        "heap_used_bytes": 7458272,
+        "rss_bytes": 49795072,
+        "gc_forced": true,
+        "attempted_frames": 4801,
+        "sent_frames": 4801,
+        "acknowledged_frames": 4800
+      },
+      {
+        "elapsed_seconds": 90.0126584,
+        "pre_gc_heap_bytes": 7748784,
+        "heap_used_bytes": 7475536,
+        "rss_bytes": 49999872,
+        "gc_forced": true,
+        "attempted_frames": 5401,
+        "sent_frames": 5401,
+        "acknowledged_frames": 5400
+      },
+      {
+        "elapsed_seconds": 100.0027059,
+        "pre_gc_heap_bytes": 8381616,
+        "heap_used_bytes": 7487952,
+        "rss_bytes": 50085888,
+        "gc_forced": true,
+        "attempted_frames": 6001,
+        "sent_frames": 6001,
+        "acknowledged_frames": 6000
+      },
+      {
+        "elapsed_seconds": 110.0124289,
+        "pre_gc_heap_bytes": 8242312,
+        "heap_used_bytes": 7490936,
+        "rss_bytes": 50032640,
+        "gc_forced": true,
+        "attempted_frames": 6601,
+        "sent_frames": 6601,
+        "acknowledged_frames": 6600
+      },
+      {
+        "elapsed_seconds": 120.0021896,
+        "pre_gc_heap_bytes": 7695344,
+        "heap_used_bytes": 7490280,
+        "rss_bytes": 49913856,
+        "gc_forced": true,
+        "attempted_frames": 7201,
+        "sent_frames": 7201,
+        "acknowledged_frames": 7200
+      },
+      {
+        "elapsed_seconds": 130.0037915,
+        "pre_gc_heap_bytes": 8348824,
+        "heap_used_bytes": 7494848,
+        "rss_bytes": 49983488,
+        "gc_forced": true,
+        "attempted_frames": 7801,
+        "sent_frames": 7801,
+        "acknowledged_frames": 7800
+      },
+      {
+        "elapsed_seconds": 140.00210979999997,
+        "pre_gc_heap_bytes": 8297208,
+        "heap_used_bytes": 7488320,
+        "rss_bytes": 49930240,
+        "gc_forced": true,
+        "attempted_frames": 8401,
+        "sent_frames": 8401,
+        "acknowledged_frames": 8400
+      },
+      {
+        "elapsed_seconds": 150.0160306,
+        "pre_gc_heap_bytes": 8431800,
+        "heap_used_bytes": 7496936,
+        "rss_bytes": 50036736,
+        "gc_forced": true,
+        "attempted_frames": 9001,
+        "sent_frames": 9001,
+        "acknowledged_frames": 9000
+      },
+      {
+        "elapsed_seconds": 160.00749599999997,
+        "pre_gc_heap_bytes": 8027128,
+        "heap_used_bytes": 7492832,
+        "rss_bytes": 49950720,
+        "gc_forced": true,
+        "attempted_frames": 9601,
+        "sent_frames": 9601,
+        "acknowledged_frames": 9600
+      },
+      {
+        "elapsed_seconds": 170.0083733,
+        "pre_gc_heap_bytes": 7988112,
+        "heap_used_bytes": 7495136,
+        "rss_bytes": 50036736,
+        "gc_forced": true,
+        "attempted_frames": 10201,
+        "sent_frames": 10201,
+        "acknowledged_frames": 10200
+      },
+      {
+        "elapsed_seconds": 180.01104279999998,
+        "pre_gc_heap_bytes": 8183760,
+        "heap_used_bytes": 7494592,
+        "rss_bytes": 49922048,
+        "gc_forced": true,
+        "attempted_frames": 10801,
+        "sent_frames": 10801,
+        "acknowledged_frames": 10800
+      },
+      {
+        "elapsed_seconds": 190.0127559,
+        "pre_gc_heap_bytes": 8220144,
+        "heap_used_bytes": 7499160,
+        "rss_bytes": 49979392,
+        "gc_forced": true,
+        "attempted_frames": 11401,
+        "sent_frames": 11401,
+        "acknowledged_frames": 11400
+      },
+      {
+        "elapsed_seconds": 200.01546869999999,
+        "pre_gc_heap_bytes": 8231288,
+        "heap_used_bytes": 7493496,
+        "rss_bytes": 49930240,
+        "gc_forced": true,
+        "attempted_frames": 12001,
+        "sent_frames": 12001,
+        "acknowledged_frames": 12000
+      },
+      {
+        "elapsed_seconds": 210.01088719999998,
+        "pre_gc_heap_bytes": 7681168,
+        "heap_used_bytes": 7506648,
+        "rss_bytes": 49946624,
+        "gc_forced": true,
+        "attempted_frames": 12601,
+        "sent_frames": 12601,
+        "acknowledged_frames": 12600
+      },
+      {
+        "elapsed_seconds": 220.012503,
+        "pre_gc_heap_bytes": 8261760,
+        "heap_used_bytes": 7502384,
+        "rss_bytes": 49963008,
+        "gc_forced": true,
+        "attempted_frames": 13201,
+        "sent_frames": 13201,
+        "acknowledged_frames": 13200
+      },
+      {
+        "elapsed_seconds": 230.00738869999998,
+        "pre_gc_heap_bytes": 8227912,
+        "heap_used_bytes": 7505552,
+        "rss_bytes": 50085888,
+        "gc_forced": true,
+        "attempted_frames": 13801,
+        "sent_frames": 13801,
+        "acknowledged_frames": 13800
+      },
+      {
+        "elapsed_seconds": 240.0064826,
+        "pre_gc_heap_bytes": 8454472,
+        "heap_used_bytes": 7503552,
+        "rss_bytes": 50008064,
+        "gc_forced": true,
+        "attempted_frames": 14401,
+        "sent_frames": 14401,
+        "acknowledged_frames": 14400
+      },
+      {
+        "elapsed_seconds": 250.00214129999998,
+        "pre_gc_heap_bytes": 8255224,
+        "heap_used_bytes": 7508120,
+        "rss_bytes": 49983488,
+        "gc_forced": true,
+        "attempted_frames": 15001,
+        "sent_frames": 15001,
+        "acknowledged_frames": 15000
+      },
+      {
+        "elapsed_seconds": 260.0099108,
+        "pre_gc_heap_bytes": 8423632,
+        "heap_used_bytes": 7501592,
+        "rss_bytes": 49897472,
+        "gc_forced": true,
+        "attempted_frames": 15601,
+        "sent_frames": 15601,
+        "acknowledged_frames": 15600
+      },
+      {
+        "elapsed_seconds": 270.0154058,
+        "pre_gc_heap_bytes": 8436608,
+        "heap_used_bytes": 7508472,
+        "rss_bytes": 50139136,
+        "gc_forced": true,
+        "attempted_frames": 16201,
+        "sent_frames": 16201,
+        "acknowledged_frames": 16200
+      },
+      {
+        "elapsed_seconds": 280.0098956,
+        "pre_gc_heap_bytes": 8225048,
+        "heap_used_bytes": 7504480,
+        "rss_bytes": 49864704,
+        "gc_forced": true,
+        "attempted_frames": 16801,
+        "sent_frames": 16801,
+        "acknowledged_frames": 16800
+      },
+      {
+        "elapsed_seconds": 290.00483399999996,
+        "pre_gc_heap_bytes": 8257184,
+        "heap_used_bytes": 7506784,
+        "rss_bytes": 49881088,
+        "gc_forced": true,
+        "attempted_frames": 17401,
+        "sent_frames": 17401,
+        "acknowledged_frames": 17400
+      },
+      {
+        "elapsed_seconds": 300.00508779999996,
+        "pre_gc_heap_bytes": 8503720,
+        "heap_used_bytes": 7534720,
+        "rss_bytes": 50364416,
+        "gc_forced": true,
+        "attempted_frames": 18001,
+        "sent_frames": 18001,
+        "acknowledged_frames": 18000
+      },
+      {
+        "elapsed_seconds": 310.0051567,
+        "pre_gc_heap_bytes": 8447944,
+        "heap_used_bytes": 7539336,
+        "rss_bytes": 50405376,
+        "gc_forced": true,
+        "attempted_frames": 18601,
+        "sent_frames": 18601,
+        "acknowledged_frames": 18600
+      },
+      {
+        "elapsed_seconds": 320.014419,
+        "pre_gc_heap_bytes": 8405216,
+        "heap_used_bytes": 7532808,
+        "rss_bytes": 50532352,
+        "gc_forced": true,
+        "attempted_frames": 19201,
+        "sent_frames": 19201,
+        "acknowledged_frames": 19200
+      },
+      {
+        "elapsed_seconds": 330.0069112,
+        "pre_gc_heap_bytes": 7753472,
+        "heap_used_bytes": 7539640,
+        "rss_bytes": 50532352,
+        "gc_forced": true,
+        "attempted_frames": 19801,
+        "sent_frames": 19801,
+        "acknowledged_frames": 19800
+      },
+      {
+        "elapsed_seconds": 340.0122077,
+        "pre_gc_heap_bytes": 8247296,
+        "heap_used_bytes": 7536824,
+        "rss_bytes": 50458624,
+        "gc_forced": true,
+        "attempted_frames": 20401,
+        "sent_frames": 20401,
+        "acknowledged_frames": 20400
+      },
+      {
+        "elapsed_seconds": 350.004597,
+        "pre_gc_heap_bytes": 8475280,
+        "heap_used_bytes": 7539128,
+        "rss_bytes": 50397184,
+        "gc_forced": true,
+        "attempted_frames": 21001,
+        "sent_frames": 21001,
+        "acknowledged_frames": 21000
+      },
+      {
+        "elapsed_seconds": 360.0125186,
+        "pre_gc_heap_bytes": 7788936,
+        "heap_used_bytes": 7538496,
+        "rss_bytes": 50511872,
+        "gc_forced": true,
+        "attempted_frames": 21601,
+        "sent_frames": 21601,
+        "acknowledged_frames": 21600
+      },
+      {
+        "elapsed_seconds": 370.00787669999994,
+        "pre_gc_heap_bytes": 8369744,
+        "heap_used_bytes": 7543640,
+        "rss_bytes": 50565120,
+        "gc_forced": true,
+        "attempted_frames": 22201,
+        "sent_frames": 22201,
+        "acknowledged_frames": 22200
+      },
+      {
+        "elapsed_seconds": 380.0041459,
+        "pre_gc_heap_bytes": 8380416,
+        "heap_used_bytes": 7538408,
+        "rss_bytes": 50434048,
+        "gc_forced": true,
+        "attempted_frames": 22801,
+        "sent_frames": 22801,
+        "acknowledged_frames": 22800
+      },
+      {
+        "elapsed_seconds": 390.0077555,
+        "pre_gc_heap_bytes": 7763368,
+        "heap_used_bytes": 7545816,
+        "rss_bytes": 50495488,
+        "gc_forced": true,
+        "attempted_frames": 23401,
+        "sent_frames": 23401,
+        "acknowledged_frames": 23400
+      },
+      {
+        "elapsed_seconds": 400.00685930000003,
+        "pre_gc_heap_bytes": 8152384,
+        "heap_used_bytes": 7541552,
+        "rss_bytes": 50393088,
+        "gc_forced": true,
+        "attempted_frames": 24001,
+        "sent_frames": 24001,
+        "acknowledged_frames": 24000
+      },
+      {
+        "elapsed_seconds": 410.0024198,
+        "pre_gc_heap_bytes": 8275600,
+        "heap_used_bytes": 7543856,
+        "rss_bytes": 50528256,
+        "gc_forced": true,
+        "attempted_frames": 24601,
+        "sent_frames": 24601,
+        "acknowledged_frames": 24600
+      },
+      {
+        "elapsed_seconds": 420.0044729,
+        "pre_gc_heap_bytes": 7810144,
+        "heap_used_bytes": 7541856,
+        "rss_bytes": 50434048,
+        "gc_forced": true,
+        "attempted_frames": 25201,
+        "sent_frames": 25201,
+        "acknowledged_frames": 25200
+      },
+      {
+        "elapsed_seconds": 430.0030362,
+        "pre_gc_heap_bytes": 8160272,
+        "heap_used_bytes": 7546424,
+        "rss_bytes": 50483200,
+        "gc_forced": true,
+        "attempted_frames": 25801,
+        "sent_frames": 25801,
+        "acknowledged_frames": 25800
+      },
+      {
+        "elapsed_seconds": 440.0044028,
+        "pre_gc_heap_bytes": 8161088,
+        "heap_used_bytes": 7540208,
+        "rss_bytes": 50462720,
+        "gc_forced": true,
+        "attempted_frames": 26401,
+        "sent_frames": 26401,
+        "acknowledged_frames": 26400
+      },
+      {
+        "elapsed_seconds": 450.017588,
+        "pre_gc_heap_bytes": 8260416,
+        "heap_used_bytes": 7547616,
+        "rss_bytes": 50483200,
+        "gc_forced": true,
+        "attempted_frames": 27001,
+        "sent_frames": 27001,
+        "acknowledged_frames": 27000
+      },
+      {
+        "elapsed_seconds": 460.0088493,
+        "pre_gc_heap_bytes": 8146224,
+        "heap_used_bytes": 7543352,
+        "rss_bytes": 50556928,
+        "gc_forced": true,
+        "attempted_frames": 27601,
+        "sent_frames": 27601,
+        "acknowledged_frames": 27600
+      },
+      {
+        "elapsed_seconds": 470.00277950000003,
+        "pre_gc_heap_bytes": 8118512,
+        "heap_used_bytes": 7545656,
+        "rss_bytes": 50565120,
+        "gc_forced": true,
+        "attempted_frames": 28201,
+        "sent_frames": 28201,
+        "acknowledged_frames": 28200
+      },
+      {
+        "elapsed_seconds": 480.0026103,
+        "pre_gc_heap_bytes": 8224688,
+        "heap_used_bytes": 7543656,
+        "rss_bytes": 50622464,
+        "gc_forced": true,
+        "attempted_frames": 28801,
+        "sent_frames": 28801,
+        "acknowledged_frames": 28800
+      },
+      {
+        "elapsed_seconds": 490.0138302,
+        "pre_gc_heap_bytes": 8097736,
+        "heap_used_bytes": 7548224,
+        "rss_bytes": 50520064,
+        "gc_forced": true,
+        "attempted_frames": 29401,
+        "sent_frames": 29401,
+        "acknowledged_frames": 29400
+      },
+      {
+        "elapsed_seconds": 500.0160933,
+        "pre_gc_heap_bytes": 8194352,
+        "heap_used_bytes": 7541696,
+        "rss_bytes": 50409472,
+        "gc_forced": true,
+        "attempted_frames": 30001,
+        "sent_frames": 30001,
+        "acknowledged_frames": 30000
+      },
+      {
+        "elapsed_seconds": 510.0102182,
+        "pre_gc_heap_bytes": 8382744,
+        "heap_used_bytes": 7548528,
+        "rss_bytes": 50307072,
+        "gc_forced": true,
+        "attempted_frames": 30601,
+        "sent_frames": 30601,
+        "acknowledged_frames": 30600
+      },
+      {
+        "elapsed_seconds": 520.0099318,
+        "pre_gc_heap_bytes": 8238560,
+        "heap_used_bytes": 7544264,
+        "rss_bytes": 50483200,
+        "gc_forced": true,
+        "attempted_frames": 31201,
+        "sent_frames": 31201,
+        "acknowledged_frames": 31200
+      },
+      {
+        "elapsed_seconds": 530.0077160999999,
+        "pre_gc_heap_bytes": 8163840,
+        "heap_used_bytes": 7546568,
+        "rss_bytes": 50405376,
+        "gc_forced": true,
+        "attempted_frames": 31801,
+        "sent_frames": 31801,
+        "acknowledged_frames": 31800
+      },
+      {
+        "elapsed_seconds": 540.0043687,
+        "pre_gc_heap_bytes": 8309808,
+        "heap_used_bytes": 7544568,
+        "rss_bytes": 50708480,
+        "gc_forced": true,
+        "attempted_frames": 32401,
+        "sent_frames": 32401,
+        "acknowledged_frames": 32400
+      },
+      {
+        "elapsed_seconds": 550.0158262,
+        "pre_gc_heap_bytes": 8140720,
+        "heap_used_bytes": 7549136,
+        "rss_bytes": 51040256,
+        "gc_forced": true,
+        "attempted_frames": 33001,
+        "sent_frames": 33001,
+        "acknowledged_frames": 33000
+      },
+      {
+        "elapsed_seconds": 560.0040028,
+        "pre_gc_heap_bytes": 8147736,
+        "heap_used_bytes": 7542608,
+        "rss_bytes": 51097600,
+        "gc_forced": true,
+        "attempted_frames": 33601,
+        "sent_frames": 33601,
+        "acknowledged_frames": 33600
+      },
+      {
+        "elapsed_seconds": 570.0171055,
+        "pre_gc_heap_bytes": 8292856,
+        "heap_used_bytes": 7549440,
+        "rss_bytes": 51113984,
+        "gc_forced": true,
+        "attempted_frames": 34201,
+        "sent_frames": 34201,
+        "acknowledged_frames": 34200
+      },
+      {
+        "elapsed_seconds": 580.014598,
+        "pre_gc_heap_bytes": 8156488,
+        "heap_used_bytes": 7547120,
+        "rss_bytes": 50524160,
+        "gc_forced": true,
+        "attempted_frames": 34801,
+        "sent_frames": 34801,
+        "acknowledged_frames": 34800
+      },
+      {
+        "elapsed_seconds": 590.0086529,
+        "pre_gc_heap_bytes": 8140536,
+        "heap_used_bytes": 7549424,
+        "rss_bytes": 50556928,
+        "gc_forced": true,
+        "attempted_frames": 35401,
+        "sent_frames": 35401,
+        "acknowledged_frames": 35400
+      },
+      {
+        "elapsed_seconds": 600.0127587,
+        "pre_gc_heap_bytes": 8494144,
+        "heap_used_bytes": 7544520,
+        "rss_bytes": 50806784,
+        "gc_forced": true,
+        "attempted_frames": 36001,
+        "sent_frames": 36001,
+        "acknowledged_frames": 36000
+      },
+      {
+        "elapsed_seconds": 610.0050176999999,
+        "pre_gc_heap_bytes": 8389064,
+        "heap_used_bytes": 7551072,
+        "rss_bytes": 50511872,
+        "gc_forced": true,
+        "attempted_frames": 36601,
+        "sent_frames": 36601,
+        "acknowledged_frames": 36600
+      },
+      {
+        "elapsed_seconds": 620.0042752,
+        "pre_gc_heap_bytes": 8426192,
+        "heap_used_bytes": 7544504,
+        "rss_bytes": 50700288,
+        "gc_forced": true,
+        "attempted_frames": 37201,
+        "sent_frames": 37201,
+        "acknowledged_frames": 37200
+      },
+      {
+        "elapsed_seconds": 630.0044211000001,
+        "pre_gc_heap_bytes": 7787768,
+        "heap_used_bytes": 7551336,
+        "rss_bytes": 50716672,
+        "gc_forced": true,
+        "attempted_frames": 37801,
+        "sent_frames": 37801,
+        "acknowledged_frames": 37800
+      },
+      {
+        "elapsed_seconds": 640.0078063,
+        "pre_gc_heap_bytes": 8412160,
+        "heap_used_bytes": 7547112,
+        "rss_bytes": 50683904,
+        "gc_forced": true,
+        "attempted_frames": 38401,
+        "sent_frames": 38401,
+        "acknowledged_frames": 38400
+      },
+      {
+        "elapsed_seconds": 650.002157,
+        "pre_gc_heap_bytes": 8426368,
+        "heap_used_bytes": 7550240,
+        "rss_bytes": 50585600,
+        "gc_forced": true,
+        "attempted_frames": 39001,
+        "sent_frames": 39001,
+        "acknowledged_frames": 39000
+      },
+      {
+        "elapsed_seconds": 660.0122331,
+        "pre_gc_heap_bytes": 7722552,
+        "heap_used_bytes": 7548240,
+        "rss_bytes": 50733056,
+        "gc_forced": true,
+        "attempted_frames": 39601,
+        "sent_frames": 39601,
+        "acknowledged_frames": 39600
+      },
+      {
+        "elapsed_seconds": 670.0074688999999,
+        "pre_gc_heap_bytes": 8404312,
+        "heap_used_bytes": 7552848,
+        "rss_bytes": 50581504,
+        "gc_forced": true,
+        "attempted_frames": 40201,
+        "sent_frames": 40201,
+        "acknowledged_frames": 40200
+      },
+      {
+        "elapsed_seconds": 680.0071995,
+        "pre_gc_heap_bytes": 8429328,
+        "heap_used_bytes": 7546280,
+        "rss_bytes": 50589696,
+        "gc_forced": true,
+        "attempted_frames": 40801,
+        "sent_frames": 40801,
+        "acknowledged_frames": 40800
+      },
+      {
+        "elapsed_seconds": 690.0071651999999,
+        "pre_gc_heap_bytes": 7739952,
+        "heap_used_bytes": 7553976,
+        "rss_bytes": 50515968,
+        "gc_forced": true,
+        "attempted_frames": 41401,
+        "sent_frames": 41401,
+        "acknowledged_frames": 41400
+      },
+      {
+        "elapsed_seconds": 700.0111779,
+        "pre_gc_heap_bytes": 8447928,
+        "heap_used_bytes": 7549752,
+        "rss_bytes": 50597888,
+        "gc_forced": true,
+        "attempted_frames": 42001,
+        "sent_frames": 42001,
+        "acknowledged_frames": 42000
+      },
+      {
+        "elapsed_seconds": 710.0112881,
+        "pre_gc_heap_bytes": 8422912,
+        "heap_used_bytes": 7552016,
+        "rss_bytes": 50569216,
+        "gc_forced": true,
+        "attempted_frames": 42601,
+        "sent_frames": 42601,
+        "acknowledged_frames": 42600
+      },
+      {
+        "elapsed_seconds": 720.0025048,
+        "pre_gc_heap_bytes": 7785696,
+        "heap_used_bytes": 7550016,
+        "rss_bytes": 50839552,
+        "gc_forced": true,
+        "attempted_frames": 43201,
+        "sent_frames": 43201,
+        "acknowledged_frames": 43200
+      },
+      {
+        "elapsed_seconds": 730.0142186,
+        "pre_gc_heap_bytes": 8331472,
+        "heap_used_bytes": 7554624,
+        "rss_bytes": 50614272,
+        "gc_forced": true,
+        "attempted_frames": 43801,
+        "sent_frames": 43801,
+        "acknowledged_frames": 43800
+      },
+      {
+        "elapsed_seconds": 740.0131967,
+        "pre_gc_heap_bytes": 8336008,
+        "heap_used_bytes": 7548056,
+        "rss_bytes": 50552832,
+        "gc_forced": true,
+        "attempted_frames": 44401,
+        "sent_frames": 44401,
+        "acknowledged_frames": 44400
+      },
+      {
+        "elapsed_seconds": 750.0111894,
+        "pre_gc_heap_bytes": 8322192,
+        "heap_used_bytes": 7554888,
+        "rss_bytes": 50503680,
+        "gc_forced": true,
+        "attempted_frames": 45001,
+        "sent_frames": 45001,
+        "acknowledged_frames": 45000
+      },
+      {
+        "elapsed_seconds": 760.0106632,
+        "pre_gc_heap_bytes": 8254344,
+        "heap_used_bytes": 7550664,
+        "rss_bytes": 50757632,
+        "gc_forced": true,
+        "attempted_frames": 45601,
+        "sent_frames": 45601,
+        "acknowledged_frames": 45600
+      },
+      {
+        "elapsed_seconds": 770.0102522999999,
+        "pre_gc_heap_bytes": 7710248,
+        "heap_used_bytes": 7552928,
+        "rss_bytes": 50487296,
+        "gc_forced": true,
+        "attempted_frames": 46201,
+        "sent_frames": 46201,
+        "acknowledged_frames": 46200
+      },
+      {
+        "elapsed_seconds": 780.0181918000001,
+        "pre_gc_heap_bytes": 8290992,
+        "heap_used_bytes": 7550928,
+        "rss_bytes": 50847744,
+        "gc_forced": true,
+        "attempted_frames": 46801,
+        "sent_frames": 46801,
+        "acknowledged_frames": 46800
+      },
+      {
+        "elapsed_seconds": 790.0162397,
+        "pre_gc_heap_bytes": 8011232,
+        "heap_used_bytes": 7555536,
+        "rss_bytes": 50593792,
+        "gc_forced": true,
+        "attempted_frames": 47401,
+        "sent_frames": 47401,
+        "acknowledged_frames": 47400
+      },
+      {
+        "elapsed_seconds": 800.0105596000001,
+        "pre_gc_heap_bytes": 8155608,
+        "heap_used_bytes": 7548968,
+        "rss_bytes": 50483200,
+        "gc_forced": true,
+        "attempted_frames": 48001,
+        "sent_frames": 48001,
+        "acknowledged_frames": 48000
+      },
+      {
+        "elapsed_seconds": 810.0056615999999,
+        "pre_gc_heap_bytes": 8304248,
+        "heap_used_bytes": 7555800,
+        "rss_bytes": 50610176,
+        "gc_forced": true,
+        "attempted_frames": 48601,
+        "sent_frames": 48601,
+        "acknowledged_frames": 48600
+      },
+      {
+        "elapsed_seconds": 820.0094429000001,
+        "pre_gc_heap_bytes": 8149664,
+        "heap_used_bytes": 7551576,
+        "rss_bytes": 50860032,
+        "gc_forced": true,
+        "attempted_frames": 49201,
+        "sent_frames": 49201,
+        "acknowledged_frames": 49200
+      },
+      {
+        "elapsed_seconds": 830.0048347999999,
+        "pre_gc_heap_bytes": 8294736,
+        "heap_used_bytes": 7554304,
+        "rss_bytes": 50761728,
+        "gc_forced": true,
+        "attempted_frames": 49801,
+        "sent_frames": 49801,
+        "acknowledged_frames": 49800
+      },
+      {
+        "elapsed_seconds": 840.0132154999999,
+        "pre_gc_heap_bytes": 8496016,
+        "heap_used_bytes": 7552304,
+        "rss_bytes": 50798592,
+        "gc_forced": true,
+        "attempted_frames": 50401,
+        "sent_frames": 50401,
+        "acknowledged_frames": 50400
+      },
+      {
+        "elapsed_seconds": 850.0076551,
+        "pre_gc_heap_bytes": 8417232,
+        "heap_used_bytes": 7556912,
+        "rss_bytes": 50626560,
+        "gc_forced": true,
+        "attempted_frames": 51001,
+        "sent_frames": 51001,
+        "acknowledged_frames": 51000
+      },
+      {
+        "elapsed_seconds": 860.0047628,
+        "pre_gc_heap_bytes": 8402648,
+        "heap_used_bytes": 7550344,
+        "rss_bytes": 50601984,
+        "gc_forced": true,
+        "attempted_frames": 51601,
+        "sent_frames": 51601,
+        "acknowledged_frames": 51600
+      },
+      {
+        "elapsed_seconds": 870.0106873,
+        "pre_gc_heap_bytes": 8464312,
+        "heap_used_bytes": 7557176,
+        "rss_bytes": 50655232,
+        "gc_forced": true,
+        "attempted_frames": 52201,
+        "sent_frames": 52201,
+        "acknowledged_frames": 52200
+      },
+      {
+        "elapsed_seconds": 880.0029615,
+        "pre_gc_heap_bytes": 8024912,
+        "heap_used_bytes": 7552952,
+        "rss_bytes": 50704384,
+        "gc_forced": true,
+        "attempted_frames": 52801,
+        "sent_frames": 52801,
+        "acknowledged_frames": 52800
+      },
+      {
+        "elapsed_seconds": 890.0072223999999,
+        "pre_gc_heap_bytes": 8091544,
+        "heap_used_bytes": 7555216,
+        "rss_bytes": 50655232,
+        "gc_forced": true,
+        "attempted_frames": 53401,
+        "sent_frames": 53401,
+        "acknowledged_frames": 53400
+      },
+      {
+        "elapsed_seconds": 900.1418351,
+        "pre_gc_heap_bytes": 8629944,
+        "heap_used_bytes": 7386240,
+        "rss_bytes": 50896896,
+        "gc_forced": true,
+        "attempted_frames": 54004,
+        "sent_frames": 54004,
+        "acknowledged_frames": 54000
+      },
+      {
+        "elapsed_seconds": 910.0120701999999,
+        "pre_gc_heap_bytes": 7728088,
+        "heap_used_bytes": 7446368,
+        "rss_bytes": 50987008,
+        "gc_forced": true,
+        "attempted_frames": 54596,
+        "sent_frames": 54596,
+        "acknowledged_frames": 54595
+      },
+      {
+        "elapsed_seconds": 920.0152277,
+        "pre_gc_heap_bytes": 7969416,
+        "heap_used_bytes": 7495312,
+        "rss_bytes": 51212288,
+        "gc_forced": true,
+        "attempted_frames": 55196,
+        "sent_frames": 55196,
+        "acknowledged_frames": 55195
+      },
+      {
+        "elapsed_seconds": 930.0113643999999,
+        "pre_gc_heap_bytes": 7913888,
+        "heap_used_bytes": 7599280,
+        "rss_bytes": 51150848,
+        "gc_forced": true,
+        "attempted_frames": 55796,
+        "sent_frames": 55796,
+        "acknowledged_frames": 55795
+      },
+      {
+        "elapsed_seconds": 940.0150181,
+        "pre_gc_heap_bytes": 8109024,
+        "heap_used_bytes": 7594056,
+        "rss_bytes": 50896896,
+        "gc_forced": true,
+        "attempted_frames": 56396,
+        "sent_frames": 56396,
+        "acknowledged_frames": 56395
+      },
+      {
+        "elapsed_seconds": 950.0032031000001,
+        "pre_gc_heap_bytes": 8155584,
+        "heap_used_bytes": 7603952,
+        "rss_bytes": 51204096,
+        "gc_forced": true,
+        "attempted_frames": 56996,
+        "sent_frames": 56996,
+        "acknowledged_frames": 56995
+      },
+      {
+        "elapsed_seconds": 960.0030720000001,
+        "pre_gc_heap_bytes": 8520552,
+        "heap_used_bytes": 7620136,
+        "rss_bytes": 51306496,
+        "gc_forced": true,
+        "attempted_frames": 57596,
+        "sent_frames": 57596,
+        "acknowledged_frames": 57595
+      },
+      {
+        "elapsed_seconds": 970.0021872000001,
+        "pre_gc_heap_bytes": 8335160,
+        "heap_used_bytes": 7625704,
+        "rss_bytes": 51384320,
+        "gc_forced": true,
+        "attempted_frames": 58196,
+        "sent_frames": 58196,
+        "acknowledged_frames": 58195
+      },
+      {
+        "elapsed_seconds": 980.0025734999999,
+        "pre_gc_heap_bytes": 8297720,
+        "heap_used_bytes": 7618176,
+        "rss_bytes": 51384320,
+        "gc_forced": true,
+        "attempted_frames": 58796,
+        "sent_frames": 58796,
+        "acknowledged_frames": 58795
+      },
+      {
+        "elapsed_seconds": 990.0108846999999,
+        "pre_gc_heap_bytes": 8578664,
+        "heap_used_bytes": 7625968,
+        "rss_bytes": 51404800,
+        "gc_forced": true,
+        "attempted_frames": 59396,
+        "sent_frames": 59396,
+        "acknowledged_frames": 59395
+      },
+      {
+        "elapsed_seconds": 1000.0110969,
+        "pre_gc_heap_bytes": 8442400,
+        "heap_used_bytes": 7620784,
+        "rss_bytes": 51556352,
+        "gc_forced": true,
+        "attempted_frames": 59996,
+        "sent_frames": 59996,
+        "acknowledged_frames": 59995
+      },
+      {
+        "elapsed_seconds": 1010.0021581,
+        "pre_gc_heap_bytes": 8509072,
+        "heap_used_bytes": 7624008,
+        "rss_bytes": 51531776,
+        "gc_forced": true,
+        "attempted_frames": 60596,
+        "sent_frames": 60596,
+        "acknowledged_frames": 60595
+      },
+      {
+        "elapsed_seconds": 1020.0160248999999,
+        "pre_gc_heap_bytes": 7857312,
+        "heap_used_bytes": 7621096,
+        "rss_bytes": 51494912,
+        "gc_forced": true,
+        "attempted_frames": 61196,
+        "sent_frames": 61196,
+        "acknowledged_frames": 61195
+      },
+      {
+        "elapsed_seconds": 1030.0161413,
+        "pre_gc_heap_bytes": 8349552,
+        "heap_used_bytes": 7626664,
+        "rss_bytes": 51625984,
+        "gc_forced": true,
+        "attempted_frames": 61796,
+        "sent_frames": 61796,
+        "acknowledged_frames": 61795
+      },
+      {
+        "elapsed_seconds": 1040.0136468,
+        "pre_gc_heap_bytes": 8151968,
+        "heap_used_bytes": 7619136,
+        "rss_bytes": 51310592,
+        "gc_forced": true,
+        "attempted_frames": 62396,
+        "sent_frames": 62396,
+        "acknowledged_frames": 62395
+      },
+      {
+        "elapsed_seconds": 1050.0128788999998,
+        "pre_gc_heap_bytes": 8442008,
+        "heap_used_bytes": 7627216,
+        "rss_bytes": 51564544,
+        "gc_forced": true,
+        "attempted_frames": 62996,
+        "sent_frames": 62996,
+        "acknowledged_frames": 62995
+      },
+      {
+        "elapsed_seconds": 1060.0161245,
+        "pre_gc_heap_bytes": 8314344,
+        "heap_used_bytes": 7622032,
+        "rss_bytes": 51310592,
+        "gc_forced": true,
+        "attempted_frames": 63596,
+        "sent_frames": 63596,
+        "acknowledged_frames": 63595
+      },
+      {
+        "elapsed_seconds": 1070.0134996,
+        "pre_gc_heap_bytes": 8400184,
+        "heap_used_bytes": 7625256,
+        "rss_bytes": 51511296,
+        "gc_forced": true,
+        "attempted_frames": 64196,
+        "sent_frames": 64196,
+        "acknowledged_frames": 64195
+      },
+      {
+        "elapsed_seconds": 1080.0126077999998,
+        "pre_gc_heap_bytes": 8625192,
+        "heap_used_bytes": 7627384,
+        "rss_bytes": 51404800,
+        "gc_forced": true,
+        "attempted_frames": 64796,
+        "sent_frames": 64796,
+        "acknowledged_frames": 64795
+      },
+      {
+        "elapsed_seconds": 1090.0035381,
+        "pre_gc_heap_bytes": 8560088,
+        "heap_used_bytes": 7632952,
+        "rss_bytes": 51310592,
+        "gc_forced": true,
+        "attempted_frames": 65396,
+        "sent_frames": 65396,
+        "acknowledged_frames": 65395
+      },
+      {
+        "elapsed_seconds": 1100.009144,
+        "pre_gc_heap_bytes": 8402616,
+        "heap_used_bytes": 7625424,
+        "rss_bytes": 51576832,
+        "gc_forced": true,
+        "attempted_frames": 65996,
+        "sent_frames": 65996,
+        "acknowledged_frames": 65995
+      },
+      {
+        "elapsed_seconds": 1110.0043892,
+        "pre_gc_heap_bytes": 8190664,
+        "heap_used_bytes": 7633288,
+        "rss_bytes": 51605504,
+        "gc_forced": true,
+        "attempted_frames": 66596,
+        "sent_frames": 66596,
+        "acknowledged_frames": 66595
+      },
+      {
+        "elapsed_seconds": 1120.0072968,
+        "pre_gc_heap_bytes": 8090016,
+        "heap_used_bytes": 7628104,
+        "rss_bytes": 51474432,
+        "gc_forced": true,
+        "attempted_frames": 67196,
+        "sent_frames": 67196,
+        "acknowledged_frames": 67195
+      },
+      {
+        "elapsed_seconds": 1130.0055003,
+        "pre_gc_heap_bytes": 8013088,
+        "heap_used_bytes": 7631328,
+        "rss_bytes": 51326976,
+        "gc_forced": true,
+        "attempted_frames": 67796,
+        "sent_frames": 67796,
+        "acknowledged_frames": 67795
+      },
+      {
+        "elapsed_seconds": 1140.0053714,
+        "pre_gc_heap_bytes": 8275192,
+        "heap_used_bytes": 7628368,
+        "rss_bytes": 51486720,
+        "gc_forced": true,
+        "attempted_frames": 68396,
+        "sent_frames": 68396,
+        "acknowledged_frames": 68395
+      },
+      {
+        "elapsed_seconds": 1150.0086454,
+        "pre_gc_heap_bytes": 8085432,
+        "heap_used_bytes": 7633936,
+        "rss_bytes": 51343360,
+        "gc_forced": true,
+        "attempted_frames": 68996,
+        "sent_frames": 68996,
+        "acknowledged_frames": 68995
+      },
+      {
+        "elapsed_seconds": 1160.0108761,
+        "pre_gc_heap_bytes": 8076072,
+        "heap_used_bytes": 7626408,
+        "rss_bytes": 51388416,
+        "gc_forced": true,
+        "attempted_frames": 69596,
+        "sent_frames": 69596,
+        "acknowledged_frames": 69595
+      },
+      {
+        "elapsed_seconds": 1170.0161214,
+        "pre_gc_heap_bytes": 8335640,
+        "heap_used_bytes": 7673912,
+        "rss_bytes": 51556352,
+        "gc_forced": true,
+        "attempted_frames": 70196,
+        "sent_frames": 70196,
+        "acknowledged_frames": 70195
+      },
+      {
+        "elapsed_seconds": 1180.0126774,
+        "pre_gc_heap_bytes": 8158128,
+        "heap_used_bytes": 7668728,
+        "rss_bytes": 51568640,
+        "gc_forced": true,
+        "attempted_frames": 70796,
+        "sent_frames": 70796,
+        "acknowledged_frames": 70795
+      },
+      {
+        "elapsed_seconds": 1190.0038855,
+        "pre_gc_heap_bytes": 8151672,
+        "heap_used_bytes": 7671952,
+        "rss_bytes": 51212288,
+        "gc_forced": true,
+        "attempted_frames": 71396,
+        "sent_frames": 71396,
+        "acknowledged_frames": 71395
+      },
+      {
+        "elapsed_seconds": 1200.011961,
+        "pre_gc_heap_bytes": 8300056,
+        "heap_used_bytes": 7668992,
+        "rss_bytes": 51531776,
+        "gc_forced": true,
+        "attempted_frames": 71996,
+        "sent_frames": 71996,
+        "acknowledged_frames": 71995
+      },
+      {
+        "elapsed_seconds": 1210.0034239000001,
+        "pre_gc_heap_bytes": 8228688,
+        "heap_used_bytes": 7674560,
+        "rss_bytes": 51314688,
+        "gc_forced": true,
+        "attempted_frames": 72596,
+        "sent_frames": 72596,
+        "acknowledged_frames": 72595
+      },
+      {
+        "elapsed_seconds": 1220.0045591,
+        "pre_gc_heap_bytes": 8174280,
+        "heap_used_bytes": 7667032,
+        "rss_bytes": 51576832,
+        "gc_forced": true,
+        "attempted_frames": 73196,
+        "sent_frames": 73196,
+        "acknowledged_frames": 73195
+      },
+      {
+        "elapsed_seconds": 1230.0037336999999,
+        "pre_gc_heap_bytes": 8318872,
+        "heap_used_bytes": 7674824,
+        "rss_bytes": 51105792,
+        "gc_forced": true,
+        "attempted_frames": 73796,
+        "sent_frames": 73796,
+        "acknowledged_frames": 73795
+      },
+      {
+        "elapsed_seconds": 1240.0075494999999,
+        "pre_gc_heap_bytes": 8224952,
+        "heap_used_bytes": 7669640,
+        "rss_bytes": 51478528,
+        "gc_forced": true,
+        "attempted_frames": 74396,
+        "sent_frames": 74396,
+        "acknowledged_frames": 74395
+      },
+      {
+        "elapsed_seconds": 1250.0079511,
+        "pre_gc_heap_bytes": 8252632,
+        "heap_used_bytes": 7672864,
+        "rss_bytes": 51490816,
+        "gc_forced": true,
+        "attempted_frames": 74996,
+        "sent_frames": 74996,
+        "acknowledged_frames": 74995
+      },
+      {
+        "elapsed_seconds": 1260.0068996,
+        "pre_gc_heap_bytes": 8337736,
+        "heap_used_bytes": 7669904,
+        "rss_bytes": 51154944,
+        "gc_forced": true,
+        "attempted_frames": 75596,
+        "sent_frames": 75596,
+        "acknowledged_frames": 75595
+      },
+      {
+        "elapsed_seconds": 1270.0028395,
+        "pre_gc_heap_bytes": 8147744,
+        "heap_used_bytes": 7675704,
+        "rss_bytes": 51363840,
+        "gc_forced": true,
+        "attempted_frames": 76196,
+        "sent_frames": 76196,
+        "acknowledged_frames": 76194
+      },
+      {
+        "elapsed_seconds": 1280.0071569999998,
+        "pre_gc_heap_bytes": 8206184,
+        "heap_used_bytes": 7667944,
+        "rss_bytes": 51499008,
+        "gc_forced": true,
+        "attempted_frames": 76796,
+        "sent_frames": 76796,
+        "acknowledged_frames": 76795
+      },
+      {
+        "elapsed_seconds": 1290.0060589999998,
+        "pre_gc_heap_bytes": 8303960,
+        "heap_used_bytes": 7675736,
+        "rss_bytes": 51400704,
+        "gc_forced": true,
+        "attempted_frames": 77396,
+        "sent_frames": 77396,
+        "acknowledged_frames": 77395
+      },
+      {
+        "elapsed_seconds": 1300.0148084,
+        "pre_gc_heap_bytes": 8134728,
+        "heap_used_bytes": 7670552,
+        "rss_bytes": 51552256,
+        "gc_forced": true,
+        "attempted_frames": 77996,
+        "sent_frames": 77996,
+        "acknowledged_frames": 77995
+      },
+      {
+        "elapsed_seconds": 1310.008507,
+        "pre_gc_heap_bytes": 8308752,
+        "heap_used_bytes": 7673776,
+        "rss_bytes": 51372032,
+        "gc_forced": true,
+        "attempted_frames": 78596,
+        "sent_frames": 78596,
+        "acknowledged_frames": 78595
+      },
+      {
+        "elapsed_seconds": 1320.0093418000001,
+        "pre_gc_heap_bytes": 8456464,
+        "heap_used_bytes": 7670816,
+        "rss_bytes": 51257344,
+        "gc_forced": true,
+        "attempted_frames": 79196,
+        "sent_frames": 79196,
+        "acknowledged_frames": 79195
+      },
+      {
+        "elapsed_seconds": 1330.0023868,
+        "pre_gc_heap_bytes": 8335336,
+        "heap_used_bytes": 7676384,
+        "rss_bytes": 51343360,
+        "gc_forced": true,
+        "attempted_frames": 79796,
+        "sent_frames": 79796,
+        "acknowledged_frames": 79795
+      },
+      {
+        "elapsed_seconds": 1340.0152209999999,
+        "pre_gc_heap_bytes": 8176144,
+        "heap_used_bytes": 7668856,
+        "rss_bytes": 51331072,
+        "gc_forced": true,
+        "attempted_frames": 80396,
+        "sent_frames": 80396,
+        "acknowledged_frames": 80395
+      },
+      {
+        "elapsed_seconds": 1350.0049909000002,
+        "pre_gc_heap_bytes": 8425240,
+        "heap_used_bytes": 7678592,
+        "rss_bytes": 51404800,
+        "gc_forced": true,
+        "attempted_frames": 80996,
+        "sent_frames": 80996,
+        "acknowledged_frames": 80995
+      },
+      {
+        "elapsed_seconds": 1360.0050838,
+        "pre_gc_heap_bytes": 8595408,
+        "heap_used_bytes": 7673408,
+        "rss_bytes": 51568640,
+        "gc_forced": true,
+        "attempted_frames": 81596,
+        "sent_frames": 81596,
+        "acknowledged_frames": 81595
+      },
+      {
+        "elapsed_seconds": 1370.0034649,
+        "pre_gc_heap_bytes": 8636032,
+        "heap_used_bytes": 7676632,
+        "rss_bytes": 51503104,
+        "gc_forced": true,
+        "attempted_frames": 82196,
+        "sent_frames": 82196,
+        "acknowledged_frames": 82195
+      },
+      {
+        "elapsed_seconds": 1380.0020872,
+        "pre_gc_heap_bytes": 7935320,
+        "heap_used_bytes": 7673672,
+        "rss_bytes": 51507200,
+        "gc_forced": true,
+        "attempted_frames": 82796,
+        "sent_frames": 82796,
+        "acknowledged_frames": 82795
+      },
+      {
+        "elapsed_seconds": 1390.0046879,
+        "pre_gc_heap_bytes": 7823112,
+        "heap_used_bytes": 7679240,
+        "rss_bytes": 51408896,
+        "gc_forced": true,
+        "attempted_frames": 83396,
+        "sent_frames": 83396,
+        "acknowledged_frames": 83395
+      },
+      {
+        "elapsed_seconds": 1400.014101,
+        "pre_gc_heap_bytes": 8584000,
+        "heap_used_bytes": 7671712,
+        "rss_bytes": 51281920,
+        "gc_forced": true,
+        "attempted_frames": 83996,
+        "sent_frames": 83996,
+        "acknowledged_frames": 83995
+      },
+      {
+        "elapsed_seconds": 1410.008396,
+        "pre_gc_heap_bytes": 7939128,
+        "heap_used_bytes": 7680200,
+        "rss_bytes": 51421184,
+        "gc_forced": true,
+        "attempted_frames": 84596,
+        "sent_frames": 84596,
+        "acknowledged_frames": 84595
+      },
+      {
+        "elapsed_seconds": 1420.0157596,
+        "pre_gc_heap_bytes": 8542864,
+        "heap_used_bytes": 7675016,
+        "rss_bytes": 51560448,
+        "gc_forced": true,
+        "attempted_frames": 85196,
+        "sent_frames": 85196,
+        "acknowledged_frames": 85195
+      },
+      {
+        "elapsed_seconds": 1430.0035928,
+        "pre_gc_heap_bytes": 8486720,
+        "heap_used_bytes": 7678240,
+        "rss_bytes": 51453952,
+        "gc_forced": true,
+        "attempted_frames": 85796,
+        "sent_frames": 85796,
+        "acknowledged_frames": 85795
+      },
+      {
+        "elapsed_seconds": 1440.0153397,
+        "pre_gc_heap_bytes": 8677072,
+        "heap_used_bytes": 7677224,
+        "rss_bytes": 51572736,
+        "gc_forced": true,
+        "attempted_frames": 86396,
+        "sent_frames": 86396,
+        "acknowledged_frames": 86395
+      },
+      {
+        "elapsed_seconds": 1450.0030267999998,
+        "pre_gc_heap_bytes": 8340504,
+        "heap_used_bytes": 7682792,
+        "rss_bytes": 51675136,
+        "gc_forced": true,
+        "attempted_frames": 86996,
+        "sent_frames": 86996,
+        "acknowledged_frames": 86995
+      },
+      {
+        "elapsed_seconds": 1460.0144328000001,
+        "pre_gc_heap_bytes": 8280528,
+        "heap_used_bytes": 7679992,
+        "rss_bytes": 51564544,
+        "gc_forced": true,
+        "attempted_frames": 87596,
+        "sent_frames": 87596,
+        "acknowledged_frames": 87595
+      },
+      {
+        "elapsed_seconds": 1470.0038452000001,
+        "pre_gc_heap_bytes": 8016544,
+        "heap_used_bytes": 7687784,
+        "rss_bytes": 51634176,
+        "gc_forced": true,
+        "attempted_frames": 88196,
+        "sent_frames": 88196,
+        "acknowledged_frames": 88195
+      },
+      {
+        "elapsed_seconds": 1480.0115782999999,
+        "pre_gc_heap_bytes": 8161552,
+        "heap_used_bytes": 7682600,
+        "rss_bytes": 51453952,
+        "gc_forced": true,
+        "attempted_frames": 88796,
+        "sent_frames": 88796,
+        "acknowledged_frames": 88795
+      },
+      {
+        "elapsed_seconds": 1490.0065711999998,
+        "pre_gc_heap_bytes": 8225144,
+        "heap_used_bytes": 7685824,
+        "rss_bytes": 51380224,
+        "gc_forced": true,
+        "attempted_frames": 89396,
+        "sent_frames": 89396,
+        "acknowledged_frames": 89395
+      },
+      {
+        "elapsed_seconds": 1500.0167522,
+        "pre_gc_heap_bytes": 8230384,
+        "heap_used_bytes": 7682864,
+        "rss_bytes": 51220480,
+        "gc_forced": true,
+        "attempted_frames": 89996,
+        "sent_frames": 89996,
+        "acknowledged_frames": 89995
+      },
+      {
+        "elapsed_seconds": 1510.0107357000002,
+        "pre_gc_heap_bytes": 8306464,
+        "heap_used_bytes": 7688432,
+        "rss_bytes": 51564544,
+        "gc_forced": true,
+        "attempted_frames": 90596,
+        "sent_frames": 90596,
+        "acknowledged_frames": 90595
+      },
+      {
+        "elapsed_seconds": 1520.0164612,
+        "pre_gc_heap_bytes": 8431800,
+        "heap_used_bytes": 7680904,
+        "rss_bytes": 51519488,
+        "gc_forced": true,
+        "attempted_frames": 91196,
+        "sent_frames": 91196,
+        "acknowledged_frames": 91195
+      },
+      {
+        "elapsed_seconds": 1530.0052122,
+        "pre_gc_heap_bytes": 7851504,
+        "heap_used_bytes": 7689992,
+        "rss_bytes": 51339264,
+        "gc_forced": true,
+        "attempted_frames": 91796,
+        "sent_frames": 91796,
+        "acknowledged_frames": 91795
+      },
+      {
+        "elapsed_seconds": 1540.0182636,
+        "pre_gc_heap_bytes": 8525736,
+        "heap_used_bytes": 7684808,
+        "rss_bytes": 51474432,
+        "gc_forced": true,
+        "attempted_frames": 92396,
+        "sent_frames": 92396,
+        "acknowledged_frames": 92395
+      },
+      {
+        "elapsed_seconds": 1550.0126449,
+        "pre_gc_heap_bytes": 8483328,
+        "heap_used_bytes": 7688032,
+        "rss_bytes": 51359744,
+        "gc_forced": true,
+        "attempted_frames": 92996,
+        "sent_frames": 92996,
+        "acknowledged_frames": 92995
+      },
+      {
+        "elapsed_seconds": 1560.0117024,
+        "pre_gc_heap_bytes": 8672128,
+        "heap_used_bytes": 7685072,
+        "rss_bytes": 51621888,
+        "gc_forced": true,
+        "attempted_frames": 93596,
+        "sent_frames": 93596,
+        "acknowledged_frames": 93595
+      },
+      {
+        "elapsed_seconds": 1570.0061475,
+        "pre_gc_heap_bytes": 8086392,
+        "heap_used_bytes": 7690640,
+        "rss_bytes": 51564544,
+        "gc_forced": true,
+        "attempted_frames": 94196,
+        "sent_frames": 94196,
+        "acknowledged_frames": 94195
+      },
+      {
+        "elapsed_seconds": 1580.0065387,
+        "pre_gc_heap_bytes": 7972080,
+        "heap_used_bytes": 7683112,
+        "rss_bytes": 51535872,
+        "gc_forced": true,
+        "attempted_frames": 94796,
+        "sent_frames": 94796,
+        "acknowledged_frames": 94795
+      },
+      {
+        "elapsed_seconds": 1590.0120365,
+        "pre_gc_heap_bytes": 8149408,
+        "heap_used_bytes": 7690904,
+        "rss_bytes": 51503104,
+        "gc_forced": true,
+        "attempted_frames": 95396,
+        "sent_frames": 95396,
+        "acknowledged_frames": 95395
+      },
+      {
+        "elapsed_seconds": 1600.0179217999998,
+        "pre_gc_heap_bytes": 8190680,
+        "heap_used_bytes": 7685720,
+        "rss_bytes": 51523584,
+        "gc_forced": true,
+        "attempted_frames": 95996,
+        "sent_frames": 95996,
+        "acknowledged_frames": 95995
+      },
+      {
+        "elapsed_seconds": 1610.0044331,
+        "pre_gc_heap_bytes": 8184080,
+        "heap_used_bytes": 7688944,
+        "rss_bytes": 51490816,
+        "gc_forced": true,
+        "attempted_frames": 96596,
+        "sent_frames": 96596,
+        "acknowledged_frames": 96595
+      },
+      {
+        "elapsed_seconds": 1620.0136750000001,
+        "pre_gc_heap_bytes": 8342944,
+        "heap_used_bytes": 7685984,
+        "rss_bytes": 51363840,
+        "gc_forced": true,
+        "attempted_frames": 97196,
+        "sent_frames": 97196,
+        "acknowledged_frames": 97195
+      },
+      {
+        "elapsed_seconds": 1630.0049124,
+        "pre_gc_heap_bytes": 8191504,
+        "heap_used_bytes": 7691552,
+        "rss_bytes": 51376128,
+        "gc_forced": true,
+        "attempted_frames": 97796,
+        "sent_frames": 97796,
+        "acknowledged_frames": 97795
+      },
+      {
+        "elapsed_seconds": 1640.0075705,
+        "pre_gc_heap_bytes": 8257232,
+        "heap_used_bytes": 7684024,
+        "rss_bytes": 51404800,
+        "gc_forced": true,
+        "attempted_frames": 98396,
+        "sent_frames": 98396,
+        "acknowledged_frames": 98395
+      },
+      {
+        "elapsed_seconds": 1650.0029246,
+        "pre_gc_heap_bytes": 8171536,
+        "heap_used_bytes": 7691816,
+        "rss_bytes": 51617792,
+        "gc_forced": true,
+        "attempted_frames": 98996,
+        "sent_frames": 98996,
+        "acknowledged_frames": 98995
+      },
+      {
+        "elapsed_seconds": 1660.0089193,
+        "pre_gc_heap_bytes": 8145528,
+        "heap_used_bytes": 7686632,
+        "rss_bytes": 51589120,
+        "gc_forced": true,
+        "attempted_frames": 99596,
+        "sent_frames": 99596,
+        "acknowledged_frames": 99595
+      },
+      {
+        "elapsed_seconds": 1670.0166461000001,
+        "pre_gc_heap_bytes": 8282648,
+        "heap_used_bytes": 7689856,
+        "rss_bytes": 51359744,
+        "gc_forced": true,
+        "attempted_frames": 100196,
+        "sent_frames": 100196,
+        "acknowledged_frames": 100195
+      },
+      {
+        "elapsed_seconds": 1680.0050245999998,
+        "pre_gc_heap_bytes": 8494240,
+        "heap_used_bytes": 7686896,
+        "rss_bytes": 51380224,
+        "gc_forced": true,
+        "attempted_frames": 100796,
+        "sent_frames": 100796,
+        "acknowledged_frames": 100795
+      },
+      {
+        "elapsed_seconds": 1690.0176592999999,
+        "pre_gc_heap_bytes": 8595488,
+        "heap_used_bytes": 7692464,
+        "rss_bytes": 51466240,
+        "gc_forced": true,
+        "attempted_frames": 101396,
+        "sent_frames": 101396,
+        "acknowledged_frames": 101395
+      },
+      {
+        "elapsed_seconds": 1700.004496,
+        "pre_gc_heap_bytes": 8242288,
+        "heap_used_bytes": 7684936,
+        "rss_bytes": 51564544,
+        "gc_forced": true,
+        "attempted_frames": 101996,
+        "sent_frames": 101996,
+        "acknowledged_frames": 101995
+      },
+      {
+        "elapsed_seconds": 1710.0155114,
+        "pre_gc_heap_bytes": 8093616,
+        "heap_used_bytes": 7692728,
+        "rss_bytes": 51654656,
+        "gc_forced": true,
+        "attempted_frames": 102596,
+        "sent_frames": 102596,
+        "acknowledged_frames": 102595
+      },
+      {
+        "elapsed_seconds": 1720.0129115,
+        "pre_gc_heap_bytes": 8385352,
+        "heap_used_bytes": 7687544,
+        "rss_bytes": 51576832,
+        "gc_forced": true,
+        "attempted_frames": 103196,
+        "sent_frames": 103196,
+        "acknowledged_frames": 103195
+      },
+      {
+        "elapsed_seconds": 1730.0026685999999,
+        "pre_gc_heap_bytes": 8152272,
+        "heap_used_bytes": 7690768,
+        "rss_bytes": 51564544,
+        "gc_forced": true,
+        "attempted_frames": 103796,
+        "sent_frames": 103796,
+        "acknowledged_frames": 103795
+      },
+      {
+        "elapsed_seconds": 1740.0032596,
+        "pre_gc_heap_bytes": 8335896,
+        "heap_used_bytes": 7687808,
+        "rss_bytes": 51548160,
+        "gc_forced": true,
+        "attempted_frames": 104396,
+        "sent_frames": 104396,
+        "acknowledged_frames": 104395
+      },
+      {
+        "elapsed_seconds": 1750.0122353999998,
+        "pre_gc_heap_bytes": 7997688,
+        "heap_used_bytes": 7693376,
+        "rss_bytes": 51331072,
+        "gc_forced": true,
+        "attempted_frames": 104996,
+        "sent_frames": 104996,
+        "acknowledged_frames": 104995
+      },
+      {
+        "elapsed_seconds": 1760.015447,
+        "pre_gc_heap_bytes": 8341568,
+        "heap_used_bytes": 7685848,
+        "rss_bytes": 51367936,
+        "gc_forced": true,
+        "attempted_frames": 105596,
+        "sent_frames": 105596,
+        "acknowledged_frames": 105595
+      },
+      {
+        "elapsed_seconds": 1770.0022846,
+        "pre_gc_heap_bytes": 7898352,
+        "heap_used_bytes": 7693640,
+        "rss_bytes": 51601408,
+        "gc_forced": true,
+        "attempted_frames": 106196,
+        "sent_frames": 106196,
+        "acknowledged_frames": 106195
+      },
+      {
+        "elapsed_seconds": 1780.0078259,
+        "pre_gc_heap_bytes": 8551496,
+        "heap_used_bytes": 7688456,
+        "rss_bytes": 51556352,
+        "gc_forced": true,
+        "attempted_frames": 106796,
+        "sent_frames": 106796,
+        "acknowledged_frames": 106795
+      },
+      {
+        "elapsed_seconds": 1790.0062771999999,
+        "pre_gc_heap_bytes": 8454184,
+        "heap_used_bytes": 7691680,
+        "rss_bytes": 51425280,
+        "gc_forced": true,
+        "attempted_frames": 107396,
+        "sent_frames": 107396,
+        "acknowledged_frames": 107395
+      },
+      {
+        "elapsed_seconds": 1800.0093861,
+        "pre_gc_heap_bytes": 8578792,
+        "heap_used_bytes": 7649160,
+        "rss_bytes": 51453952,
+        "gc_forced": true,
+        "attempted_frames": 107995,
+        "sent_frames": 107995,
+        "acknowledged_frames": 107995
+      }
+    ],
+    "memory": {
+      "heap": {
+        "start": 6656368,
+        "end": 7649160,
+        "min": 6656368,
+        "max": 7693640,
+        "growth": 992792,
+        "trend_bytes_per_minute": 8180.3283182564755
+      },
+      "rss": {
+        "start": 47648768,
+        "end": 51453952,
+        "min": 47648768,
+        "max": 51675136,
+        "growth": 3805184,
+        "trend_bytes_per_minute": 61218.8095891447
+      }
+    },
+    "acceptance": {
+      "duration": true,
+      "cadence": true,
+      "acknowledgements": true,
+      "no_invalid_ack": true,
+      "one_reconnect": true,
+      "resynchronized": true,
+      "resized": true,
+      "no_protocol_errors": true,
+      "no_unexpected_closes": true,
+      "convergence": true,
+      "memory": true
+    },
+    "average_attempted_hz": 59.996431289268536,
+    "status": "PASS"
+  },
+  "ci": {
+    "implementation_commit": "172fc2bff20a1a9f43e309cf7fefc6e3ca6c36ba",
+    "run_id": 33644093416,
+    "url": "https://github.com/CranberryClock/FrameBridge/actions/runs/33644093416",
+    "status": "completed",
+    "conclusion": "success",
+    "failing_step": null,
+    "verified_at": "2026-09-02 14:47:28 UTC"
+  },
+  "changed_files": [
+    ".github/workflows/tcw-004.yml",
+    "CMakeLists.txt",
+    "README.md",
+    "apps/demo-web/index.html",
+    "apps/demo-web/src/browser.ts",
+    "apps/demo-web/src/smoke.test.ts",
+    "artifacts/tcw-004/human-browser-steps.md",
+    "artifacts/tcw-004/manifest.json",
+    "artifacts/tcw-004/real-soak.json",
+    "artifacts/tcw-004/redacted-transcript.txt",
+    "docs/tcw004-protocol.md",
+    "native/bridge/codec.hpp",
+    "native/bridge/codec_test.cpp",
+    "packages/protocol/fixtures/canonical.tsv",
+    "packages/protocol/fixtures/capabilities.json",
+    "packages/protocol/fixtures/malformed-incorrect-checksum.hex",
+    "packages/protocol/fixtures/malformed-invalid-fixed-payload.hex",
+    "packages/protocol/fixtures/malformed-oversized-payload.hex",
+    "packages/protocol/fixtures/malformed-truncated-header.hex",
+    "packages/protocol/fixtures/malformed-truncated-payload.hex",
+    "packages/protocol/fixtures/malformed-unsupported-flags.hex",
+    "packages/protocol/fixtures/malformed-wrong-magic.hex",
+    "packages/protocol/fixtures/malformed-wrong-version.hex",
+    "packages/protocol/fixtures/malformed-zero-sequence.hex",
+    "packages/protocol/fixtures/valid-begin-frame.hex",
+    "packages/protocol/fixtures/valid-error.hex",
+    "packages/protocol/fixtures/valid-frame-accepted.hex",
+    "packages/protocol/fixtures/valid-resize.hex",
+    "packages/protocol/src/bridge.test.ts",
+    "packages/protocol/src/client.ts",
+    "packages/protocol/src/index.ts",
+    "packages/protocol/src/protocol.test.ts",
+    "packages/protocol/src/server.ts",
+    "packages/protocol/src/transport-client.ts",
+    "plan/tcw004-final-rework.md",
+    "tools/tcw004-evidence.mjs",
+    "tools/tcw004-soak.mjs",
+    "tools/tcw004-validate.mjs"
+  ],
+  "human_driver_checklist": "human-browser-steps.md",
+  "limitations": [
+    "Real Chrome interaction and visual acceptance remain HUMAN_REQUIRED.",
+    "Memory sampling uses explicit GC; both pre-GC and retained heap are recorded.",
+    "No native networking or rendering is implemented in TCW-004."
+  ]
 }

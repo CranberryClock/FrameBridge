@@ -1,7 +1,6 @@
 {
-  "task": "TCW-004",
-  "status": "STALE_INVALID",
-  "superseded_artifact_commit": "97a5367155d5f580e863561322eab712bd2ddb32",
-  "reason": "Previous raw output was overwritten and fields were reconstructed without retained measurement evidence. It is not valid acceptance evidence.",
-  "replacement_policy": "Use uniquely generated runs/*/result.json linked by manifest.json. Never reconstruct measurements."
+  "status": "PASS",
+  "implementation_commit": "172fc2bff20a1a9f43e309cf7fefc6e3ca6c36ba",
+  "evidence": "runs/acceptance-2026-09-02T14-47-18-590Z-fveQIb/result.json",
+  "note": "Pointer only; raw measurements reside in the immutable generated run record."
 }

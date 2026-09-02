@@ -1,0 +1,114 @@
+{
+  "status": "PASS",
+  "implementation_commit": "172fc2bff20a1a9f43e309cf7fefc6e3ca6c36ba",
+  "clean_install": true,
+  "node": "v22.18.0",
+  "commands": [
+    {
+      "name": "frozen-install",
+      "executable": "cmd.exe",
+      "args": [
+        "/d",
+        "/c",
+        "corepack pnpm install --frozen-lockfile"
+      ],
+      "working_directory": "D:\\FrameBridge\\out\\tcw004-clean-final",
+      "exit_code": 0,
+      "expected_exit": 0,
+      "output": "frozen-install.txt"
+    },
+    {
+      "name": "typescript-build",
+      "executable": "cmd.exe",
+      "args": [
+        "/d",
+        "/c",
+        "corepack pnpm -r build"
+      ],
+      "working_directory": "D:\\FrameBridge\\out\\tcw004-clean-final",
+      "exit_code": 0,
+      "expected_exit": 0,
+      "output": "typescript-build.txt"
+    },
+    {
+      "name": "typescript-tests",
+      "executable": "cmd.exe",
+      "args": [
+        "/d",
+        "/c",
+        "corepack pnpm -r test"
+      ],
+      "working_directory": "D:\\FrameBridge\\out\\tcw004-clean-final",
+      "exit_code": 0,
+      "expected_exit": 0,
+      "output": "typescript-tests.txt"
+    },
+    {
+      "name": "vite-build",
+      "executable": "cmd.exe",
+      "args": [
+        "/d",
+        "/c",
+        "corepack pnpm --filter @framebridge/demo-web exec vite build"
+      ],
+      "working_directory": "D:\\FrameBridge\\out\\tcw004-clean-final",
+      "exit_code": 0,
+      "expected_exit": 0,
+      "output": "vite-build.txt"
+    },
+    {
+      "name": "native-configure",
+      "executable": "C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/bin/cmake.exe",
+      "args": [
+        "-S",
+        ".",
+        "-B",
+        "out/tcw004-validation",
+        "-G",
+        "Visual Studio 17 2022",
+        "-A",
+        "x64"
+      ],
+      "working_directory": "D:\\FrameBridge\\out\\tcw004-clean-final",
+      "exit_code": 0,
+      "expected_exit": 0,
+      "output": "native-configure.txt"
+    },
+    {
+      "name": "native-build",
+      "executable": "C:/Program Files/Microsoft Visual Studio/2022/Community/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/bin/cmake.exe",
+      "args": [
+        "--build",
+        "out/tcw004-validation",
+        "--config",
+        "Release",
+        "--target",
+        "framebridge-bridge-codec"
+      ],
+      "working_directory": "D:\\FrameBridge\\out\\tcw004-clean-final",
+      "exit_code": 0,
+      "expected_exit": 0,
+      "output": "native-build.txt"
+    },
+    {
+      "name": "native-execute",
+      "executable": "D:\\FrameBridge\\out\\tcw004-clean-final\\out\\tcw004-validation\\Release\\framebridge-bridge-codec.exe",
+      "args": [],
+      "working_directory": "D:\\FrameBridge\\out\\tcw004-clean-final",
+      "exit_code": 0,
+      "expected_exit": 0,
+      "output": "native-execute.txt"
+    },
+    {
+      "name": "native-missing-fixture",
+      "executable": "D:\\FrameBridge\\out\\tcw004-clean-final\\out\\tcw004-validation\\Release\\framebridge-bridge-codec.exe",
+      "args": [
+        "packages/protocol/fixtures/does-not-exist"
+      ],
+      "working_directory": "D:\\FrameBridge\\out\\tcw004-clean-final",
+      "exit_code": 1,
+      "expected_exit": 1,
+      "output": "native-missing-fixture.txt"
+    }
+  ]
+}
