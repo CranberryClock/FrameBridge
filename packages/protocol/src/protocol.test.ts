@@ -53,6 +53,8 @@ rejects("complete queue oldest drop",s=>{for(let i=1n;i<=4n;i++){s.send(M.BeginF
 rejects("reject before mutation",s=>{const old=s.value.lastAcceptedSequence;assert.throws(()=>s.send(M.CreateBuffer,buffer(0n),1n));assert.equal(s.value.lastAcceptedSequence,old);assert.equal(s.value.declaredResourceBytes,0);});
 const caps=readFileSync(new URL("capabilities.json",fixtureDir),"utf8");
 test("json","shared hello and capabilities",()=>{const hello=JSON.parse(readFileSync(new URL("hello.json",fixtureDir),"utf8"));P.authenticate(hello,hello.token,hello.origin,hello.origin);assert.equal(P.validateCapabilities(JSON.parse(caps)).sessionGeneration,"2");});
+test("capabilities","native Dawn backend accepted",()=>{const value=JSON.parse(caps);value.backend="native-dawn";assert.equal(P.validateCapabilities(value).backend,"native-dawn");});
+test("capabilities","unknown backend rejected",()=>{const value=JSON.parse(caps);value.backend="untrusted-backend";assert.throws(()=>P.validateCapabilities(value));});
 for(const hz of [60,120,144])test("scheduling",String(hz)+" Hz",()=>{
  const sends:Uint8Array[]=[];const c=new MirrorClient(b=>sends.push(b));c.authenticate(caps);
  const session=new P.MirrorSession();

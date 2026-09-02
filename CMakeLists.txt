@@ -1,5 +1,10 @@
 cmake_minimum_required(VERSION 3.31)
 project(framebridge-null-runtime LANGUAGES CXX)
+
+set(IXWEBSOCKET_INSTALL OFF CACHE BOOL "" FORCE)
+set(USE_TLS OFF CACHE BOOL "" FORCE)
+set(USE_ZLIB OFF CACHE BOOL "" FORCE)
+add_subdirectory(third_party/ixwebsocket EXCLUDE_FROM_ALL)
 add_executable(framebridge-null-runtime native/runtime/src/main.cpp)
 target_compile_features(framebridge-null-runtime PRIVATE cxx_std_20)
 if(MSVC)
@@ -38,3 +43,27 @@ if(MSVC)
   target_compile_options(framebridge-streamline-preflight-test PRIVATE /W4 /WX /permissive-)
 endif()
 add_test(NAME framebridge-streamline-preflight COMMAND $<TARGET_FILE:framebridge-streamline-preflight-test>)
+
+add_library(framebridge-native-mirror-session STATIC
+  native/mirror-receiver/mirror_session.cpp)
+target_include_directories(framebridge-native-mirror-session PUBLIC
+  native/mirror-receiver native/bridge third_party/nlohmann-json/single_include)
+target_compile_features(framebridge-native-mirror-session PUBLIC cxx_std_20)
+if(MSVC)
+  target_compile_options(framebridge-native-mirror-session PRIVATE /W4 /WX /permissive-)
+endif()
+
+add_executable(framebridge-native-mirror native/mirror-receiver/main.cpp)
+target_link_libraries(framebridge-native-mirror PRIVATE framebridge-native-mirror-session ixwebsocket ws2_32)
+target_compile_features(framebridge-native-mirror PRIVATE cxx_std_20)
+if(MSVC)
+  target_compile_options(framebridge-native-mirror PRIVATE /W4 /WX /permissive-)
+endif()
+
+add_executable(framebridge-native-mirror-test native/mirror-receiver/mirror_session_test.cpp)
+target_link_libraries(framebridge-native-mirror-test PRIVATE framebridge-native-mirror-session)
+target_compile_features(framebridge-native-mirror-test PRIVATE cxx_std_20)
+if(MSVC)
+  target_compile_options(framebridge-native-mirror-test PRIVATE /W4 /WX /permissive-)
+endif()
+add_test(NAME framebridge-native-mirror-session COMMAND $<TARGET_FILE:framebridge-native-mirror-test>)
