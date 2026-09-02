@@ -1,0 +1,36 @@
+MSBuild version 17.14.51+25f168cee for .NET Framework
+
+MSBuild version 17.14.51+25f168cee for .NET Framework
+
+  1>Checking Build System
+  Building Custom Rule D:/FrameBridge/build/tcw004a-clean-20260902/CMakeLists.txt
+  Scanning sources for module dependencies...
+  codec_test.cpp
+  Compiling...
+  codec_test.cpp
+  framebridge-bridge-codec.vcxproj -> D:\FrameBridge\build\tcw004a-clean-20260902\build\release\Release\framebridge-bridge-codec.exe
+  Building Custom Rule D:/FrameBridge/build/tcw004a-clean-20260902/CMakeLists.txt
+  Scanning sources for module dependencies...
+  main.cpp
+  Compiling...
+  main.cpp
+  framebridge-null-runtime.vcxproj -> D:\FrameBridge\build\tcw004a-clean-20260902\build\release\Release\framebridge-null-runtime.exe
+  Building Custom Rule D:/FrameBridge/build/tcw004a-clean-20260902/CMakeLists.txt
+  Scanning sources for module dependencies...
+  preflight.cpp
+  Compiling...
+  preflight.cpp
+  framebridge-streamline-preflight-lib.vcxproj -> D:\FrameBridge\build\tcw004a-clean-20260902\build\release\Release\framebridge-streamline-preflight-lib.lib
+  Building Custom Rule D:/FrameBridge/build/tcw004a-clean-20260902/CMakeLists.txt
+  Scanning sources for module dependencies...
+  main.cpp
+  Compiling...
+  main.cpp
+  framebridge-streamline-dawn-preflight.vcxproj -> D:\FrameBridge\build\tcw004a-clean-20260902\build\release\Release\framebridge-streamline-dawn-preflight.exe
+  Building Custom Rule D:/FrameBridge/build/tcw004a-clean-20260902/CMakeLists.txt
+  Scanning sources for module dependencies...
+  preflight_test.cpp
+  Compiling...
+  preflight_test.cpp
+  framebridge-streamline-preflight-test.vcxproj -> D:\FrameBridge\build\tcw004a-clean-20260902\build\release\Release\framebridge-streamline-preflight-test.exe
+  Building Custom Rule D:/FrameBridge/build/tcw004a-clean-20260902/CMakeLists.txt

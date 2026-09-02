@@ -12,6 +12,10 @@ the architecture decision remains unresolved behind external dependencies.
 `GetD3D12Device` availability was identified through source inspection only
 and was not compiled or exercised in this task.
 
+`artifacts/tcw-004a/result.json` is a byte-for-byte copy of the clean-checkout
+executable stdout captured at runtime. Its SHA-256 is
+`343bc2c77648a1051f0ecd80127a94d5eace5e6d4e210c77625c8d3de1615717`.
+
 The result is not a DLSS test, native renderer test, or proof that Dawn’s
 private D3D12 extraction helper is a supported public ABI. A future supervised
 run with the pinned SDK and authorized app ID must perform signature

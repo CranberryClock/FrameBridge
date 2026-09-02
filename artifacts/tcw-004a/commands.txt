@@ -3,12 +3,22 @@ Toolchain:
   ctest = C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\ctest.exe
   generator = Visual Studio 17 2022, x64, Release
 
-Commands and exit codes:
-  cmake -S . -B build/tcw004a -G "Visual Studio 17 2022" -A x64        [0]
-  cmake --build build/tcw004a --config Release                         [0]
-  ctest --test-dir build/tcw004a -C Release --output-on-failure        [0]
-  build/tcw004a/Release/framebridge-streamline-preflight-test.exe      [0, active_checks=21, dependency_states=4, exit_mappings=4]
-  build/tcw004a/Release/framebridge-streamline-dawn-preflight.exe      [3, expected blocked prerequisite]
+Clean-checkout source:
+  git clone --no-local D:\FrameBridge D:\FrameBridge\build\tcw004a-clean-20260902 [0]
+  git -C D:\FrameBridge\build\tcw004a-clean-20260902 checkout a6379e51d320348967b81a63034539b16b55d761 [0]
+  git status --porcelain [clean]
+
+Clean-checkout commands and exit codes:
+  cmake -S D:\FrameBridge\build\tcw004a-clean-20260902 -B D:\FrameBridge\build\tcw004a-clean-20260902\build\release -G "Visual Studio 17 2022" -A x64 [0]
+  cmake --build D:\FrameBridge\build\tcw004a-clean-20260902\build\release --config Release --clean-first [0]
+  ctest --test-dir D:\FrameBridge\build\tcw004a-clean-20260902\build\release -C Release --output-on-failure [0, 2 tests]
+  D:\FrameBridge\build\tcw004a-clean-20260902\build\release\Release\framebridge-streamline-preflight-test.exe [0, active_checks=21, dependency_states=4, exit_mappings=4]
+  D:\FrameBridge\build\tcw004a-clean-20260902\build\release\Release\framebridge-streamline-dawn-preflight.exe > D:\FrameBridge\artifacts\tcw-004a\raw-result.json 2> D:\FrameBridge\artifacts\tcw-004a\raw-stderr.txt [3]
+  active test stdout redirected to artifacts/tcw-004a/active-test-output.txt
+  stderr redirected directly to artifacts/tcw-004a/raw-stderr.txt (0 bytes)
+
+Raw result SHA-256:
+  343bc2c77648a1051f0ecd80127a94d5eace5e6d4e210c77625c8d3de1615717
 
 Active runtime test output:
   PASS active_checks=21 exit_mapping=4 dependency_states=4 sentinel_redaction=PASS controlled_negative=PASS
@@ -16,5 +26,5 @@ Active runtime test output:
 The sentinel application ID was configured only in the test process. Its
 digits were absent from serialized output; the value is not recorded here.
 
-The first preflight execution was intentionally run with both external
-variables absent. No variable values are recorded here.
+The preflight execution was run with both external variables absent. No
+variable values are recorded here.

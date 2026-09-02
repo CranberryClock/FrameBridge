@@ -3,13 +3,23 @@
   "status": "BLOCKED_EXTERNAL_DEPENDENCY",
   "architecture_classification": "BLOCKED_EXTERNAL_DEPENDENCY",
   "baseline_commit": "813b7aa7308fd6e601f644c3ae9be38ea46d9f4c",
-  "implementation_commit": "6afb87ca6f60ddf715ca40b04462d6a407310b77",
+  "implementation_commit": "a6379e51d320348967b81a63034539b16b55d761",
   "external_dependencies": {
     "streamline_root_variable": "FRAMEBRIDGE_STREAMLINE_ROOT",
     "nvidia_app_id_variable": "FRAMEBRIDGE_NVIDIA_APP_ID",
     "streamline_sdk_present": false,
     "nvidia_app_id_present": false,
     "secrets_logged": false
+  },
+  "clean_checkout": {
+    "commit": "a6379e51d320348967b81a63034539b16b55d761",
+    "worktree": "clean",
+    "raw_stdout_path": "artifacts/tcw-004a/raw-result.json",
+    "raw_stdout_sha256": "343bc2c77648a1051f0ecd80127a94d5eace5e6d4e210c77625c8d3de1615717",
+    "diagnostic_exit_code": 3,
+    "release_test_count": 2,
+    "release_test_exit_code": 0,
+    "active_test_output": "artifacts/tcw-004a/active-test-output.txt"
   },
   "gates": {
     "TCW-SL-PREFLIGHT-001": "PASS",
@@ -25,6 +35,11 @@
     "artifacts/tcw-004a/commands.txt",
     "artifacts/tcw-004a/environment.json",
     "artifacts/tcw-004a/result.json",
+    "artifacts/tcw-004a/raw-result.json",
+    "artifacts/tcw-004a/raw-stderr.txt",
+    "artifacts/tcw-004a/clean-configure-output.txt",
+    "artifacts/tcw-004a/clean-build-output.txt",
+    "artifacts/tcw-004a/clean-test-output.txt",
     "artifacts/tcw-004a/review-summary.md",
     "artifacts/tcw-004a/hashes.json"
   ]

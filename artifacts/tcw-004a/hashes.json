@@ -2,13 +2,13 @@
   "algorithm": "SHA-256",
   "external_streamline_binaries": [],
   "built_binaries": {
-    "build/tcw004a/Release/framebridge-streamline-dawn-preflight.exe": "8c595916db71c853a4b8931c6396a0154b8a219db141368bd6c22226754b1436",
-    "build/tcw004a/Release/framebridge-streamline-preflight-test.exe": "6948728175a83c206f49c77047ab87c51db0bbfa754436640fc178012caaf491"
+    "build/tcw004a-clean-20260902/build/release/Release/framebridge-streamline-dawn-preflight.exe": "9e7db046bd92717623c97c1f681cc657762ad02164c954601fdf7f856b417ccd",
+    "build/tcw004a-clean-20260902/build/release/Release/framebridge-streamline-preflight-test.exe": "e9bf48554d7fe06e1bf7e1be5eb16e5db7ffcd251d00a753bb2b4f71aedd73e8"
   },
   "source_files": {
-    "native/streamline-preflight/preflight.cpp": "c7532db7147f08414e2fc8755647bac172e96fb19df43700a68f132f40a5fee8",
-    "native/streamline-preflight/preflight.h": "fed062adce4ff6a134152e6dcdc786ccc97a2277b64a8a94296edcda292efe2f",
-    "native/streamline-preflight/main.cpp": "7d7c091faba13e59c240eab448c9cf54a29e0efed542967cd901b9579de2abd2",
-    "native/streamline-preflight/preflight_test.cpp": "35060e768b10231ad8d86ef111da2761c8b3dbbe52f63b24ace66d6e8ba60566"
+    "native/streamline-preflight/preflight.cpp": "f916d9da7a5f4057790eda29ecad5ff8c4b12e5d3ed59f8d74a81e27146450df",
+    "native/streamline-preflight/preflight.h": "cfbf984d5ceb4118a69574aa51e4ae57ba836ccb09afbdcfc60a70b30bde1890",
+    "native/streamline-preflight/main.cpp": "370cef22ee41e26d44e2ea93951110785e15f7d3c5d95e4d2c73ec3708b1b636",
+    "native/streamline-preflight/preflight_test.cpp": "b227df2a3dcc91ebf8873a6d6a0cc9c6d26a8a30ae7644a1a19e1fa829df6723"
   }
 }
