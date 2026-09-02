@@ -1,6 +1,6 @@
 {
   "status": "PASS",
-  "implementation_commit": "172fc2bff20a1a9f43e309cf7fefc6e3ca6c36ba",
+  "implementation_commit": "c1a979d117a8310809a7afce2604a6ecdfca14c0",
   "evidence": "runs/acceptance-2026-09-02T14-47-18-590Z-fveQIb/result.json",
   "note": "Pointer only; raw measurements reside in the immutable generated run record."
 }

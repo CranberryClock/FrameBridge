@@ -1,0 +1,55 @@
+{
+  "task": "TCW-004",
+  "evidence_type": "redacted_human_report",
+  "source": "User-run Chrome for Testing session and two provided screenshots",
+  "chrome": {
+    "product": "Google Chrome for Testing",
+    "version": "152.0.7977.75",
+    "display_refresh_rate_hz": 240,
+    "requested_120_144_hz_check": "HUMAN_REQUIRED — current display was 240 Hz"
+  },
+  "loopback": {
+    "host": "127.0.0.1",
+    "port": 51304,
+    "token_recorded": false,
+    "token_field_empty_in_captured_connected_state": true
+  },
+  "pre_disconnect": {
+    "browser_logical_frame": "14111",
+    "session_generation": "1",
+    "current_resize_generation": "13",
+    "acknowledged_resize_generation": "10"
+  },
+  "post_reconnect": {
+    "browser_logical_frame": "21869",
+    "last_sent_frame": "21869",
+    "accepted_frame": "21868",
+    "session_generation": "2",
+    "current_resize_generation": "13",
+    "acknowledged_resize_generation": "13",
+    "outstanding_frames": 1,
+    "dropped_frames": 0,
+    "protocol_error": null
+  },
+  "continuity": {
+    "cube_and_browser_frame_continued_while_disconnected": true,
+    "user_reported_no_stutters": true,
+    "user_reported_back_and_forth_resize_worked": true,
+    "reconnect_did_not_restart_simulation": true
+  },
+  "resize": {
+    "sequence": ["800x450", "640x360"],
+    "acknowledgement_order_explicitly_reported_by_user": false,
+    "numeric_acknowledgement_values_in_screenshot": "640x360 acknowledged at generation 13; the user reported that back-and-forth worked, but the earlier 800x450 acknowledgement was not captured as a separate screenshot"
+  },
+  "gate_status": {
+    "TCW-PROTO-003": "PASS — narrow scene-state mirror gate",
+    "TCW-CONT-001": "PASS — browser continuity confirmed",
+    "TCW-REFRESH-120-144": "HUMAN_REQUIRED"
+  },
+  "notes": [
+    "The original create/update/draw/destroy fragmentation formulation is superseded for this mirror spike.",
+    "CreateBuffer and Draw were not used by the active cube contract and remain reserved spike messages.",
+    "No authentication token or personal machine identifier is stored in this record."
+  ]
+}

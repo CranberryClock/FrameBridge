@@ -1,14 +1,16 @@
 {
   "task": "TCW-004",
   "status": "SUPERVISOR_REVIEW_HUMAN_REQUIRED",
-  "implementation_commit": "172fc2bff20a1a9f43e309cf7fefc6e3ca6c36ba",
+  "implementation_commit": "c1a979d117a8310809a7afce2604a6ecdfca14c0",
+  "acceptance_source_commit": "172fc2bff20a1a9f43e309cf7fefc6e3ca6c36ba",
+  "acceptance_reused_from_prior_commit": true,
   "gates": {
     "TCW-BUILD-001": "PASS",
     "TCW-PROTO-001": "PASS",
     "TCW-PROTO-002": "PASS",
-    "TCW-PROTO-003": "HUMAN_REQUIRED",
+    "TCW-PROTO-003": "PASS",
     "TCW-PROTO-004": "PASS",
-    "TCW-CONT-001": "HUMAN_REQUIRED"
+    "TCW-CONT-001": "PASS"
   },
   "scope_boundary": "Node loopback test/developer infrastructure; browser WebGPU renderer; no native socket or renderer claim",
   "stale_evidence": "Prior real-soak.json invalidated; retained in Git history only",
@@ -21,7 +23,7 @@
     {
       "suite": "protocol",
       "status": "PASS",
-      "tests": 74,
+      "tests": 75,
       "categories": {
         "encoder-rejections": 6,
         "fixtures": 13,
@@ -29,7 +31,7 @@
         "session": 22,
         "json": 1,
         "scheduling": 4,
-        "acknowledgements": 8,
+        "acknowledgements": 9,
         "capabilities": 8,
         "resize": 1
       },
@@ -51,9 +53,9 @@
   ],
   "cpp_output": "CPP_CODEC_OK valid=12 malformed=11 encoder_rejections=6 json_files=2\r\n",
   "validation": {
-    "path": "validation\\clean-172fc2bff20a",
+    "path": "validation\\clean-c1a979d117a8",
     "status": "PASS",
-    "implementation_commit": "172fc2bff20a1a9f43e309cf7fefc6e3ca6c36ba",
+    "implementation_commit": "c1a979d117a8310809a7afce2604a6ecdfca14c0",
     "clean_install": true,
     "node": "v22.18.0",
     "commands": [
@@ -65,7 +67,7 @@
           "/c",
           "corepack pnpm install --frozen-lockfile"
         ],
-        "working_directory": "D:\\FrameBridge\\out\\tcw004-clean-final",
+        "working_directory": "D:\\FrameBridge\\out\\tcw004-clean-minor",
         "exit_code": 0,
         "expected_exit": 0,
         "output": "frozen-install.txt"
@@ -78,7 +80,7 @@
           "/c",
           "corepack pnpm -r build"
         ],
-        "working_directory": "D:\\FrameBridge\\out\\tcw004-clean-final",
+        "working_directory": "D:\\FrameBridge\\out\\tcw004-clean-minor",
         "exit_code": 0,
         "expected_exit": 0,
         "output": "typescript-build.txt"
@@ -91,7 +93,7 @@
           "/c",
           "corepack pnpm -r test"
         ],
-        "working_directory": "D:\\FrameBridge\\out\\tcw004-clean-final",
+        "working_directory": "D:\\FrameBridge\\out\\tcw004-clean-minor",
         "exit_code": 0,
         "expected_exit": 0,
         "output": "typescript-tests.txt"
@@ -104,7 +106,7 @@
           "/c",
           "corepack pnpm --filter @framebridge/demo-web exec vite build"
         ],
-        "working_directory": "D:\\FrameBridge\\out\\tcw004-clean-final",
+        "working_directory": "D:\\FrameBridge\\out\\tcw004-clean-minor",
         "exit_code": 0,
         "expected_exit": 0,
         "output": "vite-build.txt"
@@ -122,7 +124,7 @@
           "-A",
           "x64"
         ],
-        "working_directory": "D:\\FrameBridge\\out\\tcw004-clean-final",
+        "working_directory": "D:\\FrameBridge\\out\\tcw004-clean-minor",
         "exit_code": 0,
         "expected_exit": 0,
         "output": "native-configure.txt"
@@ -138,27 +140,27 @@
           "--target",
           "framebridge-bridge-codec"
         ],
-        "working_directory": "D:\\FrameBridge\\out\\tcw004-clean-final",
+        "working_directory": "D:\\FrameBridge\\out\\tcw004-clean-minor",
         "exit_code": 0,
         "expected_exit": 0,
         "output": "native-build.txt"
       },
       {
         "name": "native-execute",
-        "executable": "D:\\FrameBridge\\out\\tcw004-clean-final\\out\\tcw004-validation\\Release\\framebridge-bridge-codec.exe",
+        "executable": "D:\\FrameBridge\\out\\tcw004-clean-minor\\out\\tcw004-validation\\Release\\framebridge-bridge-codec.exe",
         "args": [],
-        "working_directory": "D:\\FrameBridge\\out\\tcw004-clean-final",
+        "working_directory": "D:\\FrameBridge\\out\\tcw004-clean-minor",
         "exit_code": 0,
         "expected_exit": 0,
         "output": "native-execute.txt"
       },
       {
         "name": "native-missing-fixture",
-        "executable": "D:\\FrameBridge\\out\\tcw004-clean-final\\out\\tcw004-validation\\Release\\framebridge-bridge-codec.exe",
+        "executable": "D:\\FrameBridge\\out\\tcw004-clean-minor\\out\\tcw004-validation\\Release\\framebridge-bridge-codec.exe",
         "args": [
           "packages/protocol/fixtures/does-not-exist"
         ],
-        "working_directory": "D:\\FrameBridge\\out\\tcw004-clean-final",
+        "working_directory": "D:\\FrameBridge\\out\\tcw004-clean-minor",
         "exit_code": 1,
         "expected_exit": 1,
         "output": "native-missing-fixture.txt"
@@ -167,18 +169,18 @@
   },
   "diagnostics": [
     {
-      "path": "runs/diagnostic-2026-09-02T14-45-04-215Z-oyf7UO/result.json",
+      "path": "runs/diagnostic-2026-09-02T15-53-40-001Z-gHc8LZ/result.json",
       "status": "PASS",
       "process_exit_code": 0,
-      "elapsed_seconds": 60.018196499999995,
-      "average_attempted_hz": 59.915162562407225
+      "elapsed_seconds": 60.021186500000006,
+      "average_attempted_hz": 59.91217784406844
     },
     {
-      "path": "runs/diagnostic-2026-09-02T14-46-04-668Z-ftV34c/result.json",
+      "path": "runs/diagnostic-2026-09-02T15-54-40-427Z-wg9Ycc/result.json",
       "status": "PASS",
       "process_exit_code": 0,
-      "elapsed_seconds": 60.0102396,
-      "average_attempted_hz": 59.93977067873597
+      "elapsed_seconds": 60.0161042,
+      "average_attempted_hz": 59.9172513433486
     }
   ],
   "acceptance": {
@@ -2106,6 +2108,7 @@
     "average_attempted_hz": 59.996431289268536,
     "status": "PASS"
   },
+  "human_evidence": "human-browser-evidence.json",
   "ci": {
     "implementation_commit": "172fc2bff20a1a9f43e309cf7fefc6e3ca6c36ba",
     "run_id": 33644093416,
@@ -2116,16 +2119,67 @@
     "verified_at": "2026-09-02 14:47:28 UTC"
   },
   "changed_files": [
+    ".gitattributes",
     ".github/workflows/tcw-004.yml",
     "CMakeLists.txt",
     "README.md",
     "apps/demo-web/index.html",
     "apps/demo-web/src/browser.ts",
     "apps/demo-web/src/smoke.test.ts",
+    "artifacts/tcw-004/artifact-hashes.json",
+    "artifacts/tcw-004/ci.json",
+    "artifacts/tcw-004/commands.txt",
     "artifacts/tcw-004/human-browser-steps.md",
     "artifacts/tcw-004/manifest.json",
     "artifacts/tcw-004/real-soak.json",
     "artifacts/tcw-004/redacted-transcript.txt",
+    "artifacts/tcw-004/review-summary.md",
+    "artifacts/tcw-004/runs/acceptance-2026-09-02T14-47-18-590Z-fveQIb/output.txt",
+    "artifacts/tcw-004/runs/acceptance-2026-09-02T14-47-18-590Z-fveQIb/result.json",
+    "artifacts/tcw-004/runs/diagnostic-2026-09-02T14-23-26-840Z-HcB0ZY/output.txt",
+    "artifacts/tcw-004/runs/diagnostic-2026-09-02T14-23-26-840Z-HcB0ZY/result.json",
+    "artifacts/tcw-004/runs/diagnostic-2026-09-02T14-24-45-065Z-oS249c/output.txt",
+    "artifacts/tcw-004/runs/diagnostic-2026-09-02T14-24-45-065Z-oS249c/result.json",
+    "artifacts/tcw-004/runs/diagnostic-2026-09-02T14-27-44-097Z-ptxQaA/output.txt",
+    "artifacts/tcw-004/runs/diagnostic-2026-09-02T14-27-44-097Z-ptxQaA/result.json",
+    "artifacts/tcw-004/runs/diagnostic-2026-09-02T14-29-28-135Z-Ei3lmQ/output.txt",
+    "artifacts/tcw-004/runs/diagnostic-2026-09-02T14-29-28-135Z-Ei3lmQ/result.json",
+    "artifacts/tcw-004/runs/diagnostic-2026-09-02T14-31-38-546Z-DLqIMS/output.txt",
+    "artifacts/tcw-004/runs/diagnostic-2026-09-02T14-31-38-546Z-DLqIMS/result.json",
+    "artifacts/tcw-004/runs/diagnostic-2026-09-02T14-32-39-019Z-hMHE4w/output.txt",
+    "artifacts/tcw-004/runs/diagnostic-2026-09-02T14-32-39-019Z-hMHE4w/result.json",
+    "artifacts/tcw-004/runs/diagnostic-2026-09-02T14-36-49-193Z-Q2RVb9/output.txt",
+    "artifacts/tcw-004/runs/diagnostic-2026-09-02T14-36-49-193Z-Q2RVb9/result.json",
+    "artifacts/tcw-004/runs/diagnostic-2026-09-02T14-38-11-738Z-dOa8lw/output.txt",
+    "artifacts/tcw-004/runs/diagnostic-2026-09-02T14-38-11-738Z-dOa8lw/result.json",
+    "artifacts/tcw-004/runs/diagnostic-2026-09-02T14-39-12-141Z-m3WJGZ/output.txt",
+    "artifacts/tcw-004/runs/diagnostic-2026-09-02T14-39-12-141Z-m3WJGZ/result.json",
+    "artifacts/tcw-004/runs/diagnostic-2026-09-02T14-40-28-356Z-sTvF8O/output.txt",
+    "artifacts/tcw-004/runs/diagnostic-2026-09-02T14-40-28-356Z-sTvF8O/result.json",
+    "artifacts/tcw-004/runs/diagnostic-2026-09-02T14-42-40-179Z-opQcTI/output.txt",
+    "artifacts/tcw-004/runs/diagnostic-2026-09-02T14-42-40-179Z-opQcTI/result.json",
+    "artifacts/tcw-004/runs/diagnostic-2026-09-02T14-45-04-215Z-oyf7UO/output.txt",
+    "artifacts/tcw-004/runs/diagnostic-2026-09-02T14-45-04-215Z-oyf7UO/result.json",
+    "artifacts/tcw-004/runs/diagnostic-2026-09-02T14-46-04-668Z-ftV34c/output.txt",
+    "artifacts/tcw-004/runs/diagnostic-2026-09-02T14-46-04-668Z-ftV34c/result.json",
+    "artifacts/tcw-004/validation/clean-172fc2bff20a/frozen-install.txt",
+    "artifacts/tcw-004/validation/clean-172fc2bff20a/native-build.txt",
+    "artifacts/tcw-004/validation/clean-172fc2bff20a/native-configure.txt",
+    "artifacts/tcw-004/validation/clean-172fc2bff20a/native-execute.txt",
+    "artifacts/tcw-004/validation/clean-172fc2bff20a/native-missing-fixture.txt",
+    "artifacts/tcw-004/validation/clean-172fc2bff20a/result.json",
+    "artifacts/tcw-004/validation/clean-172fc2bff20a/typescript-build.txt",
+    "artifacts/tcw-004/validation/clean-172fc2bff20a/typescript-tests.txt",
+    "artifacts/tcw-004/validation/clean-172fc2bff20a/vite-build.txt",
+    "artifacts/tcw-004/validation/run-svZDyC/frozen-install.txt",
+    "artifacts/tcw-004/validation/run-svZDyC/native-build.txt",
+    "artifacts/tcw-004/validation/run-svZDyC/native-configure.txt",
+    "artifacts/tcw-004/validation/run-svZDyC/native-execute.txt",
+    "artifacts/tcw-004/validation/run-svZDyC/native-missing-fixture.txt",
+    "artifacts/tcw-004/validation/run-svZDyC/result.json",
+    "artifacts/tcw-004/validation/run-svZDyC/typescript-build.txt",
+    "artifacts/tcw-004/validation/run-svZDyC/typescript-tests.txt",
+    "artifacts/tcw-004/validation/run-svZDyC/vite-build.txt",
     "docs/tcw004-protocol.md",
     "native/bridge/codec.hpp",
     "native/bridge/codec_test.cpp",
@@ -2157,7 +2211,7 @@
   ],
   "human_driver_checklist": "human-browser-steps.md",
   "limitations": [
-    "Real Chrome interaction and visual acceptance remain HUMAN_REQUIRED.",
+    "The accepted wall-clock soak predates this minor client/UI commit; the soak runner and wire contract were unchanged, and fresh clean validation plus diagnostics cover the revised code.",
     "Memory sampling uses explicit GC; both pre-GC and retained heap are recorded.",
     "No native networking or rendering is implemented in TCW-004."
   ]
