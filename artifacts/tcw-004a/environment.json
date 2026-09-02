@@ -1,0 +1,11 @@
+{
+  "os": "Windows",
+  "generator": "Visual Studio 17 2022",
+  "architecture": "x64",
+  "msvc": "19.38.33145.0",
+  "msvc_toolset": "14.38.33130",
+  "windows_sdk": "10.0.26100.0",
+  "streamline_root_configured": false,
+  "nvidia_app_id_configured": false,
+  "external_binaries_committed": false
+}

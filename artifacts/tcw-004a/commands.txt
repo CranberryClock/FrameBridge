@@ -1,0 +1,14 @@
+Toolchain:
+  cmake = C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe
+  ctest = C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\ctest.exe
+  generator = Visual Studio 17 2022, x64, Release
+
+Commands and exit codes:
+  cmake -S . -B build/tcw004a -G "Visual Studio 17 2022" -A x64        [0]
+  cmake --build build/tcw004a --config Release                         [0]
+  ctest --test-dir build/tcw004a -C Release --output-on-failure        [0]
+  build/tcw004a/Release/framebridge-streamline-preflight-test.exe      [0]
+  build/tcw004a/Release/framebridge-streamline-dawn-preflight.exe      [3, expected blocked prerequisite]
+
+The first preflight execution was intentionally run with both external
+variables absent. No variable values are recorded here.

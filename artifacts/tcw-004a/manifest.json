@@ -1,0 +1,24 @@
+{
+  "task": "TCW-004A",
+  "status": "BLOCKED_EXTERNAL_DEPENDENCY",
+  "architecture_classification": "BLOCKED_EXTERNAL_DEPENDENCY",
+  "baseline_commit": "813b7aa7308fd6e601f644c3ae9be38ea46d9f4c",
+  "implementation_commit": "PENDING_COMMIT",
+  "external_dependencies": {
+    "streamline_root_variable": "FRAMEBRIDGE_STREAMLINE_ROOT",
+    "nvidia_app_id_variable": "FRAMEBRIDGE_NVIDIA_APP_ID",
+    "streamline_sdk_present": false,
+    "nvidia_app_id_present": false,
+    "secrets_logged": false
+  },
+  "gates": {
+    "TCW-SL-PREFLIGHT-001": "PASS",
+    "TCW-SL-PREFLIGHT-002": "PASS",
+    "TCW-SL-PREFLIGHT-003": "BLOCKED_EXTERNAL_DEPENDENCY",
+    "TCW-SL-PREFLIGHT-004": "BLOCKED_EXTERNAL_DEPENDENCY",
+    "TCW-SL-PREFLIGHT-005": "BLOCKED_EXTERNAL_DEPENDENCY",
+    "TCW-SL-PREFLIGHT-006": "PASS",
+    "TCW-SL-PREFLIGHT-007": "PASS"
+  },
+  "note": "No Streamline or DLSS runtime was loaded. No native renderer work was started."
+}

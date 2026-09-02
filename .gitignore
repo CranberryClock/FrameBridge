@@ -2,8 +2,15 @@ node_modules/
 dist/
 build/
 third_party/_sdk/
+third_party/streamline/
+Streamline/
+sl.interposer.dll
+sl.*.dll
+nvngx_*.dll
 artifacts/*
 !artifacts/.gitkeep
+!artifacts/tcw-004a/
+!artifacts/tcw-004a/**
 captures/
 *.pix3
 *.rdc
