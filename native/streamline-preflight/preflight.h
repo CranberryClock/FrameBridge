@@ -14,23 +14,34 @@ enum class ExitCode : int {
   RuntimeFailure = 4,
 };
 
+enum class Status {
+  Pass,
+  InvalidConfiguration,
+  BlockedExternalDependency,
+  RuntimeFailure,
+};
+
+int ExitCodeFor(Status status);
+
 struct Configuration {
   std::filesystem::path sdkRoot;
-  std::uint32_t applicationId = 0;
   bool hasSdkRoot = false;
   bool hasApplicationId = false;
+  bool applicationIdConfigured = false;
+  bool applicationIdMalformed = false;
 };
 
 struct Result {
-  std::string status;
+  Status status = Status::RuntimeFailure;
   std::string classification;
   std::string reason;
   Configuration configuration;
-  std::vector<std::string> checks;
+  std::vector<std::string> executedChecks;
+  std::vector<std::string> plannedChecks;
   std::vector<std::string> warnings;
 };
 
-bool ParseApplicationId(const std::string& value, std::uint32_t& output);
+bool IsValidApplicationId(const std::string& value);
 Configuration ReadConfiguration();
 std::string RedactPath(const std::filesystem::path& path);
 std::string SerializeResult(const Result& result);

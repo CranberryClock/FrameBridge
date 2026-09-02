@@ -2,9 +2,7 @@
 
 #include <Windows.h>
 
-#include <algorithm>
 #include <charconv>
-#include <fstream>
 #include <iomanip>
 #include <sstream>
 
@@ -45,12 +43,33 @@ bool HasInterposer(const fs::path& root) {
          fs::is_regular_file(root / "bin" / "sl.interposer.dll");
 }
 
+const char* StatusName(Status status) {
+  switch (status) {
+    case Status::Pass: return "PASS";
+    case Status::InvalidConfiguration: return "INVALID_CONFIGURATION";
+    case Status::BlockedExternalDependency: return "BLOCKED_EXTERNAL_DEPENDENCY";
+    case Status::RuntimeFailure: return "RUNTIME_FAILURE";
+  }
+  return "RUNTIME_FAILURE";
+}
+
 }  // namespace
 
-bool ParseApplicationId(const std::string& value, std::uint32_t& output) {
+int ExitCodeFor(Status status) {
+  switch (status) {
+    case Status::Pass: return static_cast<int>(ExitCode::Pass);
+    case Status::InvalidConfiguration: return static_cast<int>(ExitCode::InvalidConfiguration);
+    case Status::BlockedExternalDependency: return static_cast<int>(ExitCode::BlockedExternalDependency);
+    case Status::RuntimeFailure: return static_cast<int>(ExitCode::RuntimeFailure);
+  }
+  return static_cast<int>(ExitCode::RuntimeFailure);
+}
+
+bool IsValidApplicationId(const std::string& value) {
   if (value.empty() || value.size() > 10 || value.find_first_not_of("0123456789") != std::string::npos) return false;
-  const auto [end, error] = std::from_chars(value.data(), value.data() + value.size(), output);
-  return error == std::errc{} && end == value.data() + value.size() && output != 0;
+  std::uint32_t parsed = 0;
+  const auto [end, error] = std::from_chars(value.data(), value.data() + value.size(), parsed);
+  return error == std::errc{} && end == value.data() + value.size() && parsed != 0;
 }
 
 Configuration ReadConfiguration() {
@@ -59,7 +78,9 @@ Configuration ReadConfiguration() {
   config.sdkRoot = sdk;
   config.hasSdkRoot = !sdk.empty();
   const std::string app = Env("FRAMEBRIDGE_NVIDIA_APP_ID");
-  config.hasApplicationId = ParseApplicationId(app, config.applicationId);
+  config.applicationIdConfigured = !app.empty();
+  config.hasApplicationId = IsValidApplicationId(app);
+  config.applicationIdMalformed = config.applicationIdConfigured && !config.hasApplicationId;
   return config;
 }
 
@@ -71,50 +92,70 @@ std::string RedactPath(const fs::path& path) {
 Result RunPreflight(const Configuration& configuration) {
   Result result;
   result.configuration = configuration;
-  result.checks = {
+  result.executedChecks = {"configuration-read", "application-id-presence", "sdk-root-presence"};
+  result.plannedChecks = {
       "configuration-read",
-      "application-id-format",
-      "full-path-signature-validation-planned",
-      "secure-load-planned",
-      "dawn-d3d12-device-extraction-planned",
-      "com-iunknown-identity-planned",
-      "slSetD3DDevice-planned",
-      "feature-requirements-and-support-planned",
-      "shutdown-cleanup-planned"};
+      "full-path-signature-validation",
+      "secure-load",
+      "dawn-d3d12-device-extraction",
+      "com-iunknown-identity",
+      "slInit-manual-hooking",
+      "slSetD3DDevice",
+      "feature-requirements-and-support",
+      "slShutdown-cleanup"};
 
-  if (!configuration.hasApplicationId) {
-    result.status = "BLOCKED";
+  if (configuration.applicationIdMalformed) {
+    result.status = Status::InvalidConfiguration;
     result.classification = "BLOCKED_EXTERNAL_DEPENDENCY";
-    result.reason = "FRAMEBRIDGE_NVIDIA_APP_ID is absent or is not a non-zero decimal uint32";
-    result.warnings.push_back("No NVIDIA application ID was logged or persisted");
+    result.reason = "FRAMEBRIDGE_NVIDIA_APP_ID is malformed; expected a non-zero decimal uint32";
+    result.warnings.push_back("The application ID value was not logged or persisted");
     return result;
   }
-  if (!configuration.hasSdkRoot || !HasInterposer(configuration.sdkRoot)) {
-    result.status = "BLOCKED";
+  if (!configuration.hasApplicationId) {
+    result.status = Status::BlockedExternalDependency;
     result.classification = "BLOCKED_EXTERNAL_DEPENDENCY";
-    result.reason = "Pinned Streamline SDK interposer was not found at FRAMEBRIDGE_STREAMLINE_ROOT";
+    result.reason = "NVIDIA application ID is missing";
+    result.warnings.push_back("The application ID value was not logged or persisted");
+    return result;
+  }
+  if (!configuration.hasSdkRoot) {
+    result.status = Status::BlockedExternalDependency;
+    result.classification = "BLOCKED_EXTERNAL_DEPENDENCY";
+    result.reason = "Streamline SDK root is missing";
+    result.warnings.push_back("No Streamline SDK binaries were loaded");
+    return result;
+  }
+  result.executedChecks.push_back("interposer-presence");
+  if (!HasInterposer(configuration.sdkRoot)) {
+    result.status = Status::BlockedExternalDependency;
+    result.classification = "BLOCKED_EXTERNAL_DEPENDENCY";
+    result.reason = "Streamline SDK root is configured but sl.interposer.dll is missing";
     result.warnings.push_back("No Streamline SDK binaries were loaded");
     return result;
   }
 
-  result.status = "BLOCKED";
+  result.status = Status::BlockedExternalDependency;
   result.classification = "BLOCKED_EXTERNAL_DEPENDENCY";
-  result.reason = "SDK discovery is present, but signed NVIDIA SDK execution is intentionally gated for the next supervised run";
+  result.reason = "External prerequisites appear present, but supervised Streamline SDK integration is unavailable";
   return result;
 }
 
 std::string SerializeResult(const Result& result) {
   std::ostringstream out;
-  out << "{\n  \"status\": \"" << JsonEscape(result.status)
+  out << "{\n  \"status\": \"" << StatusName(result.status)
       << "\",\n  \"architecture_classification\": \"" << JsonEscape(result.classification)
       << "\",\n  \"reason\": \"" << JsonEscape(result.reason) << "\",\n"
       << "  \"sdk_root\": \"" << JsonEscape(RedactPath(result.configuration.sdkRoot)) << "\",\n"
       << "  \"application_id_present\": " << (result.configuration.hasApplicationId ? "true" : "false") << ",\n"
-      << "  \"application_id\": " << (result.configuration.hasApplicationId ? std::to_string(result.configuration.applicationId) : "null") << ",\n"
-      << "  \"checks\": [";
-  for (std::size_t i = 0; i < result.checks.size(); ++i) {
+      << "  \"executed_checks\": [";
+  for (std::size_t i = 0; i < result.executedChecks.size(); ++i) {
     if (i) out << ", ";
-    out << "\"" << JsonEscape(result.checks[i]) << "\"";
+    out << "\"" << JsonEscape(result.executedChecks[i]) << "\"";
+  }
+  out << "],\n  \"planned_checks\": [";
+  for (std::size_t i = 0; i < result.plannedChecks.size(); ++i) {
+    if (i) out << ", ";
+    out << "\"" << JsonEscape(result.plannedChecks[i]) << "\"";
   }
   out << "],\n  \"warnings\": [";
   for (std::size_t i = 0; i < result.warnings.size(); ++i) {

@@ -1,10 +1,16 @@
 # TCW-004A review summary
 
-The preflight code and tests are complete for the locally available state.
+The configuration and error-handling scaffold and its active tests are
+implemented for the locally available state.
 The required Streamline SDK and NVIDIA-provided application ID are not
 installed/configured on this machine, so runtime SDK gates are blocked and no
 architecture viability claim is made. The exact classification is
 `BLOCKED_EXTERNAL_DEPENDENCY`.
+
+The actual Streamline/Dawn compatibility path is not implemented or executed;
+the architecture decision remains unresolved behind external dependencies.
+`GetD3D12Device` availability was identified through source inspection only
+and was not compiled or exercised in this task.
 
 The result is not a DLSS test, native renderer test, or proof that Dawn’s
 private D3D12 extraction helper is a supported public ABI. A future supervised

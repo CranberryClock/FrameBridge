@@ -2,6 +2,12 @@
 
 Status: `BLOCKED_EXTERNAL_DEPENDENCY`.
 
+The configuration and error-handling scaffold is implemented. The actual
+Streamline/Dawn compatibility path is not implemented or executed; the
+architecture decision remains unresolved behind the external dependencies.
+`GetD3D12Device` availability was identified through source inspection only
+and was not compiled or exercised in this task.
+
 This is a bounded architecture probe. It does not initialize DLSS, render with
 Streamline, replace the native renderer, or change the browser mirror.
 
@@ -27,6 +33,11 @@ time it reads `FRAMEBRIDGE_STREAMLINE_ROOT` and
 `FRAMEBRIDGE_NVIDIA_APP_ID`; values are never printed. Missing or invalid
 external prerequisites return exit code 3 and the exact architecture
 classification `BLOCKED_EXTERNAL_DEPENDENCY`.
+
+The machine result separates `executed_checks` from `planned_checks`. Only
+configuration presence and SDK interposer discovery execute locally; signature
+validation, secure loading, Dawn extraction, COM identity, Streamline calls,
+support queries, and shutdown remain planned because the SDK is unavailable.
 
 ## Local invocation
 

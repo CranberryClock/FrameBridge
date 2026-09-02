@@ -7,8 +7,14 @@ Commands and exit codes:
   cmake -S . -B build/tcw004a -G "Visual Studio 17 2022" -A x64        [0]
   cmake --build build/tcw004a --config Release                         [0]
   ctest --test-dir build/tcw004a -C Release --output-on-failure        [0]
-  build/tcw004a/Release/framebridge-streamline-preflight-test.exe      [0]
+  build/tcw004a/Release/framebridge-streamline-preflight-test.exe      [0, active_checks=21, dependency_states=4, exit_mappings=4]
   build/tcw004a/Release/framebridge-streamline-dawn-preflight.exe      [3, expected blocked prerequisite]
+
+Active runtime test output:
+  PASS active_checks=21 exit_mapping=4 dependency_states=4 sentinel_redaction=PASS controlled_negative=PASS
+
+The sentinel application ID was configured only in the test process. Its
+digits were absent from serialized output; the value is not recorded here.
 
 The first preflight execution was intentionally run with both external
 variables absent. No variable values are recorded here.

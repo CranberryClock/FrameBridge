@@ -1,20 +1,25 @@
 {
   "status": "BLOCKED",
   "architecture_classification": "BLOCKED_EXTERNAL_DEPENDENCY",
-  "reason": "FRAMEBRIDGE_NVIDIA_APP_ID is absent or is not a non-zero decimal uint32",
+  "reason": "NVIDIA application ID is missing",
   "sdk_root": "",
   "application_id_present": false,
-  "application_id": null,
-  "checks": [
-    "configuration-read",
-    "application-id-format",
-    "full-path-signature-validation-planned",
-    "secure-load-planned",
-    "dawn-d3d12-device-extraction-planned",
-    "com-iunknown-identity-planned",
-    "slSetD3DDevice-planned",
-    "feature-requirements-and-support-planned",
-    "shutdown-cleanup-planned"
+  "executed_checks": ["configuration-read", "application-id-presence", "sdk-root-presence"],
+  "planned_checks": [
+    "full-path-signature-validation",
+    "secure-load",
+    "dawn-d3d12-device-extraction",
+    "com-iunknown-identity",
+    "slInit-manual-hooking",
+    "slSetD3DDevice",
+    "feature-requirements-and-support",
+    "slShutdown-cleanup"
   ],
-  "warnings": ["No NVIDIA application ID was logged or persisted"]
+  "warnings": ["The application ID value was not logged or persisted"],
+  "completion_language": {
+    "scaffold": "implemented",
+    "streamline_dawn_compatibility_path": "not_implemented_or_executed",
+    "architecture_decision": "unresolved_behind_external_dependencies",
+    "get_d3d12_device": "source_inspection_only_not_compiled_or_exercised"
+  }
 }

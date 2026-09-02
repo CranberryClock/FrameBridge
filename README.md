@@ -11,3 +11,7 @@ Local validation: `node tools/tcw004-validate.mjs` records exact commands, outpu
 Run repeated diagnostics with `$env:TCW004_DURATION_SECONDS='60'; node tools/tcw004-soak.mjs`. Commit stable implementation before acceptance, then run with duration 1800. Every run writes a unique directory under artifacts/tcw-004/runs with source/runtime hashes, timestamps, measured acceptance checks, memory samples, and process exit code. The prior reconstructed real-soak.json is stale and provides no acceptance evidence. Current gate decisions belong in the evidence manifest.
 
 No native socket endpoint, native bridge renderer, DLSS, Streamline, extension, installer, custom Three.js backend, or Unreal work is part of this task. Stop for supervisor review after TCW-004.
+
+TCW-004A is a bounded Streamline/Dawn compatibility preflight scaffold. Its current status is
+`BLOCKED_EXTERNAL_DEPENDENCY` because the pinned NVIDIA SDK and NVIDIA application ID are not available locally; no
+Streamline or DLSS runtime was loaded.
