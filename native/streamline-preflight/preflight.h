@@ -46,5 +46,6 @@ Configuration ReadConfiguration();
 std::string RedactPath(const std::filesystem::path& path);
 std::string SerializeResult(const Result& result);
 Result RunPreflight(const Configuration& configuration);
+Result RuntimeFailureResult();
 
 }  // namespace framebridge::streamline

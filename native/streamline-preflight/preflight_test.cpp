@@ -55,6 +55,12 @@ int main() {
     interposerMissing.sdkRoot = "C:\\framebridge-test-no-sdk";
     Check(RunPreflight(interposerMissing).reason == "Streamline SDK root is configured but sl.interposer.dll is missing", "missing interposer state incorrect");
 
+    const Result runtimeFailure = RuntimeFailureResult();
+    Check(ExitCodeFor(runtimeFailure.status) == 4, "runtime failure did not map to exit 4");
+    const std::string runtimeJson = SerializeResult(runtimeFailure);
+    Check(runtimeJson.find("C:\\framebridge-test-no-sdk") == std::string::npos, "runtime failure exposed configured path");
+    Check(runtimeJson.find("RUNTIME_FAILURE") != std::string::npos, "runtime failure result missing");
+
     bool controlledFailureObserved = false;
     try {
       Check(false, "controlled negative self-test");

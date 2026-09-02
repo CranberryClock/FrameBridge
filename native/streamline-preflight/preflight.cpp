@@ -38,9 +38,13 @@ std::string JsonEscape(const std::string& input) {
 }
 
 bool HasInterposer(const fs::path& root) {
-  return fs::is_regular_file(root / "sl.interposer.dll") ||
-         fs::is_regular_file(root / "bin" / "x64" / "sl.interposer.dll") ||
-         fs::is_regular_file(root / "bin" / "sl.interposer.dll");
+  std::error_code error;
+  const bool rootDll = fs::is_regular_file(root / "sl.interposer.dll", error);
+  error.clear();
+  const bool x64Dll = fs::is_regular_file(root / "bin" / "x64" / "sl.interposer.dll", error);
+  error.clear();
+  const bool binDll = fs::is_regular_file(root / "bin" / "sl.interposer.dll", error);
+  return rootDll || x64Dll || binDll;
 }
 
 const char* StatusName(Status status) {
@@ -94,7 +98,6 @@ Result RunPreflight(const Configuration& configuration) {
   result.configuration = configuration;
   result.executedChecks = {"configuration-read", "application-id-presence", "sdk-root-presence"};
   result.plannedChecks = {
-      "configuration-read",
       "full-path-signature-validation",
       "secure-load",
       "dawn-d3d12-device-extraction",
@@ -137,6 +140,15 @@ Result RunPreflight(const Configuration& configuration) {
   result.status = Status::BlockedExternalDependency;
   result.classification = "BLOCKED_EXTERNAL_DEPENDENCY";
   result.reason = "External prerequisites appear present, but supervised Streamline SDK integration is unavailable";
+  return result;
+}
+
+Result RuntimeFailureResult() {
+  Result result;
+  result.status = Status::RuntimeFailure;
+  result.classification = "RUNTIME_FAILURE";
+  result.reason = "preflight runtime exception; details withheld";
+  result.warnings.push_back("Exception details were not logged to prevent path or secret disclosure");
   return result;
 }
 
