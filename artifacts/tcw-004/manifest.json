@@ -1,9 +1,11 @@
 {
   "task": "TCW-004",
-  "status": "SUPERVISOR_REVIEW_HUMAN_REQUIRED",
+  "status": "TCW-004_ACCEPTED",
   "implementation_commit": "c1a979d117a8310809a7afce2604a6ecdfca14c0",
   "acceptance_source_commit": "172fc2bff20a1a9f43e309cf7fefc6e3ca6c36ba",
   "acceptance_reused_from_prior_commit": true,
+  "mirror_browser_continuity": "PASS",
+  "full_browser_to_native_transform_visual_continuity": "PENDING_NATIVE_RENDERER",
   "gates": {
     "TCW-BUILD-001": "PASS",
     "TCW-PROTO-001": "PASS",

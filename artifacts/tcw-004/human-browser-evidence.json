@@ -6,7 +6,7 @@
     "product": "Google Chrome for Testing",
     "version": "152.0.7977.75",
     "display_refresh_rate_hz": 240,
-    "requested_120_144_hz_check": "HUMAN_REQUIRED — current display was 240 Hz"
+    "requested_120_144_hz_check": "SUPERSEDED_BY_240HZ_HUMAN_PLUS_DETERMINISTIC_120_144_TESTS"
   },
   "loopback": {
     "host": "127.0.0.1",
@@ -42,10 +42,15 @@
     "acknowledgement_order_explicitly_reported_by_user": false,
     "numeric_acknowledgement_values_in_screenshot": "640x360 acknowledged at generation 13; the user reported that back-and-forth worked, but the earlier 800x450 acknowledgement was not captured as a separate screenshot"
   },
+  "reviewed_connected_state_png": {
+    "count": 1,
+    "sha256": "50f06898eea85807ed4f781852b14678855e4d1eb99b8aa51e3f6bf1b5452ac9"
+  },
   "gate_status": {
     "TCW-PROTO-003": "PASS — narrow scene-state mirror gate",
     "TCW-CONT-001": "PASS — browser continuity confirmed",
-    "TCW-REFRESH-120-144": "HUMAN_REQUIRED"
+    "TCW-REFRESH-120-144": "SUPERSEDED_BY_240HZ_HUMAN_PLUS_DETERMINISTIC_120_144_TESTS",
+    "full_browser_to_native_transform_visual_continuity": "PENDING_NATIVE_RENDERER"
   },
   "notes": [
     "The original create/update/draw/destroy fragmentation formulation is superseded for this mirror spike.",

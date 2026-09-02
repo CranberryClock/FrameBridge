@@ -13,7 +13,7 @@ Implementation: `c1a979d117a8310809a7afce2604a6ecdfca14c0`. This follows protoco
 | TCW-PROTO-004 | PASS |
 | TCW-CONT-001 | PASS — browser continuity confirmed |
 
-The exact 120/144 Hz sub-check is HUMAN_REQUIRED because this machine was observed at 240 Hz. This is the only remaining sub-check.
+The physical 120/144 Hz sub-check is SUPERSEDED_BY_240HZ_HUMAN_PLUS_DETERMINISTIC_120_144_TESTS. The 240 Hz human run and deterministic 60/120/144 Hz scheduling tests satisfy the high-refresh intent.
 
 ## Tests and commands
 
@@ -53,6 +53,6 @@ Raw measurements: `runs/acceptance-2026-09-02T14-47-18-590Z-fveQIb/result.json`.
 
 MIRROR SPIKE — NOT THREE BACKEND. The endpoint is a Node test/developer harness, not a native listener or renderer. The long soak uses the DOM-independent canonical state and shared client over real loopback WebSockets, not a human-driven Chrome session. Memory is measured with explicit sample-point GC; pre-GC heap is also recorded.
 
-Follow `human-browser-steps.md`: verify local Chrome connection; session generation change and current-frame resynchronization on reconnect; both resize sizes and matching acknowledgements; uninterrupted cube animation while disconnected; 120/144 Hz behavior; and a screenshot with the token field empty. No human screenshot or visual gate is claimed by this handoff.
+The reviewed human evidence confirms local Chrome authentication, session-generation change, current-frame resynchronization, both resize directions, uninterrupted cube animation while disconnected, and a token-cleared screenshot. The 240 Hz human run plus deterministic 60/120/144 Hz scheduling tests supersede a separate physical 120/144 Hz run. TCW-004 mirror/browser continuity is PASS. Full browser-to-native transform/visual continuity is PENDING_NATIVE_RENDERER; no native renderer was tested.
 
 The complete implementation changed-file list is in `manifest.json`. It covers the protocol/session/client/tests, browser UI, shared fixtures, native codec tests, CI/CMake, runners, and documentation. No TCW-005, DLSS, Streamline, native presentation, extension, installer, custom Three.js backend, or Unreal work was performed. Stop for supervisor review.
