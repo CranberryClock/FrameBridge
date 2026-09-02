@@ -1,7 +1,12 @@
-corepack pnpm install --frozen-lockfile => exit 0
-corepack pnpm -r build => exit 0
-corepack pnpm -r test => exit 0
-corepack pnpm --filter @framebridge/demo-web exec vite build => exit 0
-cmake -S . -B out/tcw004-cpp -G Ninja -DCMAKE_BUILD_TYPE=Release => exit 0
-cmake --build out/tcw004-cpp --target framebridge-bridge-codec => exit 0
-node tools/tcw004-soak.mjs => exit 0 process, gate BLOCKED (76022 frames at 1800.032 seconds; required cadence not met)
+Working directory: D:\FrameBridge
+
+corepack pnpm install --frozen-lockfile                                      => exit 0
+corepack pnpm -r build                                                       => exit 0
+corepack pnpm -r test                                                        => exit 0
+corepack pnpm --filter @framebridge/demo-web exec vite build                 => exit 0
+"C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -S . -B out/tcw004-cpp-vs -G "Visual Studio 17 2022" -A x64 => exit 0
+cmake --build out/tcw004-cpp-vs --config Release --target framebridge-bridge-codec => exit 0
+out\tcw004-cpp-vs\Release\framebridge-bridge-codec.exe                     => exit 0
+node tools/tcw004-soak.mjs                                                    => exit 0; gate FAIL, average attempted cadence 57.177 Hz
+
+The C++ executable was run from the repository root so it could read packages/protocol/fixtures/*.hex.

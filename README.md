@@ -1,9 +1,9 @@
 # FrameBridge
 
-FrameBridge is a narrow Windows research system. Its first showcase demo is **The Cube Works**: a supported Three.js cube that can eventually switch from browser WebGPU to native Dawn/D3D12 with DLSS Super Resolution.
+FrameBridge is a narrow Windows research system. Its first showcase demo is **The Cube Works**, a supported Three.js cube using the browser WebGPU fallback.
 
-This repository has completed TCW-001 through TCW-003. TCW-004 supervisor rework adds the authenticated binary mirror protocol, strict validation, per-session state, browser connection controls, and shared TypeScript/C++ fixture checks. TCW-004 remains blocked pending a successful 1,800-second 60 Hz wall-clock soak and browser-control screenshot; the browser bridge is not yet accepted, and extension, presentation, and DLSS implementation remain intentionally absent.
+TCW-001 through TCW-003 are complete. TCW-004 is an explicit scene-mirroring protocol spike labeled **MIRROR SPIKE — NOT THREE BACKEND**. The browser remains authoritative for logical frame, simulation time, transform, camera, viewport, resize generation, and resource identity. The Node WebSocket endpoint is test/developer infrastructure; it is not a native socket listener, D3D12 renderer, or Three.js backend.
 
-For the native build, use `VsDevCmd.bat -arch=x64 -vcvars_ver=14.44`, then run the CMake presets. The doctor only reports; it never installs.
+Current TCW-004 status: short build, TypeScript/C++ codec, authentication, lifecycle, quota, and queue tests are implemented. Native and browser acceptance evidence is still under supervisor review; browser gates remain HUMAN_REQUIRED until a local Chrome run captures connection, reconnect, resize, and high-refresh behavior. The real soak must be run with `node tools/tcw004-soak.mjs` and is PASS only when the runner itself exits zero.
 
-The TCW-002 spike is configured separately with `cmake -S native/interop-spike -B out/tcw002 -G Ninja -DDAWN_ROOT=<external Dawn checkout>`. It requires the pinned Dawn build and runs without CPU pixel readback.
+For the native build, use `VsDevCmd.bat -arch=x64 -vcvars_ver=14.38`, then configure with the installed Visual Studio CMake generator. The doctor only reports; it never installs. Do not add NVIDIA/DLSS/Streamline binaries to Git.

@@ -1,0 +1,1 @@
+{"kind":"hello","version":0,"token":"TEST_ONLY_TOKEN_REDACTED","origin":"http://127.0.0.1:5173","three":{"version":"0.185.0","commit":"fixture"},"buildId":"fixture","requestedCapabilities":["explicit-mirror"],"byteOrder":"little"}
