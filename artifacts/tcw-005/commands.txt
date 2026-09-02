@@ -1,0 +1,26 @@
+Clean checkout and submodules:
+  git clone --no-local D:\FrameBridge D:\FrameBridge\build\tcw005-clean-20260902 [0]
+  git -C D:\FrameBridge\build\tcw005-clean-20260902 checkout 7a38fd42e7674d3de2e4d8f49412e62c8d246e94 [0]
+  git -C D:\FrameBridge\build\tcw005-clean-20260902 submodule update --init --recursive [0]
+  git status --porcelain [clean]
+
+Native clean build:
+  cmake -S D:\FrameBridge\build\tcw005-clean-20260902 -B D:\FrameBridge\build\tcw005-clean-20260902\build\release -G "Visual Studio 17 2022" -A x64 -DUSE_ZLIB=OFF -DUSE_TLS=OFF -DIXWEBSOCKET_INSTALL=OFF [0]
+  cmake --build D:\FrameBridge\build\tcw005-clean-20260902\build\release --config Release --clean-first [0]
+  ctest --test-dir D:\FrameBridge\build\tcw005-clean-20260902\build\release -C Release --output-on-failure [0, 3 tests]
+
+TypeScript clean validation:
+  corepack pnpm --version [10.14.0]
+  corepack pnpm install --frozen-lockfile --ignore-scripts [0]
+  corepack pnpm build [0]
+  corepack pnpm test [0]
+
+Native direct integration:
+  node tools/tcw005-native-integration.mjs .\build\release\Release\framebridge-native-mirror.exe [0]
+  native session output: PASS native_session queue=2 drops=2 ack=PASS reserved_rejection=PASS [0]
+
+Not run because Dawn checkout is absent:
+  native Dawn cube/window build [BLOCKED_EXTERNAL_DEPENDENCY]
+  matrix/corner parity [BLOCKED_EXTERNAL_DEPENDENCY]
+  600-second native-renderer stability [BLOCKED_EXTERNAL_DEPENDENCY]
+  human browser/native comparison [HUMAN_REQUIRED]

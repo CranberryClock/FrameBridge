@@ -11,6 +11,8 @@ artifacts/*
 !artifacts/.gitkeep
 !artifacts/tcw-004a/
 !artifacts/tcw-004a/**
+!artifacts/tcw-005/
+!artifacts/tcw-005/**
 captures/
 *.pix3
 *.rdc

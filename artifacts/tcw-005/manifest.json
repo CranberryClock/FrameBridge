@@ -1,0 +1,43 @@
+{
+  "task": "TCW-005",
+  "status": "BLOCKED_ARCHITECTURE",
+  "implementation_commit": "7a38fd42e7674d3de2e4d8f49412e62c8d246e94",
+  "baseline_commit": "cbaba3b6a95a0a75aa00ed4735232e92f4b6841d",
+  "source_commit_for_long_runs": null,
+  "blocker": "Pinned Dawn checkout 34b1fca4d6c3d7025a2231d82b4fc719ca57fd71 is not available on this machine; the accepted TCW-003 renderer and comparison window could not be built or exercised.",
+  "gates": {
+    "TCW-NATIVE-MIRROR-001": "BLOCKED_EXTERNAL_DEPENDENCY",
+    "TCW-NATIVE-MIRROR-002": "PASS",
+    "TCW-NATIVE-MIRROR-003": "PASS",
+    "TCW-NATIVE-MIRROR-004": "BLOCKED_EXTERNAL_DEPENDENCY",
+    "TCW-NATIVE-MIRROR-005": "PASS",
+    "TCW-NATIVE-MIRROR-006": "BLOCKED_ARCHITECTURE",
+    "TCW-NATIVE-MIRROR-007": "BLOCKED_EXTERNAL_DEPENDENCY",
+    "TCW-NATIVE-MIRROR-008": "BLOCKED_EXTERNAL_DEPENDENCY",
+    "TCW-NATIVE-MIRROR-009": "HUMAN_REQUIRED",
+    "TCW-NATIVE-MIRROR-010": "PASS"
+  },
+  "claims": {
+    "node_in_accepted_frame_path": false,
+    "native_dawn_renderer_exercised": false,
+    "dlss_streamline_overlay_extension_installer_three_backend_unreal": false
+  },
+  "test_counts": {
+    "native_ctest": 3,
+    "typescript_protocol": 77,
+    "typescript_loopback": 15,
+    "demo_smoke_assertions": 3,
+    "direct_native_integration": 1
+  },
+  "evidence_files": [
+    "artifacts/tcw-005/result.json",
+    "artifacts/tcw-005/native-integration-raw.json",
+    "artifacts/tcw-005/active-native-session-test.txt",
+    "artifacts/tcw-005/stability-run.json",
+    "artifacts/tcw-005/d3d12-validation.txt",
+    "artifacts/tcw-005/commands.txt",
+    "artifacts/tcw-005/environment.json",
+    "artifacts/tcw-005/hashes.json",
+    "artifacts/tcw-005/review-summary.md"
+  ]
+}

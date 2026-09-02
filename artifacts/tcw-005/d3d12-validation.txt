@@ -1,0 +1,4 @@
+STATUS=BLOCKED_EXTERNAL_DEPENDENCY
+The accepted TCW-003 Dawn/D3D12 renderer could not be built because the pinned
+Dawn checkout is absent. No D3D12 validation run was performed and no native
+GPU result is claimed.

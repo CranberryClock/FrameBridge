@@ -1,0 +1,14 @@
+{
+  "status": "BLOCKED_EXTERNAL_DEPENDENCY",
+  "required_wall_clock_seconds": 600,
+  "measured_wall_clock_seconds": null,
+  "receiver": "native C++ receiver was not run for acceptance stability because the native Dawn render path is unavailable",
+  "source_commit": null,
+  "protocol_only_integration": "PASS",
+  "native_rendering": "NOT_RUN",
+  "memory_samples": [],
+  "queue_bound": 2,
+  "protocol_errors": null,
+  "invalid_acknowledgements": null,
+  "clean_gpu_shutdown": "NOT_RUN"
+}

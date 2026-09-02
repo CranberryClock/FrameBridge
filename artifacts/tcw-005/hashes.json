@@ -1,0 +1,24 @@
+{
+  "algorithm": "SHA-256",
+  "source_commit": "7a38fd42e7674d3de2e4d8f49412e62c8d246e94",
+  "dependency_commits": {
+    "third_party/ixwebsocket": "64fae7676bd8fe31f7cb4bcde7a6841892dad65e",
+    "third_party/nlohmann-json": "9cca280a4d0ccf0c08f47a99aa71d1b0e52f8d03"
+  },
+  "binaries": {
+    "build/tcw005-clean-20260902/build/release/Release/framebridge-native-mirror.exe": "1ff2e6edeed75e319bba861ed7d33537a11d76e4ebcbc468f6da290d4844c03a",
+    "build/tcw005-clean-20260902/build/release/Release/framebridge-native-mirror-test.exe": "5a41b77721b564f7fbe4932de276e9ba066328630c3174ececc27f0ae6bda588",
+    "build/tcw005-clean-20260902/build/release/Release/framebridge-native-mirror-session.lib": "0d8534a85d62e3d5a792d17e63ae3f5fc96b9d7d3d8ec718f289e908faa65154",
+    "build/tcw005-clean-20260902/build/release/third_party/ixwebsocket/Release/ixwebsocket.lib": "2cae8c36b2297f1fe5625abc4ed688404e5515b4737608b03873f903a973936a"
+  },
+  "source_files": {
+    "native/mirror-receiver/main.cpp": "d47693196d827a93c9e40f16d6da4bb48ff16549866a305cd1e36b01e9c05b41",
+    "native/mirror-receiver/mirror_session.cpp": "276dd93516128855a235ea3b280965bf8461ccc7e476d5a622535052e6f8fea4",
+    "native/mirror-receiver/mirror_session.h": "f0737780f557f5ee147ffa94b6b57b1804130381fcaf0a3b042fa33b8bc766e8",
+    "native/mirror-receiver/mirror_session_test.cpp": "26411455be3d707edb7e24b053ed6e8eb11d8923504a537782f2e2cd56a4c38f",
+    "tools/tcw005-native-integration.mjs": "e75d167c176a1513655c1f79842e47714c96b251738d0235dbd094b48822948e",
+    "packages/protocol/src/index.ts": "4b50e54ba89329de322a5421a0efa8ce2e93d533f78e45c4fec0936370993419",
+    "packages/protocol/src/protocol.test.ts": "bc06090da04a3d9d53b909f9df090f9969f4187de4adb153763f051f4ced09dd"
+  },
+  "raw_integration_result_sha256": "5717fd3eaa9621a80f3d14ab058c3d5cc8e805f4f664e9367a706f1efe5ee67a"
+}

@@ -1,0 +1,12 @@
+Internal ctest changing into directory: D:/FrameBridge/build/tcw005-clean-20260902/build/release
+Test project D:/FrameBridge/build/tcw005-clean-20260902/build/release
+    Start 1: framebridge-codec
+1/3 Test #1: framebridge-codec ...................   Passed    0.18 sec
+    Start 2: framebridge-streamline-preflight
+2/3 Test #2: framebridge-streamline-preflight ....   Passed    0.04 sec
+    Start 3: framebridge-native-mirror-session
+3/3 Test #3: framebridge-native-mirror-session ...   Passed    0.05 sec
+
+100% tests passed, 0 tests failed out of 3
+
+Total Test time (real) =   0.29 sec

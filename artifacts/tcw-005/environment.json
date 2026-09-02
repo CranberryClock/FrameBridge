@@ -1,0 +1,13 @@
+{
+  "os": "Windows 11 x64",
+  "msvc": "19.38.33145.0",
+  "msvc_toolset": "14.38.33130",
+  "windows_sdk": "10.0.26100.0",
+  "cmake": "Visual Studio bundled CMake",
+  "pnpm": "10.14.0 via Corepack",
+  "node": "22.18.0",
+  "dawn_pinned_commit": "34b1fca4d6c3d7025a2231d82b4fc719ca57fd71",
+  "dawn_checkout_present": false,
+  "streamline_or_dlss_loaded": false,
+  "native_frame_proxy": false
+}
