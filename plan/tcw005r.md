@@ -16,6 +16,10 @@ diagnostics and eliminates unused per-resize CPU readback allocation. Capture
 storage is now lazy. Repeat the same unchanged memory limits after these fixes.
 Fixed-size diagnostics stayed flat while repeated resize allocation grew. The
 final resize design bounds the target pool at two entries and grows swapchain
-capacity only as needed, selecting the exact current presentation region with
-DXGI SetSourceSize. The acceptance run also checks target/swapchain allocation
-counts, alongside the unchanged memory limits.
+capacity only as needed. A second run at 35892e2 was intentionally stopped after
+window inspection found incorrect scaling on shrink with the DXGI source-size
+approach. A same-device fullscreen texture blit now fills the entire buffer;
+DXGI stretch maps that normalized image to the exact native client dimensions.
+The cube remains Dawn-rendered. The acceptance run also checks target/swapchain
+allocation counts, alongside the unchanged memory limits. Neither earlier run
+counts as acceptance evidence.

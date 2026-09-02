@@ -27,7 +27,7 @@ The extracted TCW-003 library retains its legacy colored 90-degree-FOV capture
 entry point. Its device, pipeline, shared texture, fence and capture machinery
 are shared with the canonical renderer. The old colored cube is not the parity
 reference. Native PNG readback is optional evidence capture only; presentation
-always copies on the GPU to a same-device DXGI flip-discard swapchain.
+always blits on the GPU to a same-device DXGI flip-discard swapchain.
 Readback buffers are allocated lazily only for explicit captures. Live resize does
 not allocate CPU readback storage; color/depth views are reused between resizes.
 A bounded two-entry target pool (active plus one cached size) reuses native and
@@ -35,11 +35,13 @@ Dawn targets across the two demo viewport sizes. New allocations start with
 initialized=false; reused textures retain their own successful EndAccess state.
 Dimensions outside the cache evict its oldest inactive target. The acceptance
 soak checks that the alternating demo sizes require exactly two target allocations.
-Swapchain storage grows only when required. The active presentation region and
-native client area still match each received viewport exactly. A GPU texture copy
-fills that region; SetSourceSize/GetSourceSize select and verify it on each resize.
-This avoids repeated allocation churn for the established sizes, using the
-[documented DXGI source-size path](https://learn.microsoft.com/en-us/windows/win32/api/dxgi1_3/nf-dxgi1_3-idxgiswapchain2-setsourcesize).
+Swapchain storage grows only when required. The native client area matches each
+received viewport exactly. A same-device D3D12 fullscreen triangle samples the
+entire Dawn-rendered texture into the full swapchain buffer using normalized UVs;
+DXGI stretch maps that full buffer to the client area. The cube itself is rendered
+by Dawn, not by this presentation-only blit. This avoids repeated allocation churn
+while preserving centered, full-window presentation after shrinking the viewport.
+No CPU readback or browser streaming is used for presentation.
 
 ## Device and synchronization
 
@@ -54,7 +56,7 @@ DXGI diagnostic storage is also bounded and drained; its warnings/errors fail.
 
 Every new imported color texture starts initialized=false; BeginAccess uses that
 state; only successful EndAccess makes it true. EndAccess flushes Dawn, followed
-by an explicit same-queue fence/wait. Native copies to the swapchain, presents,
+by an explicit same-queue fence/wait. Native blits to the swapchain, presents,
 waits before allocator reuse, checks validation, then permits an ACK.
 
 READY and native-dawn capabilities require successful device, target and window

@@ -1,6 +1,7 @@
 #include <windows.h>
 #include <dxgi1_6.h>
 #include <dxgidebug.h>
+#include <d3dcompiler.h>
 #include <atomic>
 #include <optional>
 #include <stdexcept>
@@ -13,6 +14,7 @@
 #include <chrono>
 #include <cmath>
 #include <cstdint>
+#include <cstring>
 #include <cstdlib>
 #include <fstream>
 #include <iomanip>
@@ -193,6 +195,9 @@ struct Renderer::Impl {
     ComPtr<ID3D12CommandAllocator> allocator;
     ComPtr<ID3D12GraphicsCommandList> list;
     ComPtr<ID3D12Fence> fence;
+    ComPtr<ID3D12RootSignature> blitRoot;
+    ComPtr<ID3D12PipelineState> blitPipeline;
+    ComPtr<ID3D12DescriptorHeap> srvHeap,rtvHeap;
     HANDLE event = nullptr;
     HWND window = nullptr;
     std::unique_ptr<CubeRenderer> cube;
@@ -271,6 +276,7 @@ struct Renderer::Impl {
         Check(native->CreateFence(0,D3D12_FENCE_FLAG_NONE,IID_PPV_ARGS(&fence)),"present fence");
         event=CreateEventW(nullptr,FALSE,FALSE,nullptr); if(!event) Die("present fence event");
         if(show) {
+            BuildBlit();
             WNDCLASSW wc{}; wc.lpfnWndProc=WndProc; wc.hInstance=GetModuleHandleW(nullptr); wc.lpszClassName=L"FrameBridgeMirror";
             if(!RegisterClassW(&wc) && GetLastError()!=ERROR_CLASS_ALREADY_EXISTS) Die("RegisterClass");
             window=CreateWindowExW(0,wc.lpszClassName,L"FrameBridge Native Mirror",WS_OVERLAPPEDWINDOW,
@@ -295,6 +301,38 @@ struct Renderer::Impl {
             if(WaitForSingleObject(event,10000)!=WAIT_OBJECT_0) Die("present timeout");
         }
     }
+    void BuildBlit() {
+        D3D12_DESCRIPTOR_HEAP_DESC heap{}; heap.NumDescriptors=1;
+        heap.Type=D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV; heap.Flags=D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+        Check(native->CreateDescriptorHeap(&heap,IID_PPV_ARGS(&srvHeap)),"blit SRV heap");
+        heap.Type=D3D12_DESCRIPTOR_HEAP_TYPE_RTV; heap.Flags=D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+        Check(native->CreateDescriptorHeap(&heap,IID_PPV_ARGS(&rtvHeap)),"blit RTV heap");
+        D3D12_DESCRIPTOR_RANGE range{}; range.RangeType=D3D12_DESCRIPTOR_RANGE_TYPE_SRV; range.NumDescriptors=1;
+        D3D12_ROOT_PARAMETER param{}; param.ParameterType=D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+        param.DescriptorTable.NumDescriptorRanges=1; param.DescriptorTable.pDescriptorRanges=&range; param.ShaderVisibility=D3D12_SHADER_VISIBILITY_PIXEL;
+        D3D12_STATIC_SAMPLER_DESC sampler{}; sampler.Filter=D3D12_FILTER_MIN_MAG_MIP_POINT;
+        sampler.AddressU=sampler.AddressV=sampler.AddressW=D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
+        sampler.MaxLOD=D3D12_FLOAT32_MAX; sampler.ComparisonFunc=D3D12_COMPARISON_FUNC_ALWAYS; sampler.ShaderVisibility=D3D12_SHADER_VISIBILITY_PIXEL;
+        D3D12_ROOT_SIGNATURE_DESC root{}; root.NumParameters=1;root.pParameters=&param;root.NumStaticSamplers=1;root.pStaticSamplers=&sampler;
+        ComPtr<ID3DBlob> serialized,errors,vs,ps;
+        Check(D3D12SerializeRootSignature(&root,D3D_ROOT_SIGNATURE_VERSION_1,&serialized,&errors),"blit root serialization");
+        Check(native->CreateRootSignature(0,serialized->GetBufferPointer(),serialized->GetBufferSize(),IID_PPV_ARGS(&blitRoot)),"blit root");
+        const char* shader=R"(
+            Texture2D<float4> image : register(t0); SamplerState pointSampler : register(s0);
+            struct V { float4 pos:SV_Position; float2 uv:TEXCOORD0; };
+            V vs(uint id:SV_VertexID) { V o; o.uv=float2((id<<1)&2,id&2); o.pos=float4(o.uv*float2(2,-2)+float2(-1,1),0,1); return o; }
+            float4 ps(V v):SV_Target { return image.SampleLevel(pointSampler,v.uv,0); }
+        )";
+        Check(D3DCompile(shader,std::strlen(shader),nullptr,nullptr,nullptr,"vs","vs_5_0",D3DCOMPILE_ENABLE_STRICTNESS,0,&vs,&errors),"blit VS");
+        Check(D3DCompile(shader,std::strlen(shader),nullptr,nullptr,nullptr,"ps","ps_5_0",D3DCOMPILE_ENABLE_STRICTNESS,0,&ps,&errors),"blit PS");
+        D3D12_GRAPHICS_PIPELINE_STATE_DESC p{}; p.pRootSignature=blitRoot.Get();
+        p.VS={vs->GetBufferPointer(),vs->GetBufferSize()}; p.PS={ps->GetBufferPointer(),ps->GetBufferSize()};
+        p.BlendState.RenderTarget[0].RenderTargetWriteMask=D3D12_COLOR_WRITE_ENABLE_ALL;
+        p.SampleMask=UINT_MAX; p.RasterizerState.FillMode=D3D12_FILL_MODE_SOLID; p.RasterizerState.CullMode=D3D12_CULL_MODE_NONE; p.RasterizerState.DepthClipEnable=TRUE;
+        p.DepthStencilState.DepthFunc=D3D12_COMPARISON_FUNC_ALWAYS;
+        p.PrimitiveTopologyType=D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE; p.NumRenderTargets=1;p.RTVFormats[0]=DXGI_FORMAT_R8G8B8A8_UNORM;p.SampleDesc.Count=1;
+        Check(native->CreateGraphicsPipelineState(&p,IID_PPV_ARGS(&blitPipeline)),"blit pipeline");
+    }
     void Resize(uint32_t w,uint32_t h) {
         Wait();
         // Drop the native command recording objects before retiring swapchain buffers.
@@ -315,17 +353,13 @@ struct Renderer::Impl {
             else {
                 DXGI_SWAP_CHAIN_DESC1 sd{}; sd.Width=w; sd.Height=h; sd.Format=DXGI_FORMAT_R8G8B8A8_UNORM;
                 sd.SampleDesc.Count=1; sd.BufferUsage=DXGI_USAGE_RENDER_TARGET_OUTPUT; sd.BufferCount=2;
-                sd.SwapEffect=DXGI_SWAP_EFFECT_FLIP_DISCARD;
+                sd.SwapEffect=DXGI_SWAP_EFFECT_FLIP_DISCARD; sd.Scaling=DXGI_SCALING_STRETCH;
                 ComPtr<IDXGISwapChain1> sc;
                 Check(factory->CreateSwapChainForHwnd(queue.Get(),window,&sd,nullptr,nullptr,&sc),"CreateSwapChainForHwnd");
                 Check(sc.As(&swapchain),"Swapchain3");
                 Check(factory->MakeWindowAssociation(window,DXGI_MWA_NO_ALT_ENTER),"Window association");
                 swapWidth=w; swapHeight=h; ++swapAllocations;
             }
-            Check(swapchain->SetSourceSize(w,h),"SetSourceSize");
-            UINT sourceWidth=0,sourceHeight=0;
-            Check(swapchain->GetSourceSize(&sourceWidth,&sourceHeight),"GetSourceSize");
-            if(sourceWidth!=w || sourceHeight!=h) Die("presentation source dimensions");
             RECT area{0,0,static_cast<LONG>(w),static_cast<LONG>(h)};
             Check(AdjustWindowRect(&area,WS_OVERLAPPEDWINDOW,FALSE)?S_OK:E_FAIL,"AdjustWindowRect");
             if(!SetWindowPos(window,nullptr,0,0,area.right-area.left,area.bottom-area.top,SWP_NOMOVE|SWP_NOZORDER|SWP_NOACTIVATE)) Die("SetWindowPos");
@@ -343,13 +377,23 @@ struct Renderer::Impl {
         barrier.Transition.pResource=back.Get();
         barrier.Transition.Subresource=D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
         barrier.Transition.StateBefore=D3D12_RESOURCE_STATE_PRESENT;
-        barrier.Transition.StateAfter=D3D12_RESOURCE_STATE_COPY_DEST;
+        barrier.Transition.StateAfter=D3D12_RESOURCE_STATE_RENDER_TARGET;
         list->ResourceBarrier(1,&barrier);
-        // Imported simultaneous-access texture is COMMON after EndAccess + same-queue fence.
-        D3D12_TEXTURE_COPY_LOCATION src{},dst{};
-        src.pResource=cube->Resource(); src.Type=D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
-        dst.pResource=back.Get(); dst.Type=D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
-        list->CopyTextureRegion(&dst,0,0,0,&src,nullptr);
+        D3D12_RESOURCE_BARRIER sourceBarrier=barrier;
+        sourceBarrier.Transition.pResource=cube->Resource();sourceBarrier.Transition.StateBefore=D3D12_RESOURCE_STATE_COMMON;sourceBarrier.Transition.StateAfter=D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+        list->ResourceBarrier(1,&sourceBarrier);
+        D3D12_SHADER_RESOURCE_VIEW_DESC srv{};srv.Format=DXGI_FORMAT_R8G8B8A8_UNORM;srv.ViewDimension=D3D12_SRV_DIMENSION_TEXTURE2D;srv.Shader4ComponentMapping=D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;srv.Texture2D.MipLevels=1;
+        native->CreateShaderResourceView(cube->Resource(),&srv,srvHeap->GetCPUDescriptorHandleForHeapStart());
+        native->CreateRenderTargetView(back.Get(),nullptr,rtvHeap->GetCPUDescriptorHandleForHeapStart());
+        const auto rtv=rtvHeap->GetCPUDescriptorHandleForHeapStart();list->OMSetRenderTargets(1,&rtv,FALSE,nullptr);
+        const D3D12_VIEWPORT viewport{0,0,static_cast<float>(swapWidth),static_cast<float>(swapHeight),0,1};
+        const D3D12_RECT scissor{0,0,static_cast<LONG>(swapWidth),static_cast<LONG>(swapHeight)};
+        list->RSSetViewports(1,&viewport);list->RSSetScissorRects(1,&scissor);
+        ID3D12DescriptorHeap* heaps[]={srvHeap.Get()};list->SetDescriptorHeaps(1,heaps);
+        list->SetGraphicsRootSignature(blitRoot.Get());list->SetPipelineState(blitPipeline.Get());
+        list->SetGraphicsRootDescriptorTable(0,srvHeap->GetGPUDescriptorHandleForHeapStart());
+        list->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);list->DrawInstanced(3,1,0,0);
+        std::swap(sourceBarrier.Transition.StateBefore,sourceBarrier.Transition.StateAfter);list->ResourceBarrier(1,&sourceBarrier);
         std::swap(barrier.Transition.StateBefore,barrier.Transition.StateAfter);
         list->ResourceBarrier(1,&barrier);
         Check(list->Close(),"present close");
@@ -389,6 +433,8 @@ void Renderer::Submit(const SceneState& state,uint64_t dropped,const std::string
     auto& i=*impl_;
     if(!i.open || !i.canonical) Die("renderer unavailable");
     if(state.width!=i.width || state.height!=i.height || state.resizeGeneration!=i.resizeGeneration) i.Resize(state.width,state.height);
+    const auto targetDesc=i.cube->Resource()->GetDesc();
+    if(targetDesc.Width!=state.width || targetDesc.Height!=state.height) Die("render target dimensions");
     const auto matrices=SceneMatrices(state);
     Mat4 mvp{}; for(size_t k=0;k<16;++k) mvp.v[k]=static_cast<float>(matrices.mvp[k]);
     i.cube->Render(mvp,!capture.empty(),true);
