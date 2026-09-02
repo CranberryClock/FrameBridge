@@ -1,6 +1,6 @@
 # TCW-005R review summary
 
-Automated gates PASS; TCW-NATIVE-MIRROR-009 remains HUMAN_REQUIRED.
+All TCW-005R gates PASS, including the human visual gate TCW-NATIVE-MIRROR-009.
 Implementation: `011174ca607ae6c24572f55a4703ea1a7c763564`.
 All final hardware tests and the acceptance run use that clean detached checkout.
 
@@ -51,7 +51,7 @@ Their failure records are retained. The final full-buffer GPU blit fixes the
 presentation scaling while keeping resize storage bounded; no CPU presentation
 readback is used. The Dawn cube, not the blit, computes scene geometry.
 
-## Evidence and remaining human gate
+## Evidence and human result
 
 Eleven PNGs: three browser canvas captures, three native render-target captures,
 four browser UI captures and one actual native-window capture after 640->800->640.
@@ -62,10 +62,11 @@ agree in geometry, orientation, framing, cyan color and dark background. Browser
 canvas screenshots include a one-pixel CSS border; pixel-perfect equality is not
 claimed. All UI captures have cleared token fields and no unrelated desktop data.
 
-The user must still judge simultaneous live motion and return the two size-state
-screenshots and continuity observations listed in human-browser-steps.md. Run
-`./tools/start-native-demo.ps1` on this validated machine. Do not count automated
-screenshots as a human PASS.
+The human supervisor validated the live Chrome/native comparison: smooth motion with
+no stutters, back-and-forth motion, reconnect continuity and clean close all passed.
+Screenshots were not supplied because the local capture displayed a personal session
+token. The token-bearing image is not stored or published; this does not invalidate
+the supervisor's PASS. The automated captures contain cleared token fields.
 
 Known limits: narrow solid-cube scene only; separate native window, not overlay;
 machine-specific NVIDIA adapter identity; point-sampled GPU presentation can differ

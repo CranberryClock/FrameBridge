@@ -1,6 +1,9 @@
 # TCW-005R human visual review
 
-Status: HUMAN_REQUIRED. Automated real-Chrome connection, frame continuity,
+Status: PASS. Human supervisor validated the live Chrome/native mirror.
+Screenshots were not provided because the local test screenshot displayed a
+personal session token. No token-bearing screenshot is included in the repository.
+Automated real-Chrome connection, frame continuity,
 resize acknowledgements and native GPU rendering are recorded separately.
 
 From the repository root on this validated machine:
@@ -38,4 +41,6 @@ Include Chrome version and display refresh rate. Capture only the app windows;
 exclude the console containing READY/token and any unrelated desktop content.
 The safe final shutdown JSON may be copied; never copy the READY line or token.
 
-Do not mark this human gate PASS until the user returns that observation.
+Human supervisor result: PASS. Motion was smooth with no stutters, back-and-forth
+motion worked, reconnect continuity was validated, and the final native close was
+clean. The visual result is accepted without publishing the token-bearing capture.

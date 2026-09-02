@@ -1,7 +1,7 @@
 {
   "task": "TCW-005",
   "rework": "TCW-005R",
-  "status": "PASS_AUTOMATED_HUMAN_REQUIRED",
+  "status": "PASS",
   "implementation_commit": "011174ca607ae6c24572f55a4703ea1a7c763564",
   "baseline_commit": "1a5ee319a0586a73d0262b07a6368b3b12d63eb5",
   "source_commit_for_long_runs": "011174ca607ae6c24572f55a4703ea1a7c763564",
@@ -44,7 +44,7 @@
     "TCW-NATIVE-MIRROR-006": "PASS",
     "TCW-NATIVE-MIRROR-007": "PASS",
     "TCW-NATIVE-MIRROR-008": "PASS",
-    "TCW-NATIVE-MIRROR-009": "HUMAN_REQUIRED",
+    "TCW-NATIVE-MIRROR-009": "PASS",
     "TCW-NATIVE-MIRROR-010": "PASS"
   },
   "gate_definitions": {
@@ -64,7 +64,13 @@
     "native_dawn_renderer_exercised": true,
     "native_DXGI_presentation_exercised": true,
     "mathematical_parity": "PASS",
-    "human_simultaneous_visual_review": "HUMAN_REQUIRED",
+    "human_simultaneous_visual_review": "PASS",
+    "human_supervisor": {
+      "status": "PASS",
+      "screenshots_provided": false,
+      "screenshots_omitted_reason": "Local test screenshot displayed a personal session token; no token-bearing capture was stored or published.",
+      "validated": "Smooth motion without stutters, back-and-forth motion, reconnect continuity and clean native close."
+    },
     "dlss_streamline_overlay_extension_installer_three_backend_unreal": false
   },
   "tests": {
@@ -129,6 +135,7 @@
     "environment.json",
     "hashes.json",
     "human-browser-steps.md",
+    "human-supervisor-pass.md",
     "interrupted-attempt-raw.json",
     "interrupted-attempt.json",
     "legacy-renderer-output.txt",
