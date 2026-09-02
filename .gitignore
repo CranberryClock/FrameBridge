@@ -13,3 +13,4 @@ captures/
 .env
 .local/
 the-cube-works-codex-handoff/
+out/
