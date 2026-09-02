@@ -1,7 +1,7 @@
 {
   "task": "TCW-003",
   "capture": "native-cube-canonical.png",
-  "sha256": "E76F53E74C171593BBF5FF7B3E23C9A1E57E3958F458C3E123ACC567A8F51229",
+  "sha256": "86A7CC833484D175765763909CC6FBD639647DF72318FBE8EAF6B3D288EE6B01",
   "width": 1280,
   "height": 720,
   "logical_frame": 30,
@@ -10,5 +10,14 @@
   "projection": "perspective_90deg_vertical_fov_webgpu_depth_0_to_1",
   "pipeline": "Dawn_WGSL_D3D12",
   "dlss": false,
-  "browser_connection": false
+  "browser_connection": false,
+  "adapter_vendor_id": 4318,
+  "adapter_device_id": 10208,
+  "adapter_luid_low": 74036,
+  "adapter_luid_high": 0,
+  "dawn_validation_errors": 0,
+  "d3d12_infoqueue_messages": 0,
+  "resize_cycles": 100,
+  "fresh_process_runs": 3,
+  "fresh_process_hashes_identical": true
 }

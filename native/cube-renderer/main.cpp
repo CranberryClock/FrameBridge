@@ -25,6 +25,7 @@ namespace {
 
 bool g_badDeviceLost = false;
 bool g_uncapturedError = false;
+uint32_t g_d3d12Messages = 0;
 
 void Die(const char* operation, HRESULT hr = S_OK) {
     std::cerr << "FAIL operation=" << operation;
@@ -46,7 +47,7 @@ Mat4 Multiply(const Mat4& a, const Mat4& b) {
     return out;
 }
 Mat4 Perspective(float aspect) {
-    Mat4 m{}; const float f = 1.0f / std::tan(0.5f); // fixed 90-degree vertical FOV
+    Mat4 m{}; const float f = 1.0f / std::tan(3.14159265358979323846f / 4.0f); // fixed 90-degree vertical FOV
     // WebGPU/D3D12 clip depth is [0, 1]; the camera looks down +Z.
     m.v[0] = f / aspect; m.v[5] = f; m.v[10] = 1.001f; m.v[11] = 1.0f; m.v[14] = -0.1001f;
     return m;
@@ -103,7 +104,7 @@ class CubeRenderer {
     }
     ~CubeRenderer() { if (event_) CloseHandle(event_); }
     void Resize(uint32_t width, uint32_t height) {
-        width_ = width; height_ = height; depth_ = {}; readback_ = {};
+        width_ = width; height_ = height; depth_ = {}; readback_ = {}; textureInitialized_ = false;
         D3D12_RESOURCE_DESC desc{}; desc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D; desc.Width = width; desc.Height = height; desc.DepthOrArraySize = 1; desc.MipLevels = 1; desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM; desc.SampleDesc.Count = 1; desc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN; desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET | D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS;
         D3D12_HEAP_PROPERTIES heap{}; heap.Type = D3D12_HEAP_TYPE_DEFAULT; D3D12_CLEAR_VALUE clear{}; clear.Format = desc.Format; clear.Color[3] = 1;
         Check(d3d_->CreateCommittedResource(&heap, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_COMMON, &clear, IID_PPV_ARGS(&nativeTexture_)), "CreateCommittedResource(color)");
@@ -113,13 +114,13 @@ class CubeRenderer {
         readback_.rowPitch = (width * 4 + 255) & ~255u; D3D12_RESOURCE_DESC rb{}; rb.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER; rb.Width = static_cast<uint64_t>(readback_.rowPitch) * height; rb.Height = 1; rb.DepthOrArraySize = 1; rb.MipLevels = 1; rb.SampleDesc.Count = 1; rb.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR; D3D12_HEAP_PROPERTIES readHeap{}; readHeap.Type = D3D12_HEAP_TYPE_READBACK; Check(d3d_->CreateCommittedResource(&readHeap, D3D12_HEAP_FLAG_NONE, &rb, D3D12_RESOURCE_STATE_COPY_DEST, nullptr, IID_PPV_ARGS(&readback_.buffer)), "CreateCommittedResource(readback)");
     }
     void Render(uint64_t frame, bool capture) {
-        wgpu::SharedTextureMemoryBeginAccessDescriptor begin{}; begin.initialized = frame != 0; CheckStatus(memory_.BeginAccess(texture_, &begin), "BeginAccess(cube)");
+        wgpu::SharedTextureMemoryBeginAccessDescriptor begin{}; begin.initialized = textureInitialized_; CheckStatus(memory_.BeginAccess(texture_, &begin), "BeginAccess(cube)");
         Mat4 mvp = Multiply(Perspective(static_cast<float>(width_) / height_), Multiply(Translate(5.0f), Rotation(static_cast<float>(frame) * 0.0174532925f)));
         queueWeb_.WriteBuffer(uniform_, 0, mvp.v, sizeof(mvp.v));
         wgpu::RenderPassColorAttachment color; color.view = texture_.CreateView(); color.loadOp = wgpu::LoadOp::Clear; color.storeOp = wgpu::StoreOp::Store; color.clearValue = {0.03,0.04,0.07,1};
         wgpu::RenderPassDepthStencilAttachment depth; depth.view = depth_.CreateView(); depth.depthLoadOp = wgpu::LoadOp::Clear; depth.depthStoreOp = wgpu::StoreOp::Store; depth.depthClearValue = 1;
         wgpu::RenderPassDescriptor pd; pd.colorAttachmentCount = 1; pd.colorAttachments = &color; pd.depthStencilAttachment = &depth; wgpu::CommandEncoder enc = device_.CreateCommandEncoder(); wgpu::RenderPassEncoder pass = enc.BeginRenderPass(&pd); pass.SetPipeline(pipeline_); pass.SetBindGroup(0, bindGroup_); pass.SetVertexBuffer(0, vertex_); pass.SetIndexBuffer(index_, wgpu::IndexFormat::Uint16); pass.DrawIndexed(36); pass.End(); wgpu::CommandBuffer cb = enc.Finish(); queueWeb_.Submit(1, &cb);
-        wgpu::SharedTextureMemoryEndAccessState end{}; CheckStatus(memory_.EndAccess(texture_, &end), "EndAccess(cube)");
+        wgpu::SharedTextureMemoryEndAccessState end{}; CheckStatus(memory_.EndAccess(texture_, &end), "EndAccess(cube)"); textureInitialized_ = true;
         uint64_t value = frame * 2 + 1; Check(queue_->Signal(fence_.Get(), value), "Signal(Dawn cube boundary)"); Wait(value);
         if (capture) Capture(value);
     }
@@ -135,13 +136,28 @@ class CubeRenderer {
     }
     void Wait(uint64_t value) { if (fence_->GetCompletedValue() < value) { Check(fence_->SetEventOnCompletion(value, event_), "SetEventOnCompletion"); WaitForSingleObject(event_, INFINITE); } }
     void Capture(uint64_t value) { Check(allocator_->Reset(), "Reset(capture allocator)"); if (!list_) { Check(d3d_->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, allocator_.Get(), nullptr, IID_PPV_ARGS(&list_)), "Create(capture list)"); Check(list_->Close(), "Close(initial capture list)"); } Check(list_->Reset(allocator_.Get(), nullptr), "Reset(capture list)"); D3D12_TEXTURE_COPY_LOCATION src{}; src.pResource = nativeTexture_.Get(); src.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX; src.SubresourceIndex = 0; D3D12_TEXTURE_COPY_LOCATION dst{}; dst.pResource = readback_.buffer.Get(); dst.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT; dst.PlacedFootprint.Footprint.Format = DXGI_FORMAT_R8G8B8A8_UNORM; dst.PlacedFootprint.Footprint.Width = width_; dst.PlacedFootprint.Footprint.Height = height_; dst.PlacedFootprint.Footprint.Depth = 1; dst.PlacedFootprint.Footprint.RowPitch = readback_.rowPitch; list_->CopyTextureRegion(&dst, 0, 0, 0, &src, nullptr); Check(list_->Close(), "Close(capture list)"); ID3D12CommandList* lists[] = {list_.Get()}; queue_->ExecuteCommandLists(1, lists); uint64_t copyValue = value + 1; Check(queue_->Signal(fence_.Get(), copyValue), "Signal(capture)"); Wait(copyValue); void* mapped = nullptr; D3D12_RANGE range{0, static_cast<SIZE_T>(readback_.rowPitch) * height_}; Check(readback_.buffer->Map(0, &range, &mapped), "Map(capture)"); readback_.rgba.resize(static_cast<size_t>(width_) * height_ * 4); for (uint32_t y = 0; y < height_; ++y) std::copy_n(static_cast<uint8_t*>(mapped) + y * readback_.rowPitch, width_ * 4, readback_.rgba.begin() + y * width_ * 4); D3D12_RANGE written{0,0}; readback_.buffer->Unmap(0, &written); }
-    wgpu::Device device_; wgpu::Queue queueWeb_; ComPtr<ID3D12Device> d3d_; ComPtr<ID3D12CommandQueue> queue_; ComPtr<ID3D12Resource> nativeTexture_; wgpu::SharedTextureMemory memory_; wgpu::Texture texture_, depth_; wgpu::Buffer vertex_, index_, uniform_; wgpu::BindGroupLayout bindLayout_; wgpu::BindGroup bindGroup_; wgpu::RenderPipeline pipeline_; uint32_t width_ = 0, height_ = 0; Readback readback_; ComPtr<ID3D12CommandAllocator> allocator_ = nullptr; ComPtr<ID3D12GraphicsCommandList> list_; ComPtr<ID3D12Fence> fence_; HANDLE event_ = nullptr;
+    wgpu::Device device_; wgpu::Queue queueWeb_; ComPtr<ID3D12Device> d3d_; ComPtr<ID3D12CommandQueue> queue_; ComPtr<ID3D12Resource> nativeTexture_; wgpu::SharedTextureMemory memory_; wgpu::Texture texture_, depth_; wgpu::Buffer vertex_, index_, uniform_; wgpu::BindGroupLayout bindLayout_; wgpu::BindGroup bindGroup_; wgpu::RenderPipeline pipeline_; uint32_t width_ = 0, height_ = 0; bool textureInitialized_ = false; Readback readback_; ComPtr<ID3D12CommandAllocator> allocator_ = nullptr; ComPtr<ID3D12GraphicsCommandList> list_; ComPtr<ID3D12Fence> fence_; HANDLE event_ = nullptr;
 };
 
 } // namespace
 
+void ReportInfoQueue(ID3D12Device* device) {
+    ComPtr<ID3D12InfoQueue> queue;
+    if (FAILED(device->QueryInterface(IID_PPV_ARGS(&queue)))) return;
+    const UINT64 count = queue->GetNumStoredMessages();
+    for (UINT64 i = 0; i < count; ++i) {
+        SIZE_T bytes = 0; queue->GetMessage(i, nullptr, &bytes);
+        std::vector<uint8_t> storage(bytes); auto* message = reinterpret_cast<D3D12_MESSAGE*>(storage.data());
+        if (SUCCEEDED(queue->GetMessage(i, message, &bytes)) && message->Severity <= D3D12_MESSAGE_SEVERITY_WARNING) {
+            ++g_d3d12Messages; std::cerr << "FAIL d3d12_infoqueue severity=" << static_cast<int>(message->Severity) << " description=" << message->pDescription << "\n";
+        }
+    }
+    queue->ClearStoredMessages();
+}
+
 int main() {
-    dawnProcSetProcs(&dawn::native::GetProcs()); const char* unsafe = "allow_unsafe_apis"; wgpu::DawnTogglesDescriptor toggles; toggles.enabledToggleCount = 1; toggles.enabledToggles = &unsafe; dawn::native::DawnInstanceDescriptor dd; dd.nextInChain = &toggles; dd.backendValidationLevel = dawn::native::BackendValidationLevel::Full; wgpu::InstanceDescriptor id; id.nextInChain = &dd; dawn::native::Instance instance(&id); wgpu::RequestAdapterOptions ao; ao.backendType = wgpu::BackendType::D3D12; auto adapters = instance.EnumerateAdapters(&ao); if (adapters.empty()) Die("EnumerateAdapters"); wgpu::Adapter adapter = wgpu::Adapter::Acquire(adapters[0].Get()); wgpu::AdapterInfo ai; adapter.GetInfo(&ai); std::cout << "TCW-GPU-001 backend=D3D12 vendor_id=" << ai.vendorID << " device_id=" << ai.deviceID << " device=" << ToString(ai.device) << "\n"; const wgpu::FeatureName features[] = {wgpu::FeatureName::SharedTextureMemoryD3D12Resource}; wgpu::DeviceDescriptor desc; desc.requiredFeatureCount = 1; desc.requiredFeatures = features; desc.SetDeviceLostCallback(wgpu::CallbackMode::AllowProcessEvents, [](const wgpu::Device&, wgpu::DeviceLostReason reason, wgpu::StringView) { if (reason != wgpu::DeviceLostReason::Destroyed && reason != wgpu::DeviceLostReason::CallbackCancelled) { g_badDeviceLost = true; std::cerr << "FAIL device_lost_reason=" << static_cast<int>(reason) << "\n"; } }); desc.SetUncapturedErrorCallback([](const wgpu::Device&, wgpu::ErrorType type, wgpu::StringView message) { g_uncapturedError = true; std::cerr << "FAIL uncaptured_error_type=" << static_cast<int>(type) << " message=" << ToString(message) << "\n"; }); wgpu::Device device = wgpu::Device::Acquire(adapters[0].CreateDevice(&desc)); if (!device) Die("CreateDevice"); auto nativeDevice = dawn::native::d3d12::GetD3D12Device(device.Get()); auto nativeQueue = dawn::native::d3d12::GetD3D12CommandQueue(device.Get()); CubeRenderer renderer(device, nativeDevice, nativeQueue);
+    const auto runStart = std::chrono::steady_clock::now();
+    dawnProcSetProcs(&dawn::native::GetProcs()); const char* unsafe = "allow_unsafe_apis"; wgpu::DawnTogglesDescriptor toggles; toggles.enabledToggleCount = 1; toggles.enabledToggles = &unsafe; dawn::native::DawnInstanceDescriptor dd; dd.nextInChain = &toggles; dd.backendValidationLevel = dawn::native::BackendValidationLevel::Full; wgpu::InstanceDescriptor id; id.nextInChain = &dd; dawn::native::Instance instance(&id); wgpu::RequestAdapterOptions ao; ao.backendType = wgpu::BackendType::D3D12; auto adapters = instance.EnumerateAdapters(&ao); if (adapters.empty()) Die("EnumerateAdapters"); dawn::native::Adapter selected{}; bool found = false; for (auto& candidate : adapters) { wgpu::Adapter probe = wgpu::Adapter::Acquire(candidate.Get()); wgpu::AdapterInfo info{}; probe.GetInfo(&info); if (info.vendorID == 0x10DE) { selected = candidate; found = true; break; } } if (!found) Die("SelectNvidiaAdapter"); wgpu::Adapter adapter = wgpu::Adapter::Acquire(selected.Get()); wgpu::AdapterInfo ai{}; adapter.GetInfo(&ai); const wgpu::FeatureName features[] = {wgpu::FeatureName::SharedTextureMemoryD3D12Resource}; wgpu::DeviceDescriptor desc; desc.requiredFeatureCount = 1; desc.requiredFeatures = features; desc.SetDeviceLostCallback(wgpu::CallbackMode::AllowProcessEvents, [](const wgpu::Device&, wgpu::DeviceLostReason reason, wgpu::StringView) { if (reason != wgpu::DeviceLostReason::Destroyed && reason != wgpu::DeviceLostReason::CallbackCancelled) { g_badDeviceLost = true; std::cerr << "FAIL device_lost_reason=" << static_cast<int>(reason) << "\n"; } }); desc.SetUncapturedErrorCallback([](const wgpu::Device&, wgpu::ErrorType type, wgpu::StringView message) { g_uncapturedError = true; std::cerr << "FAIL uncaptured_error_type=" << static_cast<int>(type) << " message=" << ToString(message) << "\n"; }); wgpu::Device device = wgpu::Device::Acquire(selected.CreateDevice(&desc)); if (!device) Die("CreateDevice"); auto nativeDevice = dawn::native::d3d12::GetD3D12Device(device.Get()); auto nativeQueue = dawn::native::d3d12::GetD3D12CommandQueue(device.Get()); const LUID luid = nativeDevice ? nativeDevice->GetAdapterLuid() : LUID{}; if (!nativeDevice || !nativeQueue || (luid.LowPart == 0 && luid.HighPart == 0)) Die("VerifyAdapterLuid"); std::cout << "TCW-GPU-001 backend=D3D12 vendor_id=" << ai.vendorID << " device_id=" << ai.deviceID << " device=" << ToString(ai.device) << " adapter_luid_low=" << luid.LowPart << " adapter_luid_high=" << luid.HighPart << "\n"; CubeRenderer renderer(device, nativeDevice, nativeQueue);
     renderer.Resize(1280, 720); renderer.Render(30, true); WritePng("artifacts/native-cube-canonical.png", renderer.width(), renderer.height(), renderer.pixels()); std::cout << "TCW-NATIVE-001 indexed_cube=PASS canonical=1280x720\nTCW-NATIVE-004 capture=artifacts/native-cube-canonical.png\n";
-    std::vector<uint8_t> first = renderer.pixels(); for (int i = 0; i < 100; ++i) { renderer.Resize(i % 2 == 0 ? 2560 : 1280, i % 2 == 0 ? 1440 : 720); renderer.Render(static_cast<uint64_t>(i + 1), false); } renderer.Resize(1280, 720); renderer.Render(30, true); bool stable = first == renderer.pixels(); std::cout << "TCW-NATIVE-003 resize_cycles=100 result=PASS\n"; std::cout << "TCW-NATIVE-002 canonical_repeat_in_process=" << (stable ? "PASS" : "FAIL") << "\n"; if (!stable || g_badDeviceLost || g_uncapturedError) return 20; std::cout << "FRAMEBRIDGE_TCW003_PASS\n"; return 0;
+    std::vector<uint8_t> first = renderer.pixels(); for (int i = 0; i < 100; ++i) { renderer.Resize(i % 2 == 0 ? 2560 : 1280, i % 2 == 0 ? 1440 : 720); renderer.Render(static_cast<uint64_t>(i + 1), false); } renderer.Resize(1280, 720); renderer.Render(30, true); bool stable = first == renderer.pixels(); ReportInfoQueue(nativeDevice.Get()); const double elapsed = std::chrono::duration<double>(std::chrono::steady_clock::now() - runStart).count(); std::cout << "TCW-NATIVE-003 resize_cycles=100 result=PASS\nTCW-INT-004 dawn_validation_errors=" << (g_uncapturedError ? 1 : 0) << " d3d12_infoqueue_messages=" << g_d3d12Messages << "\nTCW-TIMING-001 elapsed_seconds=" << std::fixed << std::setprecision(6) << elapsed << "\n"; std::cout << "TCW-NATIVE-002 canonical_repeat_in_process=" << (stable ? "PASS" : "FAIL") << "\n"; if (!stable || g_badDeviceLost || g_uncapturedError || g_d3d12Messages != 0) return 20; std::cout << "FRAMEBRIDGE_TCW003_PASS\n"; return 0;
 }
