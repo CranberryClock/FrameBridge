@@ -70,8 +70,9 @@ test("scheduling","irregular skipped callbacks and same-frame reconnect",()=>{
  assert.equal(c.outstanding,1);
 });
 function client(){const c=new MirrorClient(()=>{});c.authenticate(caps);const sequence=c.frame(frame(4n))!;return {c,sequence};}
-for(const kind of ["wrong generation","unknown sequence","wrong frame","resize mismatch","status","replay","repeat capabilities","future frame"])test("acknowledgements",kind,()=>{
+for(const kind of ["wrong generation","unknown sequence","wrong frame","resize mismatch","status","replay","repeat capabilities","future frame","inflated cumulative drop"])test("acknowledgements",kind,()=>{
  const {c,sequence}=client();const p=P.encodeFrameAccepted(kind==="wrong generation"?3n:2n,kind==="wrong frame"||kind==="future frame"?frame(99n):kind==="resize mismatch"?{...frame(4n),resizeGeneration:2n}:frame(4n),kind==="unknown sequence"?sequence+100n:sequence,0);
+ if(kind==="inflated cumulative drop"){assert.throws(()=>c.acknowledge(P.encodeFrameAccepted(2n,frame(4n),sequence,1)));return;}
  if(kind==="repeat capabilities"){assert.throws(()=>c.authenticate(caps));return;}
  if(kind==="replay"){c.acknowledge(p);assert.throws(()=>c.acknowledge(p));return;}
  if(kind==="status"){const m=P.decode(p);new DataView(m.payload.buffer).setUint32(28,1,true);assert.throws(()=>c.acknowledge(P.encode(m)));return;}

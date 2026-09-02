@@ -10,6 +10,7 @@ const start=performance.now();let frame=1n;let protocolError="";
 let renderer:WebGPURenderer|undefined,camera:THREE.PerspectiveCamera|undefined;
 function current(){return canonicalState(frame,viewport);}
 function fail(message:string){protocolError=message;put("error",message);put("connection","protocol-error");socket?.close(1002,"protocol validation");}
+function clearProtocolError(){protocolError="";put("error","");}
 function viewportUI(){put("dimensions",viewport.width+" × "+viewport.height);put("resize",viewport.resizeGeneration);}
 function sendFrame(){if(socket?.readyState!==WebSocket.OPEN||!mirror?.authenticated)return;
  try{const seq=mirror.frame(current());if(seq!==undefined){put("sent",frame);put("outstanding",mirror.outstanding);}}catch{fail("outbound protocol or backpressure failure");}}
@@ -19,6 +20,7 @@ function disconnect(){
  put("connection","disconnected");put("authentication","not authenticated");put("outstanding",0);button.textContent="Connect mirror";
 }
 function connect(){
+ clearProtocolError();
  const port=Number(portInput.value),token=tokenInput.value;
  if(!Number.isInteger(port)||port<1||port>65535||!/^[0-9a-f]{48}$/i.test(token)){fail("invalid developer connection settings");return;}
  const ws=new WebSocket("ws://127.0.0.1:"+port);socket=ws;ws.binaryType="arraybuffer";
@@ -27,7 +29,7 @@ function connect(){
  ws.onopen=()=>{if(socket!==ws)return;put("authentication","authenticating");ws.send(JSON.stringify({kind:"hello",version:0,token,origin:location.origin,three:{version:"0.185.0",commit:"2431a09"},buildId:"demo-web",requestedCapabilities:["explicit-mirror"],byteOrder:"little"}));};
  ws.onmessage=event=>{if(socket!==ws)return;
   try{
-   if(typeof event.data==="string"){const caps=client.authenticate(event.data);tokenInput.value="";put("generation",caps.sessionGeneration);put("backend",caps.backend);put("authentication","authenticated");put("connection","connected");sendFrame();return;}
+   if(typeof event.data==="string"){const caps=client.authenticate(event.data);clearProtocolError();tokenInput.value="";put("generation",caps.sessionGeneration);put("backend",caps.backend);put("authentication","authenticated");put("connection","connected");sendFrame();return;}
    const {ack}=client.acknowledge(new Uint8Array(event.data as ArrayBuffer));
    put("accepted",ack.frame);put("accepted-resize",ack.resizeGeneration);put("dropped",ack.droppedFrames);put("outstanding",client.outstanding);
   }catch{fail("invalid capabilities or uncorrelated acknowledgement");}

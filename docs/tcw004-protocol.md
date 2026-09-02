@@ -10,10 +10,10 @@ All binary payload sizes are fixed:
 | BeginSession / EndSession / Ping | 0 | Empty |
 | Error | 4 | Server-only u32 error code |
 | SetRtxMode | 1 | Only 0 accepted (RTX unavailable) |
-| CreateBuffer | 8 | Declared allocation size u64; resource ID must be nonzero |
+| CreateBuffer | 8 | Reserved unused spike message: declared allocation size u64; resource ID must be nonzero |
 | DestroyResource | 0 | Resource ID must exist |
 | BeginFrame | 48 | Frame u64, simulation time f64, rotation X/Y f32, camera Z f32, width/height u32, resize generation u64, reserved u32 zero |
-| Draw | 16 | Reserved spike draw command bytes; no rendering claim |
+| Draw | 16 | Reserved unused spike message: draw command bytes; no rendering claim |
 | EndFrame | 0 | Closes exactly the open frame |
 | Resize | 16 | Width/height u32 and positive resize generation u64 |
 | FrameAccepted | 40 | Generation, frame, EndFrame sequence (u64 each), cumulative dropped frames/status (u32 each), resize generation u64 |
@@ -26,7 +26,7 @@ Quotas: hello 8 KiB; payload 1 MiB; WebSocket message 1 MiB + 36 bytes; 256 live
 
 A queued item stores the entire frame and its EndFrame sequence. Drop the oldest unprocessed complete frame on saturation. Delay defaults to zero; an injected 100 ms processor in the loopback test forces saturation. ACKs are emitted only when processing finishes. The browser correlates generation/sequence/frame/resize and retires skipped predecessors only when cumulative drop telemetry explains them.
 
-Fixtures in packages/protocol/fixtures/canonical.tsv specify independent encoder input fields and payload bytes. TS and C++ encode those fields without decoder output and compare against the twelve shared canonical .hex files. Both decode and reject the eleven malformed files. C++ reports codec coverage; Node tests provide authentication/session/transport coverage.
+Fixtures in packages/protocol/fixtures/canonical.tsv specify independent encoder input fields and payload bytes. TS and C++ encode those fields without decoder output and compare against the twelve shared canonical .hex files. Both decode and reject the eleven malformed files. C++ reports codec coverage; Node tests provide authentication/session/transport coverage. CreateBuffer and Draw are intentionally unused reserved spike messages: the active cube contract contains scene state, viewport/Resize, and session lifecycle only. They must not be expanded in TCW-004.
 
 The browser uses latest-only logical-frame scheduling per animation callback. It keeps rendering and advancing simulation through disconnect. Reconnect resets only session-local sequencing and sends the current resize and full frame. Node diagnostic/soak generation uses the same canonical state and client protocol controller, with bounded catch-up (at most four complete logical frames per scheduler tick).
 
@@ -36,4 +36,4 @@ Memory thresholds: retained heap <=128 MiB; RSS <=256 MiB; start-to-end growth <
 
 Samples occur on monotonic 10-second deadlines plus start/end. The worker uses --expose-gc and explicitly collects at those sample points, recording pre-GC heap and retained heap; this avoids treating GC sawtooth timing as a leak. Cadence includes this instrumentation cost. All checks affect process exit status. Short diagnostic PASS never promotes TCW-PROTO-004; it additionally requires >=1800 seconds.
 
-CI and local builds execute the C++ test from repository root. Browser gates remain HUMAN_REQUIRED. The old real-soak.json is invalid evidence, retained only in Git history; no reconstructed fields are carried forward.
+CI and local builds execute the C++ test from repository root. The original create/update/draw/destroy fragmentation formulation of TCW-PROTO-003 is superseded for this narrow spike. Its replacement human mirror gate verifies authenticated loopback scene-state transmission, continued browser-authoritative simulation during disconnect, reconnect at the current logical frame, matching FrameAccepted state, both explicit resizes, an empty token field, and the applicable display-rate check. Browser gates remain HUMAN_REQUIRED. The old real-soak.json is invalid evidence, retained only in Git history; no reconstructed fields are carried forward.

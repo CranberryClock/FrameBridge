@@ -39,7 +39,7 @@ export class MirrorClient {
     requireValid(ack.droppedFrames >= this.dropped,"decreasing dropped count");
     // FIFO processing means unacknowledged predecessors were dropped as complete frames.
     const skipped = [...this.pending.keys()].filter(s=>s < ack.sequence);
-    requireValid(skipped.length <= ack.droppedFrames-this.dropped,"unexplained missing acknowledgement");
+    requireValid(skipped.length === ack.droppedFrames-this.dropped,"cumulative drop count does not match skipped frames");
     for (const seq of skipped) this.pending.delete(seq);
     this.pending.delete(ack.sequence); this.acceptedSequence = ack.sequence; this.acceptedFrame = ack.frame; this.dropped = ack.droppedFrames;
     return {ack,state};
