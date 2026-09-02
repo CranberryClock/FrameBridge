@@ -7,9 +7,9 @@
     "TCW-BUILD-001": "PASS",
     "TCW-PROTO-001": "PASS short shared fixture TS/C++",
     "TCW-PROTO-002": "PASS short validation/lifecycle suite",
-    "TCW-PROTO-003": "PASS Node loopback client; browser UI evidence blocked by local-browser connectivity",
+    "TCW-PROTO-003": "BLOCKED Node loopback client passed; browser UI/client evidence blocked by local-browser connectivity",
     "TCW-PROTO-004": "BLOCKED real 1800-second run sustained 76022 frames (~42 Hz), not the required 60 Hz",
-    "TCW-CONT-001": "PASS Node loopback reconnect sample; browser screenshot evidence blocked"
+    "TCW-CONT-001": "BLOCKED Node loopback reconnect sample passed; browser screenshot evidence blocked"
   },
   "clean_validation": {
     "frozen_install": {"command": "corepack pnpm install --frozen-lockfile", "exit_code": 0, "pnpm": "10.14.0"},
