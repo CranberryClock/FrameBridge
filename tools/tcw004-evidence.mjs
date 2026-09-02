@@ -14,7 +14,7 @@ if(!acceptance)throw new Error("no acceptance record");
 const sha=acceptance.data.implementation_commit;
 const diagnostics=runs.filter(r=>r.data.mode==="diagnostic"&&r.data.implementation_commit===sha&&!r.data.implementation_dirty).sort((a,b)=>a.data.end_time.localeCompare(b.data.end_time)).slice(-2);
 if(diagnostics.length!==2)throw new Error("two exact-commit diagnostics required");
-const clean=path.join(root,"out/tcw004-clean/artifacts/tcw-004/validation");
+const clean=path.join(root,"out/tcw004-clean-final/artifacts/tcw-004/validation");
 const dirs=await readdir(clean);const validationDir=dirs.at(-1);if(!validationDir)throw new Error("clean validation missing");
 const validation=await read(path.join(clean,validationDir,"result.json"));
 if(validation.implementation_commit!==sha||!validation.clean_install)throw new Error("not a clean validation of implementation commit");

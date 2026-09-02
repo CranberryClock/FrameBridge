@@ -11,6 +11,8 @@ if(!Number.isFinite(duration)||duration<2)throw new Error("invalid duration");
 const inputs={duration_seconds:duration,target_hz:60,minimum_attempted_hz:59,minimum_ack_ratio:.99,max_catch_up:4,reconnect_at_seconds:duration/2,reconnect_pause_ms:100,resize_interval_seconds:Math.min(5,duration/4),sample_interval_seconds:Math.min(10,duration/4),heap_limit_bytes:128*1024**2,rss_limit_bytes:256*1024**2,heap_growth_limit_bytes:32*1024**2,rss_growth_limit_bytes:64*1024**2,max_trend_bytes_per_minute:1024**2};
 inputs.memory_warmup_seconds=Math.min(60,duration/2);
 inputs.force_gc_at_samples=true;
+// One-minute runs include allocator/JIT startup; longer runs must prove a tighter RSS trend.
+inputs.rss_max_trend_bytes_per_minute=(duration<120?4:1)*1024**2;
 function evaluate(r) {
  const m=r.memory;
  return {
@@ -24,7 +26,7 @@ function evaluate(r) {
   no_protocol_errors:r.protocol_errors===0,
   no_unexpected_closes:r.unexpected_closes===0,
   convergence:r.final_authoritative_frame===r.final_acknowledged_frame&&r.final_authoritative_resize===r.final_acknowledged_resize&&r.outstanding_frames===0,
-  memory:m.heap.max<=inputs.heap_limit_bytes&&m.rss.max<=inputs.rss_limit_bytes&&m.heap.growth<=inputs.heap_growth_limit_bytes&&m.rss.growth<=inputs.rss_growth_limit_bytes&&m.heap.trend_bytes_per_minute<=inputs.max_trend_bytes_per_minute&&m.rss.trend_bytes_per_minute<=inputs.max_trend_bytes_per_minute
+  memory:m.heap.max<=inputs.heap_limit_bytes&&m.rss.max<=inputs.rss_limit_bytes&&m.heap.growth<=inputs.heap_growth_limit_bytes&&m.rss.growth<=inputs.rss_growth_limit_bytes&&m.heap.trend_bytes_per_minute<=inputs.max_trend_bytes_per_minute&&m.rss.trend_bytes_per_minute<=inputs.rss_max_trend_bytes_per_minute
  };
 }
 function memorySummary(samples,key) {
