@@ -1,9 +1,13 @@
 # FrameBridge
 
-FrameBridge is a narrow Windows research system. Its first showcase demo is **The Cube Works**, a supported Three.js cube using the browser WebGPU fallback.
+FrameBridge is a Windows research system. The Cube Works is its first pinned Three.js showcase, retaining the ordinary browser WebGPU cube.
 
-TCW-001 through TCW-003 are complete. TCW-004 is an explicit scene-mirroring protocol spike labeled **MIRROR SPIKE — NOT THREE BACKEND**. The browser remains authoritative for logical frame, simulation time, transform, camera, viewport, resize generation, and resource identity. The Node WebSocket endpoint is test/developer infrastructure; it is not a native socket listener, D3D12 renderer, or Three.js backend.
+TCW-001 through TCW-003 are complete. TCW-004 is **MIRROR SPIKE — NOT THREE BACKEND**. Its Node loopback endpoint is test/developer infrastructure. The browser owns simulation and scene state.
 
-Current TCW-004 status: short build, TypeScript/C++ codec, authentication, lifecycle, quota, and queue tests are implemented. Native and browser acceptance evidence is still under supervisor review; browser gates remain HUMAN_REQUIRED until a local Chrome run captures connection, reconnect, resize, and high-refresh behavior. The real soak must be run with `node tools/tcw004-soak.mjs` and is PASS only when the runner itself exits zero.
+The final TCW-004 rework adds explicit binary session lifecycle, correlated frame/resize acknowledgements, independent TS/C++ fixtures for all twelve messages, exhaustive protocol rejection assertions, delayed-processor backpressure tests, and deterministic refresh scheduling tests. Browser acceptance remains HUMAN_REQUIRED. See [protocol contract](docs/tcw004-protocol.md) and [human checklist](artifacts/tcw-004/human-browser-steps.md).
 
-For the native build, use `VsDevCmd.bat -arch=x64 -vcvars_ver=14.38`, then configure with the installed Visual Studio CMake generator. The doctor only reports; it never installs. Do not add NVIDIA/DLSS/Streamline binaries to Git.
+Local validation: `node tools/tcw004-validate.mjs` records exact commands, output, and exit codes, including executing the C++ test. Run in a clean checkout to prove frozen installation.
+
+Run repeated diagnostics with `$env:TCW004_DURATION_SECONDS='60'; node tools/tcw004-soak.mjs`. Commit stable implementation before acceptance, then run with duration 1800. Every run writes a unique directory under artifacts/tcw-004/runs with source/runtime hashes, timestamps, measured acceptance checks, memory samples, and process exit code. The prior reconstructed real-soak.json is stale and provides no acceptance evidence. Current gate decisions belong in the evidence manifest.
+
+No native socket endpoint, native bridge renderer, DLSS, Streamline, extension, installer, custom Three.js backend, or Unreal work is part of this task. Stop for supervisor review after TCW-004.

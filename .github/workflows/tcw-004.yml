@@ -2,7 +2,10 @@ name: TCW-004 short validation
 on: [push, pull_request]
 jobs:
   short-validation:
-    runs-on: windows-latest
+    runs-on: windows-2022
+    defaults:
+      run:
+        working-directory: ${{ github.workspace }}
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -16,6 +19,6 @@ jobs:
       - run: pnpm -r build
       - run: pnpm -r test
       - run: pnpm --filter @framebridge/demo-web exec vite build
-      - run: cmake -S . -B out/tcw004-cpp -G Ninja -DCMAKE_BUILD_TYPE=Release
-      - run: cmake --build out/tcw004-cpp --target framebridge-bridge-codec
-      - run: .\out\tcw004-cpp\framebridge-bridge-codec.exe
+      - run: cmake -S . -B out/tcw004-cpp -G "Visual Studio 17 2022" -A x64
+      - run: cmake --build out/tcw004-cpp --config Release --target framebridge-bridge-codec
+      - run: .\out\tcw004-cpp\Release\framebridge-bridge-codec.exe

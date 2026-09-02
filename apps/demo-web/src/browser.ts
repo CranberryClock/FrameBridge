@@ -1,15 +1,61 @@
 import * as THREE from "three";
-import { WebGPURenderer } from "three/webgpu";
-import { decode, encode, encodeFrameState, MessageType, type FrameState } from "@framebridge/protocol";
-const q = <T extends HTMLElement>(id: string): T => { const e = document.querySelector<T>(`#${id}`); if (!e) throw new Error(`missing ${id}`); return e; };
-const canvas = q<HTMLCanvasElement>("cube"), mode = q("mode"), browserFrame = q("browser-frame"), connection = q("connection"), authentication = q("authentication"), portInput = q<HTMLInputElement>("port"), tokenInput = q<HTMLInputElement>("token"), button = q<HTMLButtonElement>("mirror"), accepted = q("accepted"), dropped = q("dropped"), error = q("error");
-let socket: WebSocket | undefined; let sequence = 0n; let frame = 0n; let resizeGeneration = 0n; let start = performance.now(); let lastSentFrame = 0n; let renderer: WebGPURenderer | undefined; let cube: THREE.Mesh | undefined;
-const state = (): FrameState => ({ frame, simulationTime: Number(frame) / 60, rotationX: Number(frame) * .01, rotationY: Number(frame) * .013, cameraZ: 3, width: canvas.width, height: canvas.height, resizeGeneration });
-function setError(message: string): void { error.textContent = `Last protocol error: ${message}`; connection.textContent = "protocol-error"; }
-function sendState(force = false): void { if (!socket || socket.readyState !== WebSocket.OPEN || (!force && frame <= lastSentFrame)) return; const current = state(); socket.send(encode({ type: MessageType.BeginFrame, sequence: ++sequence, payload: encodeFrameState(current) })); socket.send(encode({ type: MessageType.EndFrame, sequence: ++sequence, payload: new Uint8Array() })); lastSentFrame = frame; }
-function disconnect(): void { socket?.close(); socket = undefined; button.textContent = "Connect mirror"; connection.textContent = "disconnected"; authentication.textContent = "not-authenticated"; mode.textContent = "MIRROR SPIKE — NOT THREE BACKEND"; }
-function connect(): void { const port = Number(portInput.value); const token = tokenInput.value; if (!Number.isInteger(port) || port < 1 || port > 65535 || token.length < 48) { setError("invalid developer connection settings"); return; } sequence = 0n; lastSentFrame = 0n; connection.textContent = "connecting"; authentication.textContent = "authenticating"; const currentSocket = new WebSocket(`ws://127.0.0.1:${port}`); socket = currentSocket; currentSocket.binaryType = "arraybuffer"; currentSocket.onopen = () => { currentSocket.send(JSON.stringify({ kind: "hello", version: 0, token, origin: location.origin, three: { version: "0.185.0", commit: "2431a09" }, buildId: "demo-web", requestedCapabilities: ["explicit-mirror"], byteOrder: "little" })); connection.textContent = "connected"; }; currentSocket.onmessage = (event) => { try { if (typeof event.data === "string") { const caps = JSON.parse(event.data) as Record<string, unknown>; if (caps.kind !== "capabilities" || caps.version !== 0 || typeof caps.sessionId !== "string" || !caps.sessionId || typeof caps.buildId !== "string" || caps.backend !== "test-harness" || !Array.isArray(caps.features) || !caps.features.includes("explicit-mirror") || caps.byteOrder !== "little") throw new Error("invalid capabilities"); authentication.textContent = "authenticated"; mode.textContent = "MIRROR SPIKE — NOT THREE BACKEND — test-harness binary mirror active"; button.textContent = "Disconnect mirror"; sendState(true); return; } const message = decode(new Uint8Array(event.data)); if (message.type !== MessageType.FrameAccepted || message.payload.byteLength !== 40) throw new Error("invalid acknowledgement"); const v = new DataView(message.payload.buffer, message.payload.byteOffset); const ackGeneration = v.getBigUint64(0, true); const ackFrame = v.getBigUint64(8, true); const ackSequence = v.getBigUint64(16, true); if (ackGeneration < 1n || ackSequence < 1n || ackFrame < 1n) throw new Error("invalid acknowledgement fields"); accepted.textContent = `Bridge accepted logical frame: ${ackFrame}`; dropped.textContent = `Dropped complete frames: ${v.getUint32(24, true)}`; } catch (cause) { setError((cause as Error).message); currentSocket.close(1002, "protocol validation"); } }; currentSocket.onerror = () => setError("socket error"); currentSocket.onclose = () => { if (socket === currentSocket) { socket = undefined; button.textContent = "Connect mirror"; if (connection.textContent !== "protocol-error") connection.textContent = "disconnected"; } }; }
-button.addEventListener("click", () => { if (socket) disconnect(); else connect(); });
-const observer = new ResizeObserver(() => { const width = Math.max(1, Math.min(8192, Math.round(canvas.clientWidth || canvas.width))); const height = Math.max(1, Math.min(8192, Math.round(canvas.clientHeight || canvas.height))); if (width !== canvas.width || height !== canvas.height) { canvas.width = width; canvas.height = height; resizeGeneration++; renderer?.setSize(width, height, false); } }); observer.observe(canvas);
-async function main(): Promise<void> { mode.textContent = "MIRROR SPIKE — NOT THREE BACKEND — browser WebGPU fallback"; if (!(navigator as Navigator & { gpu?: unknown }).gpu) { mode.textContent += " — BROWSER_WEBGPU_UNAVAILABLE"; return; } const scene = new THREE.Scene(); scene.background = new THREE.Color(0x080b12); const camera = new THREE.PerspectiveCamera(60, canvas.width / canvas.height, .1, 100); camera.position.z = 3; renderer = new WebGPURenderer({ canvas, antialias: false }); await renderer.init(); renderer.setSize(canvas.width, canvas.height, false); cube = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshBasicMaterial({ color: 0x36d6ff, wireframe: true })); scene.add(cube); const animate = (): void => { frame = BigInt(Math.max(1, Math.floor((performance.now() - start) * 60 / 1000))); browserFrame.textContent = String(frame); const current = state(); cube!.rotation.x = current.rotationX; cube!.rotation.y = current.rotationY; camera.aspect = current.width / current.height; camera.updateProjectionMatrix(); sendState(); renderer!.render(scene, camera); requestAnimationFrame(animate); }; animate(); }
-void main();
+import {WebGPURenderer} from "three/webgpu";
+import {MirrorClient,logicalFrameAt,canonicalState,type ResizeState,MAX_DIMENSION} from "@framebridge/protocol";
+function element<T extends HTMLElement>(id:string):T {const value=document.getElementById(id);if(!value)throw new Error("missing "+id);return value as T;}
+const canvas=element<HTMLCanvasElement>("cube"),button=element<HTMLButtonElement>("mirror"),tokenInput=element<HTMLInputElement>("token"),portInput=element<HTMLInputElement>("port");
+const put=(id:string,value:unknown)=>{element(id).textContent=String(value);};
+let socket:WebSocket|undefined,mirror:MirrorClient|undefined;
+let viewport:ResizeState={width:640,height:360,resizeGeneration:1n};
+const start=performance.now();let frame=1n;let protocolError="";
+let renderer:WebGPURenderer|undefined,camera:THREE.PerspectiveCamera|undefined;
+function current(){return canonicalState(frame,viewport);}
+function fail(message:string){protocolError=message;put("error",message);put("connection","protocol-error");socket?.close(1002,"protocol validation");}
+function viewportUI(){put("dimensions",viewport.width+" × "+viewport.height);put("resize",viewport.resizeGeneration);}
+function sendFrame(){if(socket?.readyState!==WebSocket.OPEN||!mirror?.authenticated)return;
+ try{const seq=mirror.frame(current());if(seq!==undefined){put("sent",frame);put("outstanding",mirror.outstanding);}}catch{fail("outbound protocol or backpressure failure");}}
+function disconnect(){
+ const ws=socket;try{mirror?.disconnect(ws?.readyState===WebSocket.OPEN);}catch{/* teardown must preserve the simulation */}
+ ws?.close(1000,"developer disconnect");socket=undefined;mirror=undefined;
+ put("connection","disconnected");put("authentication","not authenticated");put("outstanding",0);button.textContent="Connect mirror";
+}
+function connect(){
+ const port=Number(portInput.value),token=tokenInput.value;
+ if(!Number.isInteger(port)||port<1||port>65535||!/^[0-9a-f]{48}$/i.test(token)){fail("invalid developer connection settings");return;}
+ const ws=new WebSocket("ws://127.0.0.1:"+port);socket=ws;ws.binaryType="arraybuffer";
+ const client=new MirrorClient(bytes=>ws.send(bytes));mirror=client;
+ put("connection","connecting");put("authentication","awaiting hello");button.textContent="Disconnect mirror";
+ ws.onopen=()=>{if(socket!==ws)return;put("authentication","authenticating");ws.send(JSON.stringify({kind:"hello",version:0,token,origin:location.origin,three:{version:"0.185.0",commit:"2431a09"},buildId:"demo-web",requestedCapabilities:["explicit-mirror"],byteOrder:"little"}));};
+ ws.onmessage=event=>{if(socket!==ws)return;
+  try{
+   if(typeof event.data==="string"){const caps=client.authenticate(event.data);tokenInput.value="";put("generation",caps.sessionGeneration);put("backend",caps.backend);put("authentication","authenticated");put("connection","connected");sendFrame();return;}
+   const {ack}=client.acknowledge(new Uint8Array(event.data as ArrayBuffer));
+   put("accepted",ack.frame);put("accepted-resize",ack.resizeGeneration);put("dropped",ack.droppedFrames);put("outstanding",client.outstanding);
+  }catch{fail("invalid capabilities or uncorrelated acknowledgement");}
+ };
+ ws.onerror=()=>{if(socket===ws)fail("loopback connection error");};
+ ws.onclose=()=>{client.disconnect(false);if(socket!==ws)return;socket=undefined;mirror=undefined;put("authentication","not authenticated");put("connection",protocolError?"protocol-error":"disconnected");put("outstanding",0);button.textContent="Connect mirror";};
+}
+button.onclick=()=>socket?disconnect():connect();
+for(const [id,width,height] of [["size640",640,360],["size800",800,450]] as const)element(id).onclick=()=>{canvas.style.width=width+"px";canvas.style.height=height+"px";};
+new ResizeObserver(entries=>{
+ const rect=entries[0]?.contentRect;if(!rect)return;
+ const width=Math.round(rect.width),height=Math.round(rect.height);
+ if(width<1||height<1||width>MAX_DIMENSION||height>MAX_DIMENSION)return;
+ if(width===viewport.width&&height===viewport.height)return;
+ viewport={width,height,resizeGeneration:viewport.resizeGeneration+1n};
+ renderer?.setSize(width,height,false);if(camera){camera.aspect=width/height;camera.updateProjectionMatrix();}viewportUI();
+ // MirrorClient sends Resize before the next complete frame, including after reconnect.
+}).observe(canvas);
+viewportUI();
+async function main(){
+ if(!(navigator as Navigator&{gpu?:unknown}).gpu){put("renderer","WebGPU unavailable");return;}
+ const scene=new THREE.Scene();scene.background=new THREE.Color(0x080b12);
+ camera=new THREE.PerspectiveCamera(60,viewport.width/viewport.height,.1,100);camera.position.z=3;
+ renderer=new WebGPURenderer({canvas,antialias:false});await renderer.init();renderer.setPixelRatio(1);renderer.setSize(viewport.width,viewport.height,false);
+ const cube=new THREE.Mesh(new THREE.BoxGeometry(),new THREE.MeshBasicMaterial({color:0x36d6ff,wireframe:true}));scene.add(cube);
+ put("renderer","browser WebGPU fallback");
+ function animate(){frame=logicalFrameAt(performance.now()-start);const s=current();cube.rotation.set(s.rotationX,s.rotationY,0);camera!.position.z=s.cameraZ;
+  put("browser-frame",frame);sendFrame();renderer!.render(scene,camera!);requestAnimationFrame(animate);}
+ requestAnimationFrame(animate);
+}
+void main().catch(()=>{put("renderer","WebGPU initialization failed");});

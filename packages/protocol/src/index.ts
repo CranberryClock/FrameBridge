@@ -1,9 +1,10 @@
 export const MAGIC = 0x30574246;
+export { MirrorClient, logicalFrameAt } from "./client.js";
 export const VERSION = 0;
 export const HEADER_BYTES = 36;
-export const MAX_HELLO_BYTES = 8 * 1024;
-export const MAX_WEBSOCKET_BYTES = 2 * 1024 * 1024;
+export const MAX_HELLO_BYTES = 8192;
 export const MAX_PAYLOAD_BYTES = 1024 * 1024;
+export const MAX_WEBSOCKET_BYTES = HEADER_BYTES + MAX_PAYLOAD_BYTES;
 export const MAX_LIVE_RESOURCES = 256;
 export const MAX_DECLARED_RESOURCE_BYTES = 64 * 1024 * 1024;
 export const MAX_DRAWS_PER_FRAME = 4096;
@@ -11,37 +12,139 @@ export const MAX_MESSAGES_PER_FRAME = 8192;
 export const MAX_QUEUED_FRAMES = 2;
 export const MAX_DIMENSION = 8192;
 export const SUPPORTED_FLAGS = 0;
-
+export const FEATURE = "explicit-mirror";
+const U64_MAX = (1n << 64n) - 1n;
 export enum MessageType { BeginSession = 1, EndSession, Ping, Error, SetRtxMode, CreateBuffer = 16, DestroyResource, BeginFrame = 32, Draw, EndFrame, Resize, FrameAccepted = 48 }
-const known = new Set<number>(Object.values(MessageType).filter((v): v is number => typeof v === "number"));
-const fixedPayloads = new Map<number, number>([[MessageType.BeginSession, 0], [MessageType.EndSession, 0], [MessageType.Ping, 0], [MessageType.Error, 4], [MessageType.SetRtxMode, 1], [MessageType.DestroyResource, 0], [MessageType.BeginFrame, 48], [MessageType.Draw, 16], [MessageType.EndFrame, 0], [MessageType.Resize, 16], [MessageType.FrameAccepted, 40]]);
+export const PAYLOAD_SIZES: ReadonlyMap<number, number> = new Map([[1,0],[2,0],[3,0],[4,4],[5,1],[16,8],[17,0],[32,48],[33,16],[34,0],[35,16],[48,40]]);
 export type BinaryMessage = Readonly<{ type: MessageType; flags?: number; sequence: bigint; objectId?: bigint; payload: Uint8Array }>;
-export function checksum(bytes: Uint8Array): number { let h = 0x811c9dc5; for (const byte of bytes) { h ^= byte; h = Math.imul(h, 0x01000193) >>> 0; } return h >>> 0; }
-function validateFields(message: BinaryMessage): { flags: number; objectId: bigint } { const flags = message.flags ?? 0; const objectId = message.objectId ?? 0n; if (!known.has(message.type) || flags !== SUPPORTED_FLAGS || message.sequence < 1n || objectId < 0n || message.payload.byteLength > MAX_PAYLOAD_BYTES) throw new Error("invalid message fields"); if ((message.type === MessageType.CreateBuffer || message.type === MessageType.DestroyResource) && objectId === 0n) throw new Error("illegal object id"); const fixed = fixedPayloads.get(message.type); if (fixed !== undefined && message.payload.byteLength !== fixed) throw new Error("invalid fixed payload"); return { flags, objectId }; }
-export function encode(message: BinaryMessage): Uint8Array { const { flags, objectId } = validateFields(message); const out = new Uint8Array(HEADER_BYTES + message.payload.byteLength); const view = new DataView(out.buffer); view.setUint32(0, MAGIC, true); view.setUint16(4, VERSION, true); view.setUint16(6, message.type, true); view.setUint32(8, flags, true); view.setUint32(12, message.payload.byteLength, true); view.setBigUint64(16, message.sequence, true); view.setBigUint64(24, objectId, true); view.setUint32(32, checksum(message.payload), true); out.set(message.payload, HEADER_BYTES); return out; }
-export function decode(bytes: Uint8Array): BinaryMessage { if (bytes.byteLength < HEADER_BYTES) throw new Error("truncated header"); const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength); const type = view.getUint16(6, true); const flags = view.getUint32(8, true); const payloadBytes = view.getUint32(12, true); const sequence = view.getBigUint64(16, true); const objectId = view.getBigUint64(24, true); if (view.getUint32(0, true) !== MAGIC) throw new Error("wrong magic"); if (view.getUint16(4, true) !== VERSION) throw new Error("wrong version"); if (!known.has(type)) throw new Error("unknown message type"); if (flags !== SUPPORTED_FLAGS) throw new Error("unsupported flags"); if (sequence < 1n) throw new Error("invalid sequence"); if (payloadBytes > MAX_PAYLOAD_BYTES || HEADER_BYTES + payloadBytes !== bytes.byteLength) throw new Error("invalid payload length"); const message = { type: type as MessageType, flags, sequence, objectId, payload: bytes.slice(HEADER_BYTES) }; validateFields(message); if (view.getUint32(32, true) !== checksum(message.payload)) throw new Error("checksum mismatch"); return message; }
-
-export type Hello = Readonly<{ kind: "hello"; version: 0; token: string; origin: string; three: { version: string; commit: string }; buildId: string; requestedCapabilities: string[]; byteOrder: "little" }>;
-export type Capabilities = Readonly<{ kind: "capabilities"; version: 0; sessionId: string; buildId: string; backend: "test-harness"; features: string[]; byteOrder: "little" }>;
-export function authenticate(value: unknown, expectedToken: string, expectedOrigin: string, requestOrigin: string): Capabilities { if (typeof value !== "object" || value === null || JSON.stringify(value).length > MAX_HELLO_BYTES) throw new Error("invalid hello"); const hello = value as Partial<Hello>; if (hello.kind !== "hello" || hello.version !== VERSION || hello.byteOrder !== "little" || hello.token !== expectedToken || hello.origin !== expectedOrigin || requestOrigin !== expectedOrigin || !hello.three || typeof hello.buildId !== "string" || !Array.isArray(hello.requestedCapabilities) || !hello.requestedCapabilities.includes("explicit-mirror")) throw new Error("authentication rejected"); return { kind: "capabilities", version: VERSION, sessionId: crypto.randomUUID(), buildId: "framebridge-dev", backend: "test-harness", features: ["explicit-mirror"], byteOrder: "little" }; }
-
-export type FrameState = Readonly<{ frame: bigint; simulationTime: number; rotationX: number; rotationY: number; cameraZ: number; width: number; height: number; resizeGeneration: bigint }>;
-export function encodeFrameState(state: FrameState): Uint8Array { const out = new Uint8Array(48); const view = new DataView(out.buffer); view.setBigUint64(0, state.frame, true); view.setFloat64(8, state.simulationTime, true); view.setFloat32(16, state.rotationX, true); view.setFloat32(20, state.rotationY, true); view.setFloat32(24, state.cameraZ, true); view.setUint32(28, state.width, true); view.setUint32(32, state.height, true); view.setBigUint64(36, state.resizeGeneration, true); return out; }
-export function decodeFrameState(payload: Uint8Array): FrameState { if (payload.byteLength !== 48) throw new Error("invalid frame state"); const v = new DataView(payload.buffer, payload.byteOffset, payload.byteLength); const state = { frame: v.getBigUint64(0, true), simulationTime: v.getFloat64(8, true), rotationX: v.getFloat32(16, true), rotationY: v.getFloat32(20, true), cameraZ: v.getFloat32(24, true), width: v.getUint32(28, true), height: v.getUint32(32, true), resizeGeneration: v.getBigUint64(36, true) }; if (!Number.isFinite(state.simulationTime) || state.frame < 1n || state.width < 1 || state.height < 1 || state.width > MAX_DIMENSION || state.height > MAX_DIMENSION) throw new Error("invalid frame state"); return state; }
-function parseResize(payload: Uint8Array): { width: number; height: number; generation: bigint } { if (payload.byteLength !== 16) throw new Error("invalid resize"); const v = new DataView(payload.buffer, payload.byteOffset, payload.byteLength); const value = { width: v.getUint32(0, true), height: v.getUint32(4, true), generation: v.getBigUint64(8, true) }; if (value.width < 1 || value.height < 1 || value.width > MAX_DIMENSION || value.height > MAX_DIMENSION || value.generation < 1n) throw new Error("invalid resize dimensions"); return value; }
-
-export class MirrorSession { readonly sessionId: string; private lastSequence = 0n; private lastFrame = 0n; private openFrame: FrameState | undefined; private queue: FrameState[] = []; private live = new Map<bigint, number>(); private declaredBytes = 0; private draws = 0; private messages = 0; private drops = 0; private ended = false; private resizeGeneration = 0n; constructor(sessionId: string = crypto.randomUUID()) { this.sessionId = sessionId; }
-  accept(message: BinaryMessage): void { if (this.ended) throw new Error("session ended"); if (message.sequence <= this.lastSequence) throw new Error("out of order sequence"); this.lastSequence = message.sequence; if (++this.messages > MAX_MESSAGES_PER_FRAME) throw new Error("message quota");
-    if (message.type === MessageType.CreateBuffer) { if (message.payload.byteLength !== 8) throw new Error("invalid buffer schema"); const id = message.objectId ?? 0n; const declared = Number(new DataView(message.payload.buffer, message.payload.byteOffset).getBigUint64(0, true)); if (!Number.isSafeInteger(declared) || declared < 1 || this.live.has(id) || this.live.size >= MAX_LIVE_RESOURCES || declared > MAX_DECLARED_RESOURCE_BYTES - this.declaredBytes) throw new Error("resource quota or lifecycle violation"); this.live.set(id, declared); this.declaredBytes += declared; return; }
-    if (message.type === MessageType.DestroyResource) { const id = message.objectId ?? 0n; const declared = this.live.get(id); if (declared === undefined) throw new Error("unknown resource"); this.live.delete(id); this.declaredBytes -= declared; return; }
-    if (message.type === MessageType.BeginFrame) { if (this.openFrame) throw new Error("nested frame"); const frame = decodeFrameState(message.payload); if (frame.frame <= this.lastFrame) throw new Error("out of order frame state"); this.openFrame = frame; this.draws = 0; this.messages = 1; return; }
-    if (message.type === MessageType.Draw) { if (!this.openFrame || ++this.draws > MAX_DRAWS_PER_FRAME) throw new Error("draw outside frame or quota"); return; }
-    if (message.type === MessageType.Resize) { const value = parseResize(message.payload); if (value.generation <= this.resizeGeneration) throw new Error("out of order resize"); this.resizeGeneration = value.generation; return; }
-    if (message.type === MessageType.EndFrame) { if (!this.openFrame) throw new Error("end without begin"); if (this.queue.length >= MAX_QUEUED_FRAMES) { this.queue.shift(); this.drops++; } this.queue.push(this.openFrame); this.lastFrame = this.openFrame.frame; this.openFrame = undefined; this.draws = 0; this.messages = 0; return; }
-    if (message.type === MessageType.EndSession) { if (this.openFrame) throw new Error("open frame"); this.ended = true; return; }
-    if (message.type === MessageType.Ping || message.type === MessageType.SetRtxMode || message.type === MessageType.BeginSession) return;
-    throw new Error("message not legal in session"); }
-  processOne(): FrameState | undefined { return this.queue.shift(); }
-  get acceptedFrame(): bigint { return this.lastFrame; } get lastAcceptedSequence(): bigint { return this.lastSequence; } get droppedFrames(): number { return this.drops; } get queuedFrames(): number { return this.queue.length; } get declaredResourceBytes(): number { return this.declaredBytes; }
+export function requireValid(ok: unknown, reason: string): asserts ok { if (!ok) throw new Error(reason); }
+export function checksum(bytes: Uint8Array): number { let h = 0x811c9dc5; for (const b of bytes) h = Math.imul(h ^ b, 0x01000193) >>> 0; return h; }
+export function validateMessage(m: BinaryMessage): void {
+  requireValid(PAYLOAD_SIZES.has(m.type), "unknown type");
+  requireValid((m.flags ?? 0) === 0, "unsupported flags");
+  requireValid(m.sequence > 0n && m.sequence <= U64_MAX, "invalid sequence");
+  const id = m.objectId ?? 0n;
+  requireValid(id >= 0n && id <= U64_MAX && (![16,17].includes(m.type) || id > 0n), "illegal object id");
+  requireValid(m.payload.byteLength <= MAX_PAYLOAD_BYTES, "maximum payload");
+  requireValid(m.payload.byteLength === PAYLOAD_SIZES.get(m.type), "invalid fixed payload");
 }
-export function encodeFrameAccepted(sessionGeneration: bigint, state: FrameState, sequence: bigint, droppedFrames: number): Uint8Array { const payload = new Uint8Array(40); const v = new DataView(payload.buffer); v.setBigUint64(0, sessionGeneration, true); v.setBigUint64(8, state.frame, true); v.setBigUint64(16, sequence, true); v.setUint32(24, droppedFrames, true); v.setUint32(28, 0, true); v.setBigUint64(32, state.resizeGeneration, true); return encode({ type: MessageType.FrameAccepted, sequence, payload }); }
+export function encode(m: BinaryMessage): Uint8Array {
+  validateMessage(m);
+  const bytes = new Uint8Array(HEADER_BYTES + m.payload.length), v = new DataView(bytes.buffer);
+  v.setUint32(0,MAGIC,true); v.setUint16(4,VERSION,true); v.setUint16(6,m.type,true);
+  v.setUint32(8,m.flags ?? 0,true); v.setUint32(12,m.payload.length,true);
+  v.setBigUint64(16,m.sequence,true); v.setBigUint64(24,m.objectId ?? 0n,true);
+  v.setUint32(32,checksum(m.payload),true); bytes.set(m.payload,HEADER_BYTES); return bytes;
+}
+export function decode(bytes: Uint8Array): BinaryMessage {
+  requireValid(bytes.length >= HEADER_BYTES,"truncated header");
+  const v = new DataView(bytes.buffer,bytes.byteOffset,bytes.byteLength), n = v.getUint32(12,true);
+  requireValid(v.getUint32(0,true) === MAGIC,"wrong magic"); requireValid(v.getUint16(4,true) === VERSION,"wrong version");
+  requireValid(n <= MAX_PAYLOAD_BYTES && n + HEADER_BYTES === bytes.length,"invalid payload length");
+  const m = { type: v.getUint16(6,true) as MessageType, flags:v.getUint32(8,true), sequence:v.getBigUint64(16,true), objectId:v.getBigUint64(24,true), payload:bytes.slice(HEADER_BYTES) };
+  validateMessage(m); requireValid(checksum(m.payload) === v.getUint32(32,true),"checksum mismatch"); return m;
+}
+export type Hello = { kind:"hello"; version:0; token:string; origin:string; three:{version:string;commit:string}; buildId:string; requestedCapabilities:string[]; byteOrder:"little" };
+export type Capabilities = { kind:"capabilities"; version:0; sessionId:string; sessionGeneration:string; buildId:string; backend:"test-harness"; features:string[]; byteOrder:"little" };
+function record(x: unknown): Record<string, unknown> { requireValid(typeof x === "object" && x !== null && !Array.isArray(x),"invalid object"); return x as Record<string,unknown>; }
+function nonempty(x: unknown): x is string { return typeof x === "string" && x.length > 0 && x.length <= 256; }
+export function validateCapabilities(value: unknown): Capabilities {
+  const c = record(value);
+  requireValid(c.kind === "capabilities" && c.version === VERSION && nonempty(c.sessionId) && nonempty(c.buildId),"invalid capabilities");
+  requireValid(c.backend === "test-harness" && c.byteOrder === "little" && Array.isArray(c.features) && c.features.every(x => typeof x === "string") && c.features.includes(FEATURE),"unsupported capabilities");
+  requireValid(typeof c.sessionGeneration === "string" && /^[1-9][0-9]{0,19}$/.test(c.sessionGeneration) && BigInt(c.sessionGeneration) <= U64_MAX,"invalid session generation");
+  return c as Capabilities;
+}
+export function authenticate(value: unknown, token: string, origin: string, headerOrigin: string): void {
+  const h = record(value), three = record(h.three);
+  requireValid(new TextEncoder().encode(JSON.stringify(h)).length <= MAX_HELLO_BYTES,"oversized hello");
+  requireValid(h.kind === "hello" && h.version === VERSION && h.byteOrder === "little","invalid hello");
+  requireValid(h.token === token && h.origin === origin && headerOrigin === origin,"authentication rejected");
+  requireValid(nonempty(h.buildId) && nonempty(three.version) && nonempty(three.commit),"invalid client identity");
+  requireValid(Array.isArray(h.requestedCapabilities) && h.requestedCapabilities.length > 0 && h.requestedCapabilities.every(x => x === FEATURE),"missing/unsupported requested capability");
+}
+export type ResizeState = Readonly<{ width:number; height:number; resizeGeneration:bigint }>;
+export type FrameState = ResizeState & Readonly<{ frame:bigint; simulationTime:number; rotationX:number; rotationY:number; cameraZ:number }>;
+function validateDimensions(s: ResizeState): void {
+  requireValid(Number.isInteger(s.width) && Number.isInteger(s.height) && s.width > 0 && s.height > 0 && s.width <= MAX_DIMENSION && s.height <= MAX_DIMENSION,"invalid resize dimensions");
+  requireValid(s.resizeGeneration > 0n && s.resizeGeneration <= U64_MAX,"invalid resize generation");
+}
+export function encodeResize(s: ResizeState): Uint8Array { validateDimensions(s); const p = new Uint8Array(16), v = new DataView(p.buffer); v.setUint32(0,s.width,true); v.setUint32(4,s.height,true); v.setBigUint64(8,s.resizeGeneration,true); return p; }
+export function decodeResize(p: Uint8Array): ResizeState { requireValid(p.length === 16,"invalid resize payload"); const v = new DataView(p.buffer,p.byteOffset,p.byteLength); const s = {width:v.getUint32(0,true),height:v.getUint32(4,true),resizeGeneration:v.getBigUint64(8,true)}; validateDimensions(s); return s; }
+export function canonicalState(frame:bigint, viewport:ResizeState): FrameState { return {...viewport, frame, simulationTime:Number(frame)/60, rotationX:Math.fround(Number(frame)*.01), rotationY:Math.fround(Number(frame)*.013), cameraZ:3}; }
+export function encodeFrameState(s: FrameState): Uint8Array {
+  validateDimensions(s); requireValid(s.frame > 0n && s.frame <= U64_MAX && [s.simulationTime,s.rotationX,s.rotationY,s.cameraZ].every(Number.isFinite) && s.simulationTime >= 0,"invalid frame state");
+  const p = new Uint8Array(48), v = new DataView(p.buffer);
+  v.setBigUint64(0,s.frame,true); v.setFloat64(8,s.simulationTime,true); v.setFloat32(16,s.rotationX,true); v.setFloat32(20,s.rotationY,true); v.setFloat32(24,s.cameraZ,true); v.setUint32(28,s.width,true); v.setUint32(32,s.height,true); v.setBigUint64(36,s.resizeGeneration,true); return p;
+}
+export function decodeFrameState(p: Uint8Array): FrameState {
+  requireValid(p.length === 48,"invalid frame payload"); const v = new DataView(p.buffer,p.byteOffset,p.length);
+  const s = {frame:v.getBigUint64(0,true),simulationTime:v.getFloat64(8,true),rotationX:v.getFloat32(16,true),rotationY:v.getFloat32(20,true),cameraZ:v.getFloat32(24,true),width:v.getUint32(28,true),height:v.getUint32(32,true),resizeGeneration:v.getBigUint64(36,true)};
+  encodeFrameState(s); requireValid(v.getUint32(44,true) === 0,"frame reserved bytes"); return s;
+}
+export type CompleteFrame = Readonly<{ state:FrameState; sequence:bigint }>;
+export class MirrorSession {
+  private phase: "awaiting-begin"|"active"|"closed" = "awaiting-begin";
+  private sequence = 0n; private lastFrame = 0n; private accepted = 0n;
+  private open: FrameState | undefined; private viewport: ResizeState | undefined;
+  private queue: CompleteFrame[] = []; private live = new Map<bigint,bigint>();
+  private bytes = 0n; private draws = 0; private messages = 0; private drops = 0;
+  constructor(readonly sessionId:string = crypto.randomUUID()) {}
+  accept(m: BinaryMessage): void {
+    validateMessage(m);
+    requireValid(this.phase !== "closed","session ended"); requireValid(m.sequence > this.sequence,"out of order sequence");
+    requireValid(m.type !== MessageType.FrameAccepted && m.type !== MessageType.Error,"server-only message");
+    if (m.type === MessageType.BeginSession) { requireValid(this.phase === "awaiting-begin","duplicate BeginSession"); this.phase = "active"; this.sequence = m.sequence; return; }
+    requireValid(this.phase === "active","data before BeginSession");
+    if (this.open) requireValid(this.messages + 1 <= MAX_MESSAGES_PER_FRAME,"message quota");
+    const id = m.objectId ?? 0n;
+    switch (m.type) {
+      case MessageType.CreateBuffer: {
+        requireValid(!this.open,"resource inside frame");
+        const size = new DataView(m.payload.buffer,m.payload.byteOffset).getBigUint64(0,true);
+        requireValid(!this.live.has(id),"duplicate resource"); requireValid(this.live.size < MAX_LIVE_RESOURCES,"live-resource quota");
+        requireValid(size > 0n && size <= BigInt(MAX_DECLARED_RESOURCE_BYTES)-this.bytes,"declared-resource-byte quota");
+        this.live.set(id,size); this.bytes += size; break;
+      }
+      case MessageType.DestroyResource: {
+        requireValid(!this.open,"resource inside frame"); const size = this.live.get(id); requireValid(size !== undefined,"destroy unknown resource"); this.live.delete(id); this.bytes -= size; break;
+      }
+      case MessageType.Resize: {
+        requireValid(!this.open,"resize inside frame"); const s = decodeResize(m.payload);
+        requireValid(!this.viewport || s.resizeGeneration > this.viewport.resizeGeneration,"out of order resize generation"); this.viewport = s; break;
+      }
+      case MessageType.BeginFrame: {
+        requireValid(!this.open,"nested BeginFrame"); const s = decodeFrameState(m.payload);
+        requireValid(s.frame > this.lastFrame,"out of order frame");
+        requireValid(this.viewport && s.width === this.viewport.width && s.height === this.viewport.height && s.resizeGeneration === this.viewport.resizeGeneration,"frame viewport mismatch");
+        this.open = s; this.draws = 0; this.messages = 0; break;
+      }
+      case MessageType.Draw: requireValid(this.open,"Draw outside frame"); requireValid(this.draws < MAX_DRAWS_PER_FRAME,"draw quota"); this.draws++; break;
+      case MessageType.EndFrame:
+        requireValid(this.open,"EndFrame without BeginFrame");
+        if (this.queue.length === MAX_QUEUED_FRAMES) { this.queue.shift(); this.drops++; }
+        this.queue.push({state:this.open,sequence:m.sequence}); this.lastFrame = this.open.frame; this.open = undefined; this.messages = 0; break;
+      case MessageType.EndSession: requireValid(!this.open,"EndSession while frame open"); this.phase = "closed"; this.live.clear(); this.bytes = 0n; this.queue = []; break;
+      case MessageType.SetRtxMode: requireValid(m.payload[0] === 0,"invalid RTX-mode value; renderer unavailable"); break;
+      case MessageType.Ping: break;
+      default: throw new Error("illegal message");
+    }
+    this.sequence = m.sequence; if (this.open) this.messages++;
+  }
+  processOne(): CompleteFrame | undefined { const item = this.queue.shift(); if (item) this.accepted = item.state.frame; return item; }
+  get acceptedFrame():bigint { return this.accepted; }
+  get lastAcceptedSequence():bigint { return this.sequence; }
+  get droppedFrames():number { return this.drops; }
+  get queuedFrames():number { return this.queue.length; }
+  get declaredResourceBytes():number { return Number(this.bytes); }
+}
+export type FrameAccepted = Readonly<{sessionGeneration:bigint; frame:bigint; sequence:bigint; droppedFrames:number; status:number; resizeGeneration:bigint}>;
+export function encodeFrameAccepted(generation:bigint, state:FrameState, sequence:bigint, dropped:number): Uint8Array {
+  const p = new Uint8Array(40), v = new DataView(p.buffer); v.setBigUint64(0,generation,true); v.setBigUint64(8,state.frame,true); v.setBigUint64(16,sequence,true); v.setUint32(24,dropped,true); v.setUint32(28,0,true); v.setBigUint64(32,state.resizeGeneration,true); return encode({type:MessageType.FrameAccepted,sequence,payload:p});
+}
+export function decodeFrameAccepted(bytes:Uint8Array): FrameAccepted {
+  const m = decode(bytes); requireValid(m.type === MessageType.FrameAccepted,"unexpected acknowledgement type");
+  const v = new DataView(m.payload.buffer,m.payload.byteOffset,m.payload.length);
+  const a = {sessionGeneration:v.getBigUint64(0,true),frame:v.getBigUint64(8,true),sequence:v.getBigUint64(16,true),droppedFrames:v.getUint32(24,true),status:v.getUint32(28,true),resizeGeneration:v.getBigUint64(32,true)};
+  requireValid(a.sequence === m.sequence && a.status === 0 && a.sessionGeneration > 0n && a.frame > 0n && a.resizeGeneration > 0n,"invalid acknowledgement fields"); return a;
+}

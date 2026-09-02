@@ -1,21 +1,18 @@
 {
   "task": "TCW-004",
-  "reviewed_base": "969c6f7ed0dadaa4e82a2fc4648b15a3406d91c7",
-  "status": "FAIL_WITH_BROWSER_HUMAN_REQUIRED",
-  "scope_boundary": "Node WebSocket test/developer infrastructure; no native socket listener and no native Three backend claim",
-  "gates": {"TCW-BUILD-001":"PASS","TCW-PROTO-001":"PASS","TCW-PROTO-002":"FAIL","TCW-PROTO-003":"HUMAN_REQUIRED","TCW-PROTO-004":"FAIL","TCW-CONT-001":"HUMAN_REQUIRED"},
-  "commands": [
-    {"command":"corepack pnpm install --frozen-lockfile","working_directory":"D:/FrameBridge","exit_code":0},
-    {"command":"corepack pnpm -r build","working_directory":"D:/FrameBridge","exit_code":0},
-    {"command":"corepack pnpm -r test","working_directory":"D:/FrameBridge","exit_code":0},
-    {"command":"corepack pnpm --filter @framebridge/demo-web exec vite build","working_directory":"D:/FrameBridge","exit_code":0},
-    {"command":"cmake -S . -B out/tcw004-cpp-vs -G Visual Studio 17 2022 -A x64; cmake --build out/tcw004-cpp-vs --config Release --target framebridge-bridge-codec; out/tcw004-cpp-vs/Release/framebridge-bridge-codec.exe","working_directory":"D:/FrameBridge","exit_code":0,"note":"CMake invoked via installed Visual Studio path because cmake is not on PATH"},
-    {"command":"node tools/tcw004-soak.mjs","working_directory":"D:/FrameBridge","exit_code":0,"note":"Runner completed 1800.013 seconds but recorded gate failure because cadence was below 59 Hz"}
-  ],
-  "fixture_counts": {"valid_binary":11,"malformed_binary":11,"json":2},
-  "short_tests": {"typescript": "PASS; shared fixture decoding and malformed rejection", "cpp": "PASS; independent encoder/decoder parity for 11 valid fixtures and malformed rejection"},
-  "soak": {"path":"real-soak.json","status":"FAIL","elapsed_seconds":1800.013,"attempted_frames":102920,"sent_frames":102920,"accepted_frames":102920,"dropped_frames":0,"average_attempted_hz":57.177,"reconnects":1,"resize_generations":359,"protocol_errors":0,"runner_exit_code":0},
-  "browser_evidence": {"status":"HUMAN_REQUIRED","reason":"Automated local Chrome screenshot/interaction evidence is not committed by this run","required":"Connect, disconnect/reconnect, resize, and high-refresh browser capture without exposing the token"},
-  "changed_files": [".github/workflows/tcw-004.yml","README.md","apps/demo-web/index.html","apps/demo-web/src/browser.ts","artifacts/tcw-004/manifest.json","artifacts/tcw-004/real-soak.json","native/bridge/codec.hpp","native/bridge/codec_test.cpp","packages/protocol/fixtures","packages/protocol/src/bridge.test.ts","packages/protocol/src/index.ts","packages/protocol/src/protocol.test.ts","packages/protocol/src/server.ts","tools/tcw004-soak.mjs"],
-  "known_limitations": ["The exhaustive supervisor-listed PROTO-002 categories and deterministic 60/120/144 Hz automated browser callback test are not all directly asserted; gate remains FAIL.","The soak completed wall-clock duration but failed the minimum average attempted cadence.","Browser gates remain HUMAN_REQUIRED."]
+  "reviewed_base": "97a5367155d5f580e863561322eab712bd2ddb32",
+  "status": "FINAL_REWORK_VALIDATING",
+  "scope_boundary": "Node WebSocket test/developer infrastructure; no native socket listener or native Three backend claim",
+  "previous_soak": "STALE_INVALID: reconstructed fields and missing raw samples; see Git history only",
+  "gates": {
+    "TCW-BUILD-001": "PENDING clean checkout validation of final commit",
+    "TCW-PROTO-001": "PASS locally: 12 independent canonical fixtures in both languages",
+    "TCW-PROTO-002": "PASS locally: exhaustive short matrix",
+    "TCW-PROTO-003": "HUMAN_REQUIRED",
+    "TCW-PROTO-004": "PENDING committed implementation acceptance run",
+    "TCW-CONT-001": "HUMAN_REQUIRED"
+  },
+  "test_counts": {"protocol": 74, "loopback": 15, "demo_identity": 3, "cpp_valid": 12, "cpp_malformed": 11, "cpp_encoder_rejections": 6},
+  "human_checklist": "human-browser-steps.md",
+  "evidence_policy": "Generated evidence will be committed separately after exact-commit validation. Raw run records are immutable."
 }

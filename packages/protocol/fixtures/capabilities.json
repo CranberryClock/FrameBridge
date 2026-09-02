@@ -1,1 +1,1 @@
-{"kind":"capabilities","version":0,"sessionId":"00000000-0000-0000-0000-000000000001","buildId":"framebridge-dev","backend":"test-harness","features":["explicit-mirror"],"byteOrder":"little"}
+{"kind":"capabilities","version":0,"sessionId":"fixture-session-2","sessionGeneration":"2","buildId":"framebridge-tcw004","backend":"test-harness","features":["explicit-mirror"],"byteOrder":"little"}

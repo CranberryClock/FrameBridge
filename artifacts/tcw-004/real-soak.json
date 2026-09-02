@@ -1,21 +1,7 @@
 {
   "task": "TCW-004",
-  "status": "FAIL",
-  "start_time": "2026-09-02T05:19:06.498Z",
-  "end_time": "2026-09-02T05:49:06.511Z",
-  "elapsed_seconds": 1800.013,
-  "target_hz": 60,
-  "attempted_frames": 102920,
-  "sent_frames": 102920,
-  "accepted_frames": 102920,
-  "dropped_frames": 0,
-  "average_attempted_hz": 57.177,
-  "reconnects": 1,
-  "reconnect_resync_acknowledged": true,
-  "reconnect_downtime_ms": 100,
-  "resize_generations": 359,
-  "protocol_errors": 0,
-  "unexpected_closes": 0,
-  "gate_failure_reason": "average attempted cadence below required 59 frames/second",
-  "token_logged": false
+  "status": "STALE_INVALID",
+  "superseded_artifact_commit": "97a5367155d5f580e863561322eab712bd2ddb32",
+  "reason": "Previous raw output was overwritten and fields were reconstructed without retained measurement evidence. It is not valid acceptance evidence.",
+  "replacement_policy": "Use uniquely generated runs/*/result.json linked by manifest.json. Never reconstruct measurements."
 }
