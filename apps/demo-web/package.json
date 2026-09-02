@@ -1,0 +1,1 @@
+{"name":"@framebridge/demo-web","private":true,"type":"module","scripts":{"build":"tsc -p tsconfig.json","test":"node dist/smoke.test.js","lint":"tsc -p tsconfig.json --noEmit","format:check":"tsc -p tsconfig.json --noEmit"}}

@@ -1,0 +1,14 @@
+node_modules/
+dist/
+build/
+third_party/_sdk/
+artifacts/*
+!artifacts/.gitkeep
+captures/
+*.pix3
+*.rdc
+*.token
+*.key
+*.pfx
+.env
+.local/

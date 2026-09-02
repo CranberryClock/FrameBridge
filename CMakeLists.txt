@@ -1,0 +1,7 @@
+cmake_minimum_required(VERSION 3.31)
+project(framebridge-null-runtime LANGUAGES CXX)
+add_executable(framebridge-null-runtime native/runtime/src/main.cpp)
+target_compile_features(framebridge-null-runtime PRIVATE cxx_std_20)
+if(MSVC)
+  target_compile_options(framebridge-null-runtime PRIVATE /W4 /permissive-)
+endif()
