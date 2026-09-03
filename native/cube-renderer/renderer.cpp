@@ -212,6 +212,7 @@ struct Renderer::Impl {
     uint32_t swapWidth = 0, swapHeight = 0;
     uint64_t swapAllocations = 0;
     uint64_t outputAllocations = 0, presentationOrdinal = 0, temporalResets = 0, sessionGeneration = 0;
+    bool sessionResetPending = false;
     uint32_t outputWidth = 0, outputHeight = 0, inputWidth = 0, inputHeight = 0;
     float renderScale = 1.0f;
     bool jitterDiagnostic = false;
@@ -473,6 +474,7 @@ void Renderer::Submit(const SceneState& state,uint64_t dropped,const std::string
     const auto iw=static_cast<uint32_t>(std::lround(state.width*i.renderScale));
     const auto ih=static_cast<uint32_t>(std::lround(state.height*i.renderScale));
     temporal::ResetReason reason=temporal::ResetReason::None;
+    if(i.sessionResetPending) { reason=reason|temporal::ResetReason::Session; i.sessionResetPending=false; }
     if(!i.history) reason=temporal::ResetReason::Initialization|temporal::ResetReason::FirstFrame;
     if(state.width!=i.outputWidth || state.height!=i.outputHeight) reason=reason|temporal::ResetReason::Dimensions;
     if(state.resizeGeneration!=i.resizeGeneration) reason=reason|temporal::ResetReason::ResizeGeneration;
@@ -498,7 +500,7 @@ void Renderer::Submit(const SceneState& state,uint64_t dropped,const std::string
         std::to_string(state.frame)+" | resize "+std::to_string(state.resizeGeneration)+" | dropped "+std::to_string(dropped);
     SetWindowTextA(i.window,title.c_str());
 }
-void Renderer::SetSessionGeneration(std::uint64_t generation) { if(impl_->sessionGeneration!=generation) { impl_->sessionGeneration=generation; impl_->history.reset(); ++impl_->temporalResets; } }
+void Renderer::SetSessionGeneration(std::uint64_t generation) { if(impl_->sessionGeneration!=generation) { impl_->sessionGeneration=generation; impl_->history.reset(); impl_->sessionResetPending=true; ++impl_->temporalResets; } }
 void Renderer::Legacy(uint64_t frame,uint32_t width,uint32_t height,const std::string& capture) {
     auto& i=*impl_;
     if(i.canonical) Die("legacy renderer mode");
