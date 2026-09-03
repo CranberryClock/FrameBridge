@@ -41,6 +41,6 @@ try {
   const chromeVersion=browser.version();
   await page.screenshot({path:out+'/connected-live.png'});await page.locator('#mirror').click();await browser.close();browser=undefined;
   await native.stop();
-  console.log(JSON.stringify({suite:'tcw005r-real-browser',status:'PASS',chrome_version:chromeVersion,parity,pre_disconnect:pre,disconnected_frame:disconnectedFrame,post_reconnect:post,resizes,errors,node_frame_proxy:false}));
+  console.log(JSON.stringify({suite:'tcw006r-real-browser',status:'PASS',chrome_version:chromeVersion,parity,pre_disconnect:pre,disconnected_frame:disconnectedFrame,post_reconnect:post,resizes,errors,node_frame_proxy:false}));
 }catch(e){console.error('FAIL browser: '+e.message);process.exitCode=1;}
 finally{if(browser)await browser.close();if(native?.child.exitCode===null)native.child.kill();vite.kill();}

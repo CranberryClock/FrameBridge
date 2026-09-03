@@ -14,11 +14,11 @@ TCW-004's accepted scope is browser/mirror continuity, not native visual renderi
 
 TCW-005R completes the direct C++ receiver with the recovered pinned Dawn/D3D12 renderer and a separate Win32 comparison window. The browser's canonical solid cyan cube state drives native rendering; acknowledgements follow successful GPU submission/presentation. Node is only the development asset server or test client, never a frame proxy. Clean Release builds, direct real-Chrome integration, matrix/corner parity, reconnect/resize tests and the 600-second native-rendered stability run are recorded in the [TCW-005 evidence manifest](artifacts/tcw-005/manifest.json). Automated and human supervisor status is `PASS`. The supervisor validated smooth motion, back-and-forth motion, reconnect continuity and clean close; the personal-token screenshot was intentionally not published. See [native mirror notes](docs/tcw005-native-mirror.md) and the [human procedure](artifacts/tcw-005/human-browser-steps.md).
 
-Native rendering is now exercised and browser-to-native visual continuity is accepted by the human supervisor. DLSS, Streamline runtime integration, extension, installer, custom Three.js backend, and Unreal work remain out of scope. Stop for supervisor review after TCW-005; do not begin TCW-006.
+Native rendering is now exercised and browser-to-native visual continuity is accepted by the human supervisor. DLSS, Streamline runtime integration, extension, installer, custom Three.js backend, and Unreal work remain out of scope.
 
 TCW-006 is the active temporal-input and replaceable reference-upscaler task. It
-adds native render/input/output resource metadata, deterministic unjittered motion
-vectors, reset/history rules, optional Halton jitter diagnostics and a GPU
+adds native render/input/output resources, GPU-written depth and motion readbacks,
+deterministic unjittered motion vectors, reset/history rules, optional Halton jitter diagnostics and a GPU
 `reference-upscale` path explicitly labeled `NOT DLSS`. Streamline, DLSS and
 TCW-007 remain out of scope until this task passes review.
 

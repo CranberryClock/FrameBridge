@@ -21,7 +21,7 @@ bool ValidateInput(const TemporalInput& in, std::string* error) {
   if(!in.output.width||!in.output.height||in.output.width>4096||in.output.height>4096) return fail("invalid output extent");
   const auto w=static_cast<std::uint32_t>(std::lround(in.output.width*in.renderScale));
   const auto h=static_cast<std::uint32_t>(std::lround(in.output.height*in.renderScale));
-  if(!w||!h||w>4096||h>4096) return fail("invalid derived input extent");
+  if(!w||!h||w>4096||h>4096 || in.input != Extent{w,h}) return fail("input extent must equal rounded output extent times render scale");
   if(in.presentationOrdinal==0) return fail("presentation ordinal must be positive");
   return true;
 }
@@ -35,7 +35,7 @@ TemporalFrameResources BuildFrame(const framebridge::render::SceneState& state,c
   out.presentationOrdinal=in.presentationOrdinal; out.resizeGeneration=state.resizeGeneration; out.jitterEnabled=in.jitterEnabled;
   out.resetReason=in.resetReason;
   out.reset=in.resetReason!=ResetReason::None || !previous.has_value();
-  out.jitterOffsetPixels=in.jitterEnabled?HaltonJitter(state.frame,in.input):std::array<float,2>{0,0};
+  out.jitterOffsetPixels=in.jitterEnabled?HaltonJitter(in.presentationOrdinal,in.input):std::array<float,2>{0,0};
   out.currentUnjittered=framebridge::render::SceneMatrices(state);
   out.jitteredProjection=out.currentUnjittered.projection;
   if(in.jitterEnabled) { out.jitteredProjection[8]+=2.0*static_cast<double>(out.jitterOffsetPixels[0])/in.input.width; out.jitteredProjection[9]-=2.0*static_cast<double>(out.jitterOffsetPixels[1])/in.input.height; }
@@ -47,6 +47,7 @@ TemporalFrameResources BuildFrame(const framebridge::render::SceneState& state,c
     out.cornerMotion[i]={ (NdcX(c)-NdcX(p))*static_cast<float>(in.input.width)*.5f,
       (NdcY(p)-NdcY(c))*static_cast<float>(in.input.height)*.5f };
   }
+  out.motionScale={1.0f/static_cast<float>(in.input.width),1.0f/static_cast<float>(in.input.height)};
   return out;
 }
 struct ReferenceUpscaler::Impl {

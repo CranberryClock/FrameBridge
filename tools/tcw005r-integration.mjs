@@ -38,5 +38,5 @@ try {
   native=await startNative(exe,['--test-render-failure']);c=await connect(native);
   c.client.frame(canonicalState(60n,{width:640,height:360,resizeGeneration:1n}));await until(()=>native.exit!==undefined);
   check(native.exit===4&&c.count===0,'render failure sent successful ACK');results.push('render_failure_no_ACK');
-  console.log(JSON.stringify({suite:'tcw005r-native-integration',status:'PASS',test_count:results.length,tests:results,delayed_dropped_frames:drops,node_role:'test_client_only',telemetry}));
+  console.log(JSON.stringify({suite:'tcw006r-native-integration',status:'PASS',test_count:results.length,tests:results,delayed_dropped_frames:drops,node_role:'test_client_only',telemetry}));
 }catch(e){if(native?.child.exitCode===null)native.child.kill();console.error('FAIL '+e.message);process.exitCode=1;}

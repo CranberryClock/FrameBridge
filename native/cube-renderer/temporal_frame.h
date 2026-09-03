@@ -28,7 +28,7 @@ struct TemporalFrameResources {
   std::uint64_t logicalFrame=0, previousLogicalFrame=0, presentationOrdinal=0, resizeGeneration=0;
   ResetReason resetReason=ResetReason::None;
   bool reset=false, jitterEnabled=false, motionIncludesJitter=false;
-  std::array<float,2> jitterOffsetPixels{}; std::array<float,2> motionScale{1,1};
+  std::array<float,2> jitterOffsetPixels{}; std::array<float,2> motionScale{};
   framebridge::render::Matrices currentUnjittered{}, previousUnjittered{};
   framebridge::render::Matrix jitteredProjection{};
   std::array<MotionVector,8> cornerMotion{};

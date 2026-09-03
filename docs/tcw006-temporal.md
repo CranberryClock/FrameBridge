@@ -19,7 +19,9 @@ explicit output texture, never the low-resolution input directly.
 The temporal convention is previous-to-current motion in render-pixel units. The
 origin is top-left, X increases right and Y increases down. Camera motion is
 included; jitter is excluded. Motion is derived from unjittered projected cube
-corners, with `mvecScale=(1,1)`. The previous state is the previous successfully
+corners and the GPU-written motion target uses the same convention. The
+Streamline-facing scale is `mvecScale=(1/inputRenderWidth,1/inputRenderHeight)`;
+for example `{1/320,1/180}` at 320x180. The previous state is the previous successfully
 submitted native frame, not `logicalFrame-1`, so a dropped browser frame produces
 the correct longer-interval vector.
 
@@ -35,9 +37,11 @@ metadata declares `motionIncludesJitter=false`. Ordinary presentation leaves thi
 diagnostic disabled to avoid visible wobble without a temporal reconstruction
 filter.
 
-Depth and motion formats are provisional future resource roles: input color and
-output color `RGBA8Unorm`, sampled depth `R32Float`, and motion `RG16Float`.
-These are same-device resources and are not claimed as Streamline-compatible until
+Depth is a non-inverted D3D12 `R32_FLOAT` render target in the normal [0,1] clip
+depth convention: background clears to 1.0 and nearer cube fragments are lower.
+Motion is a GPU-written `RG16_FLOAT` render target, cleared to zero on reset.
+Input color and output color are `RGBA8Unorm`. These are same-device resources
+and are not claimed as Streamline-compatible until
 the future SDK task tests them. No native second device is created.
 
 The native window title identifies the active path as `reference-upscale 0.5x NOT

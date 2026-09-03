@@ -197,7 +197,13 @@ struct Renderer::Impl {
     ComPtr<ID3D12GraphicsCommandList> list;
     ComPtr<ID3D12Fence> fence;
     ComPtr<ID3D12RootSignature> blitRoot;
-    ComPtr<ID3D12PipelineState> blitPipeline;
+    ComPtr<ID3D12PipelineState> blitPipeline, temporalPipeline;
+    ComPtr<ID3D12RootSignature> temporalRoot;
+    ComPtr<ID3D12DescriptorHeap> temporalRtv;
+    ComPtr<ID3D12Resource> temporalConstants;
+    struct PlaneReadback { ComPtr<ID3D12Resource> buffer; UINT rowPitch=0; UINT bytesPerPixel=0; } depthReadback, motionReadback;
+    uint64_t depthForegroundPixels=0, motionNonZeroPixels=0, temporalReadbackFrames=0;
+    bool temporalResourcesSameDevice=false;
     ComPtr<ID3D12DescriptorHeap> srvHeap,rtvHeap;
     struct AuxTarget { uint32_t inputWidth=0,inputHeight=0,outputWidth=0,outputHeight=0; ComPtr<ID3D12Resource> depth,motion,output; };
     AuxTarget activeAux{};
@@ -294,6 +300,7 @@ struct Renderer::Impl {
         Check(list->Close(),"initial list close");
         Check(native->CreateFence(0,D3D12_FENCE_FLAG_NONE,IID_PPV_ARGS(&fence)),"present fence");
         event=CreateEventW(nullptr,FALSE,FALSE,nullptr); if(!event) Die("present fence event");
+        BuildTemporalInputs();
         if(show) {
             BuildBlit();
             WNDCLASSW wc{}; wc.lpfnWndProc=WndProc; wc.hInstance=GetModuleHandleW(nullptr); wc.lpszClassName=L"FrameBridgeMirror";
@@ -352,6 +359,46 @@ struct Renderer::Impl {
         p.PrimitiveTopologyType=D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE; p.NumRenderTargets=1;p.RTVFormats[0]=DXGI_FORMAT_R8G8B8A8_UNORM;p.SampleDesc.Count=1;
         Check(native->CreateGraphicsPipelineState(&p,IID_PPV_ARGS(&blitPipeline)),"blit pipeline");
     }
+    void BuildTemporalInputs() {
+        D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc{}; rtvHeapDesc.NumDescriptors=2; rtvHeapDesc.Type=D3D12_DESCRIPTOR_HEAP_TYPE_RTV; Check(native->CreateDescriptorHeap(&rtvHeapDesc,IID_PPV_ARGS(&temporalRtv)),"temporal RTV heap");
+        D3D12_ROOT_PARAMETER param{}; param.ParameterType=D3D12_ROOT_PARAMETER_TYPE_CBV; param.Descriptor.ShaderRegister=0; param.ShaderVisibility=D3D12_SHADER_VISIBILITY_ALL;
+        D3D12_ROOT_SIGNATURE_DESC root{}; root.NumParameters=1; root.pParameters=&param;
+        ComPtr<ID3DBlob> serialized,errors,vs,ps;
+        Check(D3D12SerializeRootSignature(&root,D3D_ROOT_SIGNATURE_VERSION_1,&serialized,&errors),"temporal root serialization");
+        Check(native->CreateRootSignature(0,serialized->GetBufferPointer(),serialized->GetBufferSize(),IID_PPV_ARGS(&temporalRoot)),"temporal root");
+        const char* shader=R"(
+            cbuffer C:register(b0){float4x4 raster;float4x4 current;float4x4 previous;float2 size;float reset;float pad;}
+            static const float3 p[8]={float3(-.5,-.5,-.5),float3(.5,-.5,-.5),float3(-.5,.5,-.5),float3(.5,.5,-.5),float3(-.5,-.5,.5),float3(.5,-.5,.5),float3(-.5,.5,.5),float3(.5,.5,.5)};
+            static const uint ix[36]={0,1,3,3,2,0,1,5,7,7,3,1,5,4,6,6,7,5,4,0,2,2,6,4,2,3,7,7,6,2,4,5,1,1,0,4};
+            struct V{float4 pos:SV_Position;float4 cur:TEXCOORD0;float4 prev:TEXCOORD1;};
+            V vs(uint id:SV_VertexID){float4 q=float4(p[ix[id]],1);V o;o.pos=mul(raster,q);o.cur=mul(current,q);o.prev=mul(previous,q);return o;}
+            struct O{float depth:SV_Target0;float2 motion:SV_Target1;};
+            O ps(V v){O o;float2 c=v.cur.xy/v.cur.w;float2 p0=v.prev.xy/v.prev.w;o.depth=v.cur.z/v.cur.w;o.motion=reset>.5?float2(0,0):(c-p0)*float2(size.x*.5,-size.y*.5);return o;}
+        )";
+        Check(D3DCompile(shader,std::strlen(shader),nullptr,nullptr,nullptr,"vs","vs_5_0",D3DCOMPILE_ENABLE_STRICTNESS,0,&vs,&errors),"temporal VS");
+        Check(D3DCompile(shader,std::strlen(shader),nullptr,nullptr,nullptr,"ps","ps_5_0",D3DCOMPILE_ENABLE_STRICTNESS,0,&ps,&errors),"temporal PS");
+        D3D12_GRAPHICS_PIPELINE_STATE_DESC p{}; p.pRootSignature=temporalRoot.Get(); p.VS={vs->GetBufferPointer(),vs->GetBufferSize()}; p.PS={ps->GetBufferPointer(),ps->GetBufferSize()};
+        p.BlendState.RenderTarget[0].RenderTargetWriteMask=D3D12_COLOR_WRITE_ENABLE_ALL; p.BlendState.RenderTarget[1].RenderTargetWriteMask=D3D12_COLOR_WRITE_ENABLE_ALL; p.SampleMask=UINT_MAX; p.RasterizerState.FillMode=D3D12_FILL_MODE_SOLID; p.RasterizerState.CullMode=D3D12_CULL_MODE_NONE; p.RasterizerState.DepthClipEnable=TRUE; p.DepthStencilState.DepthEnable=FALSE; p.PrimitiveTopologyType=D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE; p.NumRenderTargets=2; p.RTVFormats[0]=DXGI_FORMAT_R32_FLOAT; p.RTVFormats[1]=DXGI_FORMAT_R16G16_FLOAT; p.SampleDesc.Count=1;
+        Check(native->CreateGraphicsPipelineState(&p,IID_PPV_ARGS(&temporalPipeline)),"temporal pipeline");
+    }
+    void PopulateTemporalInputs(const temporal::TemporalFrameResources& frame) {
+        D3D12_RESOURCE_BARRIER b[2]{}; for(auto& x:b){x.Type=D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;x.Transition.Subresource=D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;x.Transition.StateBefore=D3D12_RESOURCE_STATE_COMMON;x.Transition.StateAfter=D3D12_RESOURCE_STATE_RENDER_TARGET;}
+        b[0].Transition.pResource=frame.inputDepth; b[1].Transition.pResource=frame.inputMotion; list->ResourceBarrier(2,b);
+        D3D12_CPU_DESCRIPTOR_HANDLE handles[2]={}; handles[0]=temporalRtv->GetCPUDescriptorHandleForHeapStart(); handles[1].ptr=handles[0].ptr+native->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV); native->CreateRenderTargetView(frame.inputDepth,nullptr,handles[0]); native->CreateRenderTargetView(frame.inputMotion,nullptr,handles[1]);
+        const float clearDepth=1.0f, clearMotion[4]={0,0,0,0}; list->ClearRenderTargetView(handles[0],&clearDepth,0,nullptr); list->ClearRenderTargetView(handles[1],clearMotion,0,nullptr); list->OMSetRenderTargets(2,handles,FALSE,nullptr); D3D12_VIEWPORT viewport{0,0,static_cast<float>(frame.inputExtent.width),static_cast<float>(frame.inputExtent.height),0,1}; D3D12_RECT scissor{0,0,static_cast<LONG>(frame.inputExtent.width),static_cast<LONG>(frame.inputExtent.height)}; list->RSSetViewports(1,&viewport); list->RSSetScissorRects(1,&scissor);
+        struct Constants {Mat4 raster,current,previous;float size[2];float reset;float pad;} c{}; const auto raster=frame.jitteredProjection; const auto rasterMvp=frame.jitteredProjection!=frame.currentUnjittered.projection?framebridge::render::Multiply(raster,framebridge::render::Multiply(frame.currentUnjittered.view,frame.currentUnjittered.model)):frame.currentUnjittered.mvp; for(int k=0;k<16;++k){c.raster.v[k]=static_cast<float>(rasterMvp[k]);c.current.v[k]=static_cast<float>(frame.currentUnjittered.mvp[k]);c.previous.v[k]=static_cast<float>(frame.previousUnjittered.mvp[k]);} c.size[0]=static_cast<float>(frame.inputExtent.width);c.size[1]=static_cast<float>(frame.inputExtent.height);c.reset=frame.reset?1.0f:0.0f;
+        D3D12_HEAP_PROPERTIES hp{};hp.Type=D3D12_HEAP_TYPE_UPLOAD;D3D12_RESOURCE_DESC rd{};rd.Dimension=D3D12_RESOURCE_DIMENSION_BUFFER;rd.Width=256;rd.Height=1;rd.DepthOrArraySize=1;rd.MipLevels=1;rd.SampleDesc.Count=1;rd.Layout=D3D12_TEXTURE_LAYOUT_ROW_MAJOR; Check(native->CreateCommittedResource(&hp,D3D12_HEAP_FLAG_NONE,&rd,D3D12_RESOURCE_STATE_GENERIC_READ,nullptr,IID_PPV_ARGS(&temporalConstants)),"temporal constants"); void* mapped=nullptr; Check(temporalConstants->Map(0,nullptr,&mapped),"temporal constants map"); std::memcpy(mapped,&c,sizeof(c));temporalConstants->Unmap(0,nullptr); list->SetGraphicsRootSignature(temporalRoot.Get());list->SetPipelineState(temporalPipeline.Get());list->SetGraphicsRootConstantBufferView(0,temporalConstants->GetGPUVirtualAddress());list->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);list->DrawInstanced(36,1,0,0);
+        for(auto& x:b) std::swap(x.Transition.StateBefore,x.Transition.StateAfter); list->ResourceBarrier(2,b);
+        auto prepare=[&](ID3D12Resource* resource, PlaneReadback& result, UINT bpp, const char* label) {
+            const auto d=resource->GetDesc(); D3D12_PLACED_SUBRESOURCE_FOOTPRINT fp{}; UINT rows=0; UINT64 rowSize=0,total=0; native->GetCopyableFootprints(&d,0,1,0,&fp,&rows,&rowSize,&total);
+            if(!result.buffer || result.rowPitch!=fp.Footprint.RowPitch) { D3D12_HEAP_PROPERTIES hp{};hp.Type=D3D12_HEAP_TYPE_READBACK;D3D12_RESOURCE_DESC bd{};bd.Dimension=D3D12_RESOURCE_DIMENSION_BUFFER;bd.Width=total;bd.Height=1;bd.DepthOrArraySize=1;bd.MipLevels=1;bd.SampleDesc.Count=1;bd.Layout=D3D12_TEXTURE_LAYOUT_ROW_MAJOR;Check(native->CreateCommittedResource(&hp,D3D12_HEAP_FLAG_NONE,&bd,D3D12_RESOURCE_STATE_COPY_DEST,nullptr,IID_PPV_ARGS(&result.buffer)),label); }
+            result.rowPitch=fp.Footprint.RowPitch;result.bytesPerPixel=bpp;D3D12_RESOURCE_BARRIER toCopy{};toCopy.Type=D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;toCopy.Transition={resource,D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES,D3D12_RESOURCE_STATE_COMMON,D3D12_RESOURCE_STATE_COPY_SOURCE};list->ResourceBarrier(1,&toCopy);D3D12_TEXTURE_COPY_LOCATION src{};src.pResource=resource;src.Type=D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;src.SubresourceIndex=0;D3D12_TEXTURE_COPY_LOCATION dst{};dst.pResource=result.buffer.Get();dst.Type=D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;dst.PlacedFootprint=fp;list->CopyTextureRegion(&dst,0,0,0,&src,nullptr);std::swap(toCopy.Transition.StateBefore,toCopy.Transition.StateAfter);list->ResourceBarrier(1,&toCopy);
+        };
+        prepare(frame.inputDepth,depthReadback,4,"depth readback"); prepare(frame.inputMotion,motionReadback,4,"motion readback");
+    }
+    void ReadTemporalInputs(uint32_t inputWidthValue,uint32_t inputHeightValue) {
+        auto scan=[&](PlaneReadback& r, bool depth) { void* p=nullptr;D3D12_RANGE range{0,0};Check(r.buffer->Map(0,&range,&p),"temporal readback map");auto* bytes=static_cast<const uint8_t*>(p);uint64_t count=0;for(uint32_t y=0;y<inputHeightValue;++y)for(uint32_t x=0;x<inputWidthValue;++x){const auto* q=bytes+y*r.rowPitch+x*r.bytesPerPixel;if(depth){float value=0;std::memcpy(&value,q,sizeof(value));if(value<0.999f)++count;}else if(q[0]!=0||q[1]!=0||q[2]!=0||q[3]!=0)++count;}D3D12_RANGE empty{0,0};r.buffer->Unmap(0,&empty);return count;};depthForegroundPixels=scan(depthReadback,true);motionNonZeroPixels=scan(motionReadback,false);++temporalReadbackFrames;
+    }
     ComPtr<ID3D12Resource> MakeTemporalTexture(uint32_t w,uint32_t h,DXGI_FORMAT format,D3D12_RESOURCE_FLAGS flags,const D3D12_CLEAR_VALUE& clear) {
         D3D12_RESOURCE_DESC d{}; d.Dimension=D3D12_RESOURCE_DIMENSION_TEXTURE2D; d.Width=w; d.Height=h; d.DepthOrArraySize=1; d.MipLevels=1; d.Format=format; d.SampleDesc.Count=1; d.Layout=D3D12_TEXTURE_LAYOUT_UNKNOWN; d.Flags=flags;
         D3D12_HEAP_PROPERTIES heap{}; heap.Type=D3D12_HEAP_TYPE_DEFAULT; ComPtr<ID3D12Resource> result; Check(native->CreateCommittedResource(&heap,D3D12_HEAP_FLAG_NONE,&d,D3D12_RESOURCE_STATE_COMMON,&clear,IID_PPV_ARGS(&result)),"temporal resource"); return result;
@@ -378,6 +425,7 @@ struct Renderer::Impl {
             ++outputAllocations;
             }
         }
+        ComPtr<ID3D12Device> depthDevice, motionDevice, outputDevice; Check(activeAux.depth->GetDevice(IID_PPV_ARGS(&depthDevice)),"depth resource device"); Check(activeAux.motion->GetDevice(IID_PPV_ARGS(&motionDevice)),"motion resource device"); Check(activeAux.output->GetDevice(IID_PPV_ARGS(&outputDevice)),"output resource device"); temporalResourcesSameDevice=depthDevice.Get()==native.Get() && motionDevice.Get()==native.Get() && outputDevice.Get()==native.Get(); if(!temporalResourcesSameDevice) Die("temporal resource device identity");
         if(window) {
             if(swapchain) {
                 if(w>swapWidth || h>swapHeight) {
@@ -409,6 +457,7 @@ struct Renderer::Impl {
         Check(swapchain->GetBuffer(swapchain->GetCurrentBackBufferIndex(),IID_PPV_ARGS(&back)),"GetBuffer");
         Check(allocator->Reset(),"present allocator reset");
         Check(list->Reset(allocator.Get(),nullptr),"present reset");
+        PopulateTemporalInputs(frame);
         const auto upscale=upscaler.Evaluate(frame,list.Get());
         if(upscale.status!=temporal::UpscaleStatus::Success) Die("reference upscale");
         D3D12_RESOURCE_BARRIER barrier{};
@@ -490,12 +539,14 @@ void Renderer::Submit(const SceneState& state,uint64_t dropped,const std::string
     if(frame.reset) ++i.temporalResets;
     const auto matrices=frame.currentUnjittered;
     Mat4 mvp{}; for(size_t k=0;k<16;++k) mvp.v[k]=static_cast<float>(matrices.mvp[k]);
-    i.cube->Render(mvp,!capture.empty(),true);
-    i.Present(frame); i.Validate();
+    if(frame.jitterEnabled) { Mat4 jittered{}; const auto jm=framebridge::render::Multiply(frame.jitteredProjection,framebridge::render::Multiply(frame.currentUnjittered.view,frame.currentUnjittered.model)); for(size_t k=0;k<16;++k) jittered.v[k]=static_cast<float>(jm[k]); i.cube->Render(jittered,!capture.empty(),true); }
+    else i.cube->Render(mvp,!capture.empty(),true);
+        i.Present(frame); i.Validate();
+    i.ReadTemporalInputs(frame.inputExtent.width,frame.inputExtent.height);
     i.submitted=state.frame; i.resizeGeneration=state.resizeGeneration; i.dropped=dropped;
     i.history=frame;
     if(!capture.empty()) WritePng(capture,iw,ih,i.cube->pixels());
-    if(!capture.empty()) { const auto slash=capture.find_last_of("/\\"); std::ofstream meta(capture.substr(0,slash)+"/temporal-"+std::to_string(state.frame)+".json"); meta<<"{\"logical_frame\":"<<state.frame<<",\"previous_logical_frame\":"<<frame.previousLogicalFrame<<",\"presentation_ordinal\":"<<frame.presentationOrdinal<<",\"input_width\":"<<frame.inputExtent.width<<",\"input_height\":"<<frame.inputExtent.height<<",\"output_width\":"<<frame.outputExtent.width<<",\"output_height\":"<<frame.outputExtent.height<<",\"reset\":"<<(frame.reset?"true":"false")<<",\"reset_reason\":"<<static_cast<unsigned>(frame.resetReason)<<",\"jitter_enabled\":"<<(frame.jitterEnabled?"true":"false")<<",\"jitter_pixels\":["<<frame.jitterOffsetPixels[0]<<","<<frame.jitterOffsetPixels[1]<<"],\"motion_convention\":\"previous-to-current render pixels top-left unjittered\",\"motion_scale\":[1,1],\"resources_same_device\":true,\"formats\":{\"input_color\":\"RGBA8Unorm\",\"input_depth\":\"R32Float\",\"input_motion\":\"RG16Float\",\"output_color\":\"RGBA8Unorm\"}}\n"; }
+    if(!capture.empty()) { const auto slash=capture.find_last_of("/\\"); std::ofstream meta(capture.substr(0,slash)+"/temporal-"+std::to_string(state.frame)+".json"); meta<<"{\"logical_frame\":"<<state.frame<<",\"previous_logical_frame\":"<<frame.previousLogicalFrame<<",\"presentation_ordinal\":"<<frame.presentationOrdinal<<",\"input_width\":"<<frame.inputExtent.width<<",\"input_height\":"<<frame.inputExtent.height<<",\"output_width\":"<<frame.outputExtent.width<<",\"output_height\":"<<frame.outputExtent.height<<",\"reset\":"<<(frame.reset?"true":"false")<<",\"reset_reason\":"<<static_cast<unsigned>(frame.resetReason)<<",\"jitter_enabled\":"<<(frame.jitterEnabled?"true":"false")<<",\"jitter_pixels\":["<<frame.jitterOffsetPixels[0]<<","<<frame.jitterOffsetPixels[1]<<"],\"motion_convention\":\"previous-to-current render pixels top-left unjittered\",\"motion_scale\":["<<frame.motionScale[0]<<","<<frame.motionScale[1]<<"],\"resources_same_device\":"<<(i.temporalResourcesSameDevice?"true":"false")<<",\"gpu_depth_populated\":true,\"gpu_motion_populated\":true,\"depth_foreground_pixels\":"<<i.depthForegroundPixels<<",\"motion_nonzero_pixels\":"<<i.motionNonZeroPixels<<",\"temporal_readback_frames\":"<<i.temporalReadbackFrames<<",\"formats\":{\"input_color\":\"RGBA8Unorm\",\"input_depth\":\"R32Float\",\"input_motion\":\"RG16Float\",\"output_color\":\"RGBA8Unorm\"}}\n"; }
     const std::string title="FrameBridge Native Mirror | native-dawn | reference-upscale "+std::to_string(i.renderScale)+"x NOT DLSS | "+i.name+" | received/submitted "+
         std::to_string(state.frame)+" | resize "+std::to_string(state.resizeGeneration)+" | dropped "+std::to_string(dropped);
     SetWindowTextA(i.window,title.c_str());
@@ -515,6 +566,6 @@ std::string Renderer::Telemetry() const {
     const auto& i=*impl_; return "{\"backend\":\"native-dawn\",\"adapter_vendor\":4318,\"adapter_device\":10208,\"luid_low\":"+
     std::to_string(i.luid.LowPart)+",\"luid_high\":"+std::to_string(i.luid.HighPart)+
     ",\"luid_verified\":true,\"render_scale\":"+std::to_string(i.renderScale)+",\"upscaler\":\"reference-upscale NOT DLSS\",\"jitter_diagnostic\":"+(i.jitterDiagnostic?"true":"false")+",\"jittered_frames\":"+std::to_string(i.jitteredFrames)+",\"non_jittered_frames\":"+std::to_string(i.nonJitteredFrames)+",\"input_width\":"+std::to_string(i.inputWidth)+",\"input_height\":"+std::to_string(i.inputHeight)+",\"output_width\":"+std::to_string(i.outputWidth)+",\"output_height\":"+std::to_string(i.outputHeight)+",\"output_allocations\":"+std::to_string(i.outputAllocations)+",\"presentation_ordinal\":"+std::to_string(i.presentationOrdinal)+",\"temporal_resets\":"+std::to_string(i.temporalResets)+",\"target_cache_capacity\":2,\"target_allocations\":"+std::to_string(i.cube->TargetAllocations())+",\"swapchain_allocations\":"+std::to_string(i.swapAllocations)+",\"dawn_validation_errors\":"+std::to_string(g_uncapturedError?1:0)+
-    ",\"d3d12_messages\":"+std::to_string(g_d3d12Messages)+",\"dxgi_messages\":"+std::to_string(g_dxgiMessages)+",\"device_lost\":"+(g_badDeviceLost?"true":"false")+"}";
+    ",\"d3d12_messages\":"+std::to_string(g_d3d12Messages)+",\"dxgi_messages\":"+std::to_string(g_dxgiMessages)+",\"device_lost\":"+(g_badDeviceLost?"true":"false")+",\"temporal_resources_same_device\":"+(i.temporalResourcesSameDevice?"true":"false")+",\"depth_foreground_pixels\":"+std::to_string(i.depthForegroundPixels)+",\"motion_nonzero_pixels\":"+std::to_string(i.motionNonZeroPixels)+",\"temporal_readback_frames\":"+std::to_string(i.temporalReadbackFrames)+"}";
 }
 } // namespace framebridge::render

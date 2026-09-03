@@ -17,7 +17,7 @@ target_include_directories(framebridge-renderer PUBLIC "${CMAKE_CURRENT_LIST_DIR
 target_include_directories(framebridge-renderer SYSTEM PRIVATE "${DAWN_ROOT}/include" "${DAWN_BUILD_DIR}/gen/include")
 target_link_libraries(framebridge-renderer PRIVATE ${DAWN_STATIC_LIBS} framebridge-temporal d3d12 d3dcompiler dxgi dxguid OneCore)
 target_compile_options(framebridge-renderer PRIVATE /W4 /WX /permissive-)
-file(GLOB FXC_CANDIDATES "$ENV{WindowsSdkDir}/bin/$ENV{WindowsSDKVersion}/x64/d3dcompiler_47.dll")
+file(GLOB FXC_CANDIDATES "$ENV{WindowsSdkVerBinPath}/x64/d3dcompiler_47.dll")
 if(NOT FXC_CANDIDATES)
   message(FATAL_ERROR "Windows SDK x64 d3dcompiler_47.dll required; configure using tools/msvc-env.ps1")
 endif()

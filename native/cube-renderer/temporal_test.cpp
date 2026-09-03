@@ -15,10 +15,14 @@ int main(int argc,char** argv) {
   const bool fail=argc>1;
   TemporalInput half{{640,360},{320,180},.5f,1,ResetReason::Initialization,false};
   TemporalInput full{{640,360},{640,360},1.0f,2,ResetReason::None,false};
-  Check(ValidateInput(half)&&ValidateInput(full),"valid extents rejected");
+  TemporalInput wide{{800,450},{400,225},.5f,3,ResetReason::None,false};
+  Check(ValidateInput(half)&&ValidateInput(full)&&ValidateInput(wide),"valid extents rejected");
   Check(half.input==Extent{320,180},"half extent");
   Check(!ValidateInput(TemporalInput{{640,360},{1,1},.25f,1,ResetReason::None,false}),"invalid scale accepted");
   auto first=BuildFrame(State(60,.1f,.2f),half,std::nullopt); Check(first.reset&&first.previousLogicalFrame==0,"initial reset");
+  Check(first.motionScale==std::array<float,2>{1.0f/320.0f,1.0f/180.0f},"320x180 motion scale");
+  auto wideFrame=BuildFrame(State(60,.1f,.2f),wide,first); Check(wideFrame.motionScale==std::array<float,2>{1.0f/400.0f,1.0f/225.0f},"400x225 motion scale");
+  auto fullFrame=BuildFrame(State(60,.1f,.2f),full,wideFrame); Check(fullFrame.motionScale==std::array<float,2>{1.0f/640.0f,1.0f/360.0f},"scale 1 motion scale");
   auto stationary=BuildFrame(State(61,.1f,.2f),TemporalInput{{640,360},{320,180},.5f,2,ResetReason::None,false},first); Check(!stationary.reset&&Length(stationary.cornerMotion[0])<1e-6f,"stationary motion");
   auto x=BuildFrame(State(62,.2f,.2f),TemporalInput{{640,360},{320,180},.5f,3,ResetReason::None,false},stationary);
   auto y=BuildFrame(State(63,.2f,.3f),TemporalInput{{640,360},{320,180},.5f,4,ResetReason::None,false},x);
@@ -29,7 +33,7 @@ int main(int argc,char** argv) {
   auto resize=BuildFrame(State(71,.35f,.45f,4),TemporalInput{{800,450},{400,225},.5f,8,ResetReason::Dimensions|ResetReason::ResizeGeneration,false},skipped); Check(resize.reset&&resize.inputExtent==Extent{400,225},"resize reset");
   auto scale=BuildFrame(State(72,.35f,.45f,4),TemporalInput{{800,450},{800,450},1.0f,9,ResetReason::RenderScale,false},resize); Check(scale.reset,"scale reset");
   auto jitter=BuildFrame(State(60,.1f,.2f),TemporalInput{{640,360},{320,180},.5f,10,ResetReason::Initialization,true},std::nullopt);
-  auto jitterAgain=BuildFrame(State(60,.1f,.2f),TemporalInput{{640,360},{320,180},.5f,10,ResetReason::Initialization,true},std::nullopt);
+  auto jitterAgain=BuildFrame(State(999,.1f,.2f),TemporalInput{{640,360},{320,180},.5f,10,ResetReason::Initialization,true},std::nullopt);
   Check(jitter.jitterOffsetPixels==jitterAgain.jitterOffsetPixels&&jitter.currentUnjittered.projection==jitterAgain.currentUnjittered.projection&&jitter.jitteredProjection!=jitter.currentUnjittered.projection,"deterministic jitter/unjittered matrix");
   Check(jitter.motionConvention.find("previous-to-current")!=std::string::npos&&!jitter.motionIncludesJitter,"motion convention");
   ReferenceUpscaler up; auto invalid=up.Evaluate(jitter,nullptr); Check(invalid.status==UpscaleStatus::InvalidFrame,"upscaler resource guard");
