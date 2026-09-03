@@ -1,0 +1,4 @@
+
+> @framebridge/protocol@0.1.0 build <REDACTED_PATH>
+> tsc -p tsconfig.json
+

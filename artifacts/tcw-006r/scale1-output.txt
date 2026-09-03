@@ -1,0 +1,1 @@
+{"acknowledged":2,"backend":"native-dawn","clean_shutdown":true,"event":"shutdown","max_queued_complete_frames":1,"owned_threads_joined":true,"sessions":1,"submitted":2}

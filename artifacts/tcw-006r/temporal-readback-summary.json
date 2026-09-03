@@ -1,0 +1,13 @@
+{
+  "contract": "GPU-written D3D12 R32_FLOAT depth and RG16_FLOAT motion; depth non-inverted, background 1.0, nearer cube lower; reset motion clear 0",
+  "captures": [
+    "browser-temporal-120.json",
+    "browser-temporal-180.json",
+    "browser-temporal-60.json",
+    "integration-temporal-120.json",
+    "integration-temporal-180.json",
+    "integration-temporal-60.json",
+    "scale1-temporal-120.json",
+    "scale1-temporal-60.json"
+  ]
+}

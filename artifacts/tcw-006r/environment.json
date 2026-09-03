@@ -1,0 +1,12 @@
+{
+  "platform": "Windows",
+  "chrome_for_testing": "152.0.7977.75",
+  "msvc": "19.44.35228.0",
+  "windows_sdk": "10.0.26100.0",
+  "cmake": "3.31.6",
+  "dawn_commit": "34b1fca4d6c3d7025a2231d82b4fc719ca57fd71",
+  "adapter": "NVIDIA GeForce RTX 4080 Laptop GPU",
+  "render_scale": 0.5,
+  "temporal_jitter_diagnostic": true,
+  "private_values": "redacted"
+}

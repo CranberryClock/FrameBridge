@@ -1,0 +1,13 @@
+Scope: all 3 workspace projects
+Lockfile is up to date, resolution step is skipped
+Progress: resolved 1, reused 0, downloaded 0, added 0
+Packages: +28
+++++++++++++++++++++++++++++
+Progress: resolved 28, reused 28, downloaded 0, added 28, done
+
+devDependencies:
++ @types/node 22.20.1
++ playwright-core 1.55.0
++ typescript 5.9.3
+
+Done in 1s using pnpm v10.14.0

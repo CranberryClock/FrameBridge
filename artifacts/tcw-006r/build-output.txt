@@ -1,0 +1,90 @@
+[0/2] Re-checking globbed directories...
+[1/90] Scanning <REDACTED_PATH>
+[2/90] Scanning <REDACTED_PATH>
+[3/90] Scanning <REDACTED_PATH>
+[4/90] Scanning <REDACTED_PATH>
+[5/90] Generating CXX dyndep file CMakeFiles\framebridge-native-mirror-session.dir\CXX.dd
+[6/90] Scanning <REDACTED_PATH>
+[7/90] Scanning <REDACTED_PATH>
+[8/90] Scanning <REDACTED_PATH>
+[9/90] Generating CXX dyndep file CMakeFiles\framebridge-temporal-test.dir\CXX.dd
+[10/90] Generating CXX dyndep file CMakeFiles\framebridge-null-runtime.dir\CXX.dd
+[11/90] Scanning <REDACTED_PATH>
+[12/90] Generating CXX dyndep file CMakeFiles\framebridge-bridge-codec.dir\CXX.dd
+[13/90] Generating CXX dyndep file CMakeFiles\framebridge-streamline-dawn-preflight.dir\CXX.dd
+[14/90] Scanning <REDACTED_PATH>
+[15/90] Scanning <REDACTED_PATH>
+[16/90] Generating CXX dyndep file CMakeFiles\framebridge-temporal.dir\CXX.dd
+[17/90] Generating CXX dyndep file CMakeFiles\framebridge-native-cube.dir\CXX.dd
+[18/90] Generating CXX dyndep file CMakeFiles\framebridge-streamline-preflight-lib.dir\CXX.dd
+[19/90] Scanning <REDACTED_PATH>
+[20/90] Generating CXX dyndep file CMakeFiles\framebridge-native-mirror-test.dir\CXX.dd
+[21/90] Generating CXX dyndep file CMakeFiles\framebridge-render-test.dir\CXX.dd
+[22/90] Generating CXX dyndep file CMakeFiles\framebridge-renderer.dir\CXX.dd
+[23/90] Scanning <REDACTED_PATH>
+[24/90] Scanning <REDACTED_PATH>
+[25/90] Generating CXX dyndep file CMakeFiles\framebridge-native-mirror.dir\CXX.dd
+[26/90] Generating CXX dyndep file CMakeFiles\framebridge-streamline-preflight-test.dir\CXX.dd
+[27/90] Building CXX object third_party\ixwebsocket\CMakeFiles\ixwebsocket.dir\ixwebsocket\IXCancellationRequest.cpp.obj
+[28/90] Building CXX object third_party\ixwebsocket\CMakeFiles\ixwebsocket.dir\ixwebsocket\IXExponentialBackoff.cpp.obj
+[29/90] Building CXX object third_party\ixwebsocket\CMakeFiles\ixwebsocket.dir\ixwebsocket\IXBench.cpp.obj
+[30/90] Building CXX object third_party\ixwebsocket\CMakeFiles\ixwebsocket.dir\ixwebsocket\IXConnectionState.cpp.obj
+[31/90] Building CXX object CMakeFiles\framebridge-native-mirror-session.dir\native\mirror-receiver\mirror_session.cpp.obj
+[32/90] Building CXX object third_party\ixwebsocket\CMakeFiles\ixwebsocket.dir\ixwebsocket\IXGzipCodec.cpp.obj
+[33/90] Building CXX object third_party\ixwebsocket\CMakeFiles\ixwebsocket.dir\ixwebsocket\IXDNSLookup.cpp.obj
+[34/90] Building CXX object third_party\ixwebsocket\CMakeFiles\ixwebsocket.dir\ixwebsocket\IXGetFreePort.cpp.obj
+[35/90] Building CXX object CMakeFiles\framebridge-temporal.dir\native\cube-renderer\temporal_frame.cpp.obj
+[36/90] Linking CXX static library framebridge-temporal.lib
+[37/90] Building CXX object third_party\ixwebsocket\CMakeFiles\ixwebsocket.dir\ixwebsocket\IXSelectInterrupt.cpp.obj
+[38/90] Building CXX object third_party\ixwebsocket\CMakeFiles\ixwebsocket.dir\ixwebsocket\IXHttp.cpp.obj
+[39/90] Building CXX object third_party\ixwebsocket\CMakeFiles\ixwebsocket.dir\ixwebsocket\IXSelectInterruptPipe.cpp.obj
+[40/90] Building CXX object third_party\ixwebsocket\CMakeFiles\ixwebsocket.dir\ixwebsocket\IXNetSystem.cpp.obj
+[41/90] Building CXX object third_party\ixwebsocket\CMakeFiles\ixwebsocket.dir\ixwebsocket\IXSelectInterruptFactory.cpp.obj
+[42/90] Building CXX object third_party\ixwebsocket\CMakeFiles\ixwebsocket.dir\ixwebsocket\IXHttpServer.cpp.obj
+[43/90] Building CXX object third_party\ixwebsocket\CMakeFiles\ixwebsocket.dir\ixwebsocket\IXHttpClient.cpp.obj
+[44/90] Building CXX object third_party\ixwebsocket\CMakeFiles\ixwebsocket.dir\ixwebsocket\IXSetThreadName.cpp.obj
+[45/90] Building CXX object third_party\ixwebsocket\CMakeFiles\ixwebsocket.dir\ixwebsocket\IXSocket.cpp.obj
+[46/90] Building CXX object third_party\ixwebsocket\CMakeFiles\ixwebsocket.dir\ixwebsocket\IXSelectInterruptEvent.cpp.obj
+[47/90] Building CXX object CMakeFiles\framebridge-streamline-preflight-lib.dir\native\streamline-preflight\preflight.cpp.obj
+[48/90] Building CXX object third_party\ixwebsocket\CMakeFiles\ixwebsocket.dir\ixwebsocket\IXSocketFactory.cpp.obj
+[49/90] Building CXX object third_party\ixwebsocket\CMakeFiles\ixwebsocket.dir\ixwebsocket\IXSocketConnect.cpp.obj
+[50/90] Building CXX object third_party\ixwebsocket\CMakeFiles\ixwebsocket.dir\ixwebsocket\IXSocketTLSOptions.cpp.obj
+[51/90] Building CXX object third_party\ixwebsocket\CMakeFiles\ixwebsocket.dir\ixwebsocket\IXUrlParser.cpp.obj
+[52/90] Building CXX object third_party\ixwebsocket\CMakeFiles\ixwebsocket.dir\ixwebsocket\IXStrCaseCompare.cpp.obj
+[53/90] Building CXX object third_party\ixwebsocket\CMakeFiles\ixwebsocket.dir\ixwebsocket\IXUdpSocket.cpp.obj
+[54/90] Building CXX object third_party\ixwebsocket\CMakeFiles\ixwebsocket.dir\ixwebsocket\IXUuid.cpp.obj
+[55/90] Building CXX object CMakeFiles\framebridge-renderer.dir\native\cube-renderer\renderer.cpp.obj
+[56/90] Building CXX object third_party\ixwebsocket\CMakeFiles\ixwebsocket.dir\ixwebsocket\IXSocketServer.cpp.obj
+[57/90] Building CXX object third_party\ixwebsocket\CMakeFiles\ixwebsocket.dir\ixwebsocket\IXWebSocketCloseConstants.cpp.obj
+[58/90] Building CXX object third_party\ixwebsocket\CMakeFiles\ixwebsocket.dir\ixwebsocket\IXUserAgent.cpp.obj
+[59/90] Building CXX object third_party\ixwebsocket\CMakeFiles\ixwebsocket.dir\ixwebsocket\IXWebSocketPerMessageDeflateCodec.cpp.obj
+[60/90] Building CXX object third_party\ixwebsocket\CMakeFiles\ixwebsocket.dir\ixwebsocket\IXWebSocketPerMessageDeflate.cpp.obj
+[61/90] Building CXX object third_party\ixwebsocket\CMakeFiles\ixwebsocket.dir\ixwebsocket\IXWebSocketPerMessageDeflateOptions.cpp.obj
+[62/90] Building CXX object third_party\ixwebsocket\CMakeFiles\ixwebsocket.dir\ixwebsocket\IXWebSocketHttpHeaders.cpp.obj
+[63/90] Building CXX object third_party\ixwebsocket\CMakeFiles\ixwebsocket.dir\ixwebsocket\IXWebSocket.cpp.obj
+[64/90] Linking CXX static library framebridge-streamline-preflight-lib.lib
+[65/90] Building CXX object third_party\ixwebsocket\CMakeFiles\ixwebsocket.dir\ixwebsocket\IXWebSocketProxyServer.cpp.obj
+[66/90] Building CXX object CMakeFiles\framebridge-null-runtime.dir\native\runtime\src\main.cpp.obj
+[67/90] Linking CXX static library framebridge-native-mirror-session.lib
+[68/90] Building CXX object CMakeFiles\framebridge-temporal-test.dir\native\cube-renderer\temporal_test.cpp.obj
+[69/90] Building CXX object third_party\ixwebsocket\CMakeFiles\ixwebsocket.dir\ixwebsocket\IXWebSocketHandshake.cpp.obj
+[70/90] Linking CXX static library framebridge-renderer.lib
+[71/90] Building CXX object third_party\ixwebsocket\CMakeFiles\ixwebsocket.dir\__\__\IXWebSocketTransport.cpp.obj
+[72/90] Building CXX object third_party\ixwebsocket\CMakeFiles\ixwebsocket.dir\ixwebsocket\IXWebSocketServer.cpp.obj
+[73/90] Linking CXX static library third_party\ixwebsocket\ixwebsocket.lib
+[74/90] Linking CXX executable framebridge-temporal-test.exe
+[75/90] Linking CXX executable framebridge-null-runtime.exe
+[76/90] Building CXX object CMakeFiles\framebridge-streamline-dawn-preflight.dir\native\streamline-preflight\main.cpp.obj
+[77/90] Building CXX object CMakeFiles\framebridge-native-mirror-test.dir\native\mirror-receiver\mirror_session_test.cpp.obj
+[78/90] Linking CXX executable framebridge-streamline-dawn-preflight.exe
+[79/90] Linking CXX executable framebridge-native-mirror-test.exe
+[80/90] Building CXX object CMakeFiles\framebridge-bridge-codec.dir\native\bridge\codec_test.cpp.obj
+[81/90] Linking CXX executable framebridge-bridge-codec.exe
+[82/90] Building CXX object CMakeFiles\framebridge-native-cube.dir\native\cube-renderer\main.cpp.obj
+[83/90] Building CXX object CMakeFiles\framebridge-streamline-preflight-test.dir\native\streamline-preflight\preflight_test.cpp.obj
+[84/90] Linking CXX executable framebridge-streamline-preflight-test.exe
+[85/90] Linking CXX executable framebridge-native-cube.exe
+[86/90] Building CXX object CMakeFiles\framebridge-render-test.dir\native\mirror-receiver\render_test.cpp.obj
+[87/90] Linking CXX executable framebridge-render-test.exe
+[88/90] Building CXX object CMakeFiles\framebridge-native-mirror.dir\native\mirror-receiver\main.cpp.obj
+[89/90] Linking CXX executable framebridge-native-mirror.exe

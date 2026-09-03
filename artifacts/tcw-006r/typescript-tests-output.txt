@@ -1,0 +1,6 @@
+
+> @framebridge/protocol@0.1.0 test <REDACTED_PATH>
+> node dist/protocol.test.js && node dist/bridge.test.js
+
+{"suite":"protocol","status":"PASS","tests":77,"categories":{"encoder-rejections":6,"fixtures":13,"malformed":11,"session":22,"json":1,"capabilities":10,"scheduling":4,"acknowledgements":9,"resize":1},"valid_binary":12,"malformed_binary":11}
+{"suite":"loopback","status":"PASS","tests":15,"categories":{"authentication":7,"transport-rejection":6,"continuity":1,"backpressure":1},"browser_gates":"HUMAN_REQUIRED"}
