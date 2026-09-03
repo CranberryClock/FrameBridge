@@ -1,0 +1,169 @@
+{
+  "task": "TCW-006",
+  "status": "PASS_WITH_NATIVE_RENDERER_FOLLOW_UP",
+  "implementation_commit": "6ce7e74fbd348ee2d0c9aa00061956fae09b8852",
+  "changed_files": [
+    "CMakeLists.txt",
+    "README.md",
+    "docs/tcw006-temporal.md",
+    "plan/tcw006.md",
+    "native/cube-renderer/CMakeLists.txt",
+    "native/cube-renderer/dawn-link.cmake",
+    "native/cube-renderer/renderer.cpp",
+    "native/cube-renderer/renderer.h",
+    "native/cube-renderer/temporal_frame.cpp",
+    "native/cube-renderer/temporal_frame.h",
+    "native/cube-renderer/temporal_test.cpp",
+    "native/mirror-receiver/main.cpp",
+    "tools/tcw005r-stability.mjs"
+  ],
+  "source_hashes": {
+    "CMakeLists.txt": "982afd02287e1a6359adeaced8e1db5aab0d4cce406afc8c02a4765e1493fb66",
+    "README.md": "160f6f32c35afcc81d8bbec69f2a51db8d23f7c5e84f207688f4b34633317ea6",
+    "docs/tcw006-temporal.md": "cac1b2931aed1242d263c0b52c72963c19d3a60105ea40039da194034641bd52",
+    "plan/tcw006.md": "47dbbf295ef1191918780c24e222f9d4cd45b4fc0a01c514c751a6ffa9811b2b",
+    "native/cube-renderer/CMakeLists.txt": "b78fa99e21811d5e16cbea2611bcae15a61634e7db4409cfe5f808fdfa3e123d",
+    "native/cube-renderer/dawn-link.cmake": "be4ee039859a0170a3aa2a1cd0429b60527caed52287281b2ee14e298cc02477",
+    "native/cube-renderer/renderer.cpp": "6d922e99b86877ab60abb97b9387a4815a8624a8f6b4cd74158f63c69ae94262",
+    "native/cube-renderer/renderer.h": "f4803c3c70d55a9556d5d964d644d39ee3b0ecaa3de2d21f45a3da7e4a2554eb",
+    "native/cube-renderer/temporal_frame.cpp": "64ecda61f990c8ba9cfb931c99e25b549b9c38d4e6d0462d8f6b406fd77e0a11",
+    "native/cube-renderer/temporal_frame.h": "e81443327dfacdf5e4904ebce7dfbe3a41cb18c17c434319b777b2ebd2a9a85d",
+    "native/cube-renderer/temporal_test.cpp": "541bdcec74e3c6dcc2fc9a0a5904b3e6927895539b13ec2fad2deea0bfa9e261",
+    "native/mirror-receiver/main.cpp": "e94c1bfbe8ba256b4b2419dfd7bc8bc0b93c36cf71a394c58604483b6251d223",
+    "tools/tcw005r-stability.mjs": "9b62c7a103b3ab366a2eb7da1bde3380bea3e10bb71dd834ec024be6619db2ad"
+  },
+  "binary_hashes": {
+    "framebridge-native-mirror.exe": "455bc8d6da48892c7f90270c56cdd4d6dcce8505d84dd865df7520cb379cf9cc"
+  },
+  "source_checkout": {
+    "path": "clean detached checkout",
+    "git_clean": true
+  },
+  "gates": {
+    "build": "PASS",
+    "temporal_contract": "PASS",
+    "native_browser_continuity": "PASS",
+    "stability_600_seconds": "PASS",
+    "diagnostic_integrity": "PASS",
+    "vendor_temporal_integration": "PENDING_TCW_007_EXTERNAL_DEPENDENCY"
+  },
+  "exact_commands": [
+    "git submodule update --init --recursive",
+    "cmake -S . -B build/release -DCMAKE_BUILD_TYPE=RelWithDebInfo -DFRAMEBRIDGE_BUILD_DAWN=ON",
+    "cmake --build build/release --config RelWithDebInfo --parallel",
+    "ctest --test-dir build/release -C RelWithDebInfo --output-on-failure",
+    "corepack pnpm install --frozen-lockfile",
+    "corepack pnpm --filter @framebridge/protocol build",
+    "corepack pnpm --filter @framebridge/protocol test",
+    "corepack pnpm --filter @framebridge/web build",
+    "node tools/tcw005r-stability.mjs build/release/framebridge-native-mirror.exe 600"
+  ],
+  "exit_codes": {
+    "configure": 0,
+    "build": 0,
+    "ctest": 0,
+    "install": 0,
+    "typescript_build": 0,
+    "typescript_tests": 0,
+    "vite": 0,
+    "temporal_contract": 0,
+    "temporal_negative_control": 0,
+    "native_integration": 0,
+    "browser_integration": 0,
+    "real_soak": 0
+  },
+  "soak": {
+    "elapsed_seconds": 600.0149673,
+    "submitted_frames": 35912,
+    "acknowledged_frames": 35912,
+    "dropped_frames": 61,
+    "reconnect_count": 3,
+    "resize_count": 119,
+    "peak_working_set_bytes": 202330112,
+    "peak_private_bytes": 228237312,
+    "protocol_errors": 0,
+    "start_time": "2026-09-03T00:50:37.238Z",
+    "end_time": "2026-09-03T01:00:37.261Z"
+  },
+  "browser_result": {
+    "chrome_version": "152.0.7977.75",
+    "parity": [
+      {
+        "frame": 60,
+        "accepted": 60,
+        "token_cleared": true
+      },
+      {
+        "frame": 120,
+        "accepted": 120,
+        "token_cleared": true
+      },
+      {
+        "frame": 180,
+        "accepted": 180,
+        "token_cleared": true
+      }
+    ],
+    "pre_disconnect": {
+      "frame": 27,
+      "generation": 4
+    },
+    "disconnected_frame": 52,
+    "post_reconnect": {
+      "frame": 76,
+      "accepted": 75,
+      "generation": 5
+    },
+    "resizes": [
+      {
+        "dimensions": "800 × 450",
+        "generation": "2"
+      },
+      {
+        "dimensions": "640 × 360",
+        "generation": "3"
+      },
+      {
+        "dimensions": "800 × 450",
+        "generation": "4"
+      },
+      {
+        "dimensions": "640 × 360",
+        "generation": "5"
+      }
+    ],
+    "errors": [],
+    "node_frame_proxy": false
+  },
+  "native_result": {
+    "status": "PASS",
+    "test_count": 14,
+    "node_role": "test_client_only",
+    "delayed_dropped_frames": 77,
+    "diagnostics": [
+      {
+        "dawn_validation_errors": 0,
+        "d3d12_messages": 0,
+        "dxgi_messages": 0,
+        "device_lost": false
+      },
+      {
+        "dawn_validation_errors": 0,
+        "d3d12_messages": 0,
+        "dxgi_messages": 0,
+        "device_lost": false
+      },
+      {
+        "dawn_validation_errors": 0,
+        "d3d12_messages": 0,
+        "dxgi_messages": 0,
+        "device_lost": false
+      }
+    ]
+  },
+  "known_limitations": [
+    "Depth and motion are provisioned as explicit same-device provisional roles; their vendor-specific compatibility is deferred.",
+    "Reference upscaler is not DLSS and contains no vendor SDK integration.",
+    "No Streamline, DLSS, NGX, application ID, or governed NVIDIA binary was obtained or committed."
+  ]
+}

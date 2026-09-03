@@ -1,0 +1,15 @@
+{
+  "platform": "Windows",
+  "browser": "Chrome for Testing 152.0.7977.75",
+  "display_refresh_hz": "not required for TCW-006 automated acceptance",
+  "cmake": "3.31.6",
+  "compiler": "MSVC 19.44.35228.0",
+  "windows_sdk": "10.0.26100.0",
+  "python": "3.13.5",
+  "go": "1.27",
+  "dawn_commit": "34b1fca4d6c3d7025a2231d82b4fc719ca57fd71",
+  "render_scale": 0.5,
+  "temporal_jitter_diagnostic": true,
+  "browser_origin": "http://127.0.0.1:5173",
+  "private_paths_and_secrets": "not recorded"
+}

@@ -1,0 +1,1 @@
+PASS temporal_contract tests=18 scales=1.0,0.5 jitter=deterministic motion=previous-to-current-render-pixels resets=PASS upscaler=PASS

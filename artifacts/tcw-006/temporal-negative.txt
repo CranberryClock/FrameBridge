@@ -1,0 +1,1 @@
+FAIL temporal_contract: controlled motion negative control

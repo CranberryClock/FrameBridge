@@ -1,0 +1,20 @@
+Internal ctest changing into directory: D:/FrameBridge/.local/tcw006-clean/build/release
+Test project D:/FrameBridge/.local/tcw006-clean/build/release
+    Start 1: framebridge-temporal-contract
+1/7 Test #1: framebridge-temporal-contract ...........   Passed    0.01 sec
+    Start 2: framebridge-temporal-negative-control
+2/7 Test #2: framebridge-temporal-negative-control ...   Passed    0.01 sec
+    Start 3: framebridge-codec
+3/7 Test #3: framebridge-codec .......................   Passed    0.01 sec
+    Start 4: framebridge-streamline-preflight
+4/7 Test #4: framebridge-streamline-preflight ........   Passed    0.02 sec
+    Start 5: framebridge-native-mirror-session
+5/7 Test #5: framebridge-native-mirror-session .......   Passed    0.02 sec
+    Start 6: framebridge-render-parity
+6/7 Test #6: framebridge-render-parity ...............   Passed    0.01 sec
+    Start 7: framebridge-release-negative-control
+7/7 Test #7: framebridge-release-negative-control ....   Passed    0.01 sec
+
+100% tests passed, 0 tests failed out of 7
+
+Total Test time (real) =   0.09 sec

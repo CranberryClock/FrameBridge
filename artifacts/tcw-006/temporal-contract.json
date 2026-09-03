@@ -1,0 +1,15 @@
+{
+  "protocol_role": "MIRROR SPIKE — NOT THREE BACKEND",
+  "motion_convention": "previous-to-current render pixels, top-left origin, camera-inclusive, unjittered, mvecScale [1,1]",
+  "input_color": "RGBA8Unorm",
+  "input_depth": "R32Float provisional same-device role",
+  "input_motion": "RG16Float provisional same-device role",
+  "output_color": "RGBA8Unorm",
+  "scale_05": {
+    "output_640x360": "320x180",
+    "output_800x450": "400x225"
+  },
+  "scale_1_regression": true,
+  "reference_upscaler": "native D3D12 fullscreen bilinear seam; no Streamline/DLSS/NGX types",
+  "jitter": "Halton(2,3), 8 samples, render-pixel offsets, diagnostic-only"
+}
