@@ -124,6 +124,7 @@ class Receiver {
     std::vector<ClientPtr> expired;
     std::shared_ptr<Client> client;
     std::optional<CompleteFrame> frame;
+    std::uint64_t sessionGeneration=0;
     std::vector<std::uint8_t> acknowledgement;
     {
       std::lock_guard lock(mutex_);
@@ -132,6 +133,7 @@ class Receiver {
       }
       client=controller_.lock();
       if(client && client->active && client->session && Clock::now()>=nextProcess_) {
+        sessionGeneration=client->session->generation();
         frame=client->session->ProcessOne();
         if(frame) acknowledgement=client->session->EncodeFrameAccepted(*frame);
       }
@@ -139,6 +141,9 @@ class Receiver {
     for(auto& s:expired) s->close(1008,"hello timeout");
     if(!frame) return true;
     try {
+#ifdef FRAMEBRIDGE_HAS_DAWN
+      if(renderer_) renderer_->SetSessionGeneration(sessionGeneration);
+#endif
       SubmitThenAcknowledge(*frame,[&](const SceneState& state,uint64_t drops) {
         if(options_.failRender) throw std::runtime_error("controlled render failure");
 #ifdef FRAMEBRIDGE_HAS_DAWN

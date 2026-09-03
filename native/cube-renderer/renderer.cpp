@@ -44,6 +44,7 @@ void CheckStatus(wgpu::Status status, const char* operation) {
     if (status != wgpu::Status::Success) Die(operation);
 }
 std::string ToString(wgpu::StringView s) { return std::string(s.data, s.length); }
+std::string ReadEnv(const char* name) { char* value=nullptr; size_t size=0; if(_dupenv_s(&value,&size,name)!=0 || !value) return {}; std::string result=value; free(value); return result; }
 
 struct Mat4 { float v[16]{}; };
 Mat4 Multiply(const Mat4& a, const Mat4& b) {
@@ -198,6 +199,9 @@ struct Renderer::Impl {
     ComPtr<ID3D12RootSignature> blitRoot;
     ComPtr<ID3D12PipelineState> blitPipeline;
     ComPtr<ID3D12DescriptorHeap> srvHeap,rtvHeap;
+    struct AuxTarget { uint32_t inputWidth=0,inputHeight=0,outputWidth=0,outputHeight=0; ComPtr<ID3D12Resource> depth,motion,output; };
+    AuxTarget activeAux{};
+    std::optional<AuxTarget> cachedAux;
     HANDLE event = nullptr;
     HWND window = nullptr;
     std::unique_ptr<CubeRenderer> cube;
@@ -207,6 +211,13 @@ struct Renderer::Impl {
     uint32_t width = 0, height = 0;
     uint32_t swapWidth = 0, swapHeight = 0;
     uint64_t swapAllocations = 0;
+    uint64_t outputAllocations = 0, presentationOrdinal = 0, temporalResets = 0, sessionGeneration = 0;
+    uint32_t outputWidth = 0, outputHeight = 0, inputWidth = 0, inputHeight = 0;
+    float renderScale = 1.0f;
+    bool jitterDiagnostic = false;
+    uint64_t jitteredFrames = 0, nonJitteredFrames = 0;
+    std::optional<temporal::TemporalFrameResources> history;
+    temporal::ReferenceUpscaler upscaler;
     bool open = true, canonical = true;
 
     static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
@@ -215,6 +226,12 @@ struct Renderer::Impl {
         return DefWindowProcW(hwnd,msg,wp,lp);
     }
     explicit Impl(bool show) : canonical(show) {
+        const auto scaleValue=ReadEnv("FRAMEBRIDGE_RENDER_SCALE");
+        if(!scaleValue.empty()) {
+            char* end=nullptr; renderScale=std::strtof(scaleValue.c_str(),&end);
+            if(!end || *end!='\0' || !(renderScale==1.0f || renderScale==0.5f)) Die("invalid FRAMEBRIDGE_RENDER_SCALE");
+        }
+        jitterDiagnostic=!ReadEnv("FRAMEBRIDGE_TEMPORAL_JITTER").empty();
         SetThreadDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
         dawnProcSetProcs(&dawn::native::GetProcs());
         ComPtr<ID3D12Debug> debug;
@@ -269,6 +286,7 @@ struct Renderer::Impl {
         ComPtr<IUnknown> a,b; Check(native.As(&a),"device identity"); Check(queueDevice.As(&b),"queue identity");
         if(a.Get()!=b.Get()) Die("Queue COM identity mismatch");
         ComPtr<ID3D12InfoQueue> info; Check(native.As(&info),"D3D12 InfoQueue required");
+        upscaler.Initialize(native.Get());
         cube=std::make_unique<CubeRenderer>(device,native,queue,canonical);
         Check(native->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT,IID_PPV_ARGS(&allocator)),"present allocator");
         Check(native->CreateCommandList(0,D3D12_COMMAND_LIST_TYPE_DIRECT,allocator.Get(),nullptr,IID_PPV_ARGS(&list)),"present list");
@@ -282,7 +300,7 @@ struct Renderer::Impl {
             window=CreateWindowExW(0,wc.lpszClassName,L"FrameBridge Native Mirror",WS_OVERLAPPEDWINDOW,
                                    CW_USEDEFAULT,CW_USEDEFAULT,640,360,nullptr,nullptr,wc.hInstance,nullptr);
             if(!window) Die("CreateWindow");
-            Resize(640,360);
+            Resize(640,360,static_cast<uint32_t>(640*renderScale),static_cast<uint32_t>(360*renderScale));
             ShowWindow(window,SW_SHOW);
         }
         Validate();
@@ -333,7 +351,11 @@ struct Renderer::Impl {
         p.PrimitiveTopologyType=D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE; p.NumRenderTargets=1;p.RTVFormats[0]=DXGI_FORMAT_R8G8B8A8_UNORM;p.SampleDesc.Count=1;
         Check(native->CreateGraphicsPipelineState(&p,IID_PPV_ARGS(&blitPipeline)),"blit pipeline");
     }
-    void Resize(uint32_t w,uint32_t h) {
+    ComPtr<ID3D12Resource> MakeTemporalTexture(uint32_t w,uint32_t h,DXGI_FORMAT format,D3D12_RESOURCE_FLAGS flags,const D3D12_CLEAR_VALUE& clear) {
+        D3D12_RESOURCE_DESC d{}; d.Dimension=D3D12_RESOURCE_DIMENSION_TEXTURE2D; d.Width=w; d.Height=h; d.DepthOrArraySize=1; d.MipLevels=1; d.Format=format; d.SampleDesc.Count=1; d.Layout=D3D12_TEXTURE_LAYOUT_UNKNOWN; d.Flags=flags;
+        D3D12_HEAP_PROPERTIES heap{}; heap.Type=D3D12_HEAP_TYPE_DEFAULT; ComPtr<ID3D12Resource> result; Check(native->CreateCommittedResource(&heap,D3D12_HEAP_FLAG_NONE,&d,D3D12_RESOURCE_STATE_COMMON,&clear,IID_PPV_ARGS(&result)),"temporal resource"); return result;
+    }
+    void Resize(uint32_t w,uint32_t h,uint32_t iw,uint32_t ih) {
         Wait();
         // Drop the native command recording objects before retiring swapchain buffers.
         // This also retires debug-layer recording metadata for the old buffers.
@@ -341,7 +363,20 @@ struct Renderer::Impl {
         Check(native->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT,IID_PPV_ARGS(&allocator)),"resize present allocator");
         Check(native->CreateCommandList(0,D3D12_COMMAND_LIST_TYPE_DIRECT,allocator.Get(),nullptr,IID_PPV_ARGS(&list)),"resize present list");
         Check(list->Close(),"resize initial list close");
-        cube->Resize(w,h);
+        cube->Resize(iw,ih);
+        if(w!=outputWidth || h!=outputHeight || !activeAux.output || iw!=inputWidth || ih!=inputHeight) {
+            if(activeAux.output) {
+                if(cachedAux && cachedAux->outputWidth==w && cachedAux->outputHeight==h && cachedAux->inputWidth==iw && cachedAux->inputHeight==ih) std::swap(activeAux,*cachedAux);
+                else cachedAux=std::move(activeAux);
+            }
+            if(!activeAux.output || activeAux.outputWidth!=w || activeAux.outputHeight!=h || activeAux.inputWidth!=iw || activeAux.inputHeight!=ih) {
+            D3D12_CLEAR_VALUE color{}; color.Format=DXGI_FORMAT_R8G8B8A8_UNORM; color.Color[3]=1;
+            D3D12_CLEAR_VALUE depth{}; depth.Format=DXGI_FORMAT_R32_FLOAT; depth.DepthStencil.Depth=1;
+            D3D12_CLEAR_VALUE motion{}; motion.Format=DXGI_FORMAT_R16G16_FLOAT;
+            activeAux={iw,ih,w,h,MakeTemporalTexture(iw,ih,DXGI_FORMAT_R32_FLOAT,D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET,depth),MakeTemporalTexture(iw,ih,DXGI_FORMAT_R16G16_FLOAT,D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET,motion),MakeTemporalTexture(w,h,DXGI_FORMAT_R8G8B8A8_UNORM,D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET,color)};
+            ++outputAllocations;
+            }
+        }
         if(window) {
             if(swapchain) {
                 if(w>swapWidth || h>swapHeight) {
@@ -365,13 +400,16 @@ struct Renderer::Impl {
             if(!SetWindowPos(window,nullptr,0,0,area.right-area.left,area.bottom-area.top,SWP_NOMOVE|SWP_NOZORDER|SWP_NOACTIVATE)) Die("SetWindowPos");
             RECT client{}; if(!GetClientRect(window,&client) || client.right!=static_cast<LONG>(w) || client.bottom!=static_cast<LONG>(h)) Die("presentation client dimensions");
         }
-        width=w; height=h;
+        width=iw; height=ih; outputWidth=w; outputHeight=h; inputWidth=iw; inputHeight=ih;
+        history.reset(); ++temporalResets;
     }
-    void Present() {
+    void Present(temporal::TemporalFrameResources& frame) {
         ComPtr<ID3D12Resource> back;
         Check(swapchain->GetBuffer(swapchain->GetCurrentBackBufferIndex(),IID_PPV_ARGS(&back)),"GetBuffer");
         Check(allocator->Reset(),"present allocator reset");
         Check(list->Reset(allocator.Get(),nullptr),"present reset");
+        const auto upscale=upscaler.Evaluate(frame,list.Get());
+        if(upscale.status!=temporal::UpscaleStatus::Success) Die("reference upscale");
         D3D12_RESOURCE_BARRIER barrier{};
         barrier.Type=D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
         barrier.Transition.pResource=back.Get();
@@ -380,10 +418,10 @@ struct Renderer::Impl {
         barrier.Transition.StateAfter=D3D12_RESOURCE_STATE_RENDER_TARGET;
         list->ResourceBarrier(1,&barrier);
         D3D12_RESOURCE_BARRIER sourceBarrier=barrier;
-        sourceBarrier.Transition.pResource=cube->Resource();sourceBarrier.Transition.StateBefore=D3D12_RESOURCE_STATE_COMMON;sourceBarrier.Transition.StateAfter=D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+        sourceBarrier.Transition.pResource=activeAux.output.Get();sourceBarrier.Transition.StateBefore=D3D12_RESOURCE_STATE_COMMON;sourceBarrier.Transition.StateAfter=D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
         list->ResourceBarrier(1,&sourceBarrier);
         D3D12_SHADER_RESOURCE_VIEW_DESC srv{};srv.Format=DXGI_FORMAT_R8G8B8A8_UNORM;srv.ViewDimension=D3D12_SRV_DIMENSION_TEXTURE2D;srv.Shader4ComponentMapping=D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;srv.Texture2D.MipLevels=1;
-        native->CreateShaderResourceView(cube->Resource(),&srv,srvHeap->GetCPUDescriptorHandleForHeapStart());
+        native->CreateShaderResourceView(activeAux.output.Get(),&srv,srvHeap->GetCPUDescriptorHandleForHeapStart());
         native->CreateRenderTargetView(back.Get(),nullptr,rtvHeap->GetCPUDescriptorHandleForHeapStart());
         const auto rtv=rtvHeap->GetCPUDescriptorHandleForHeapStart();list->OMSetRenderTargets(1,&rtv,FALSE,nullptr);
         const D3D12_VIEWPORT viewport{0,0,static_cast<float>(swapWidth),static_cast<float>(swapHeight),0,1};
@@ -432,19 +470,35 @@ bool Renderer::Pump() {
 void Renderer::Submit(const SceneState& state,uint64_t dropped,const std::string& capture) {
     auto& i=*impl_;
     if(!i.open || !i.canonical) Die("renderer unavailable");
-    if(state.width!=i.width || state.height!=i.height || state.resizeGeneration!=i.resizeGeneration) i.Resize(state.width,state.height);
+    const auto iw=static_cast<uint32_t>(std::lround(state.width*i.renderScale));
+    const auto ih=static_cast<uint32_t>(std::lround(state.height*i.renderScale));
+    temporal::ResetReason reason=temporal::ResetReason::None;
+    if(!i.history) reason=temporal::ResetReason::Initialization|temporal::ResetReason::FirstFrame;
+    if(state.width!=i.outputWidth || state.height!=i.outputHeight) reason=reason|temporal::ResetReason::Dimensions;
+    if(state.resizeGeneration!=i.resizeGeneration) reason=reason|temporal::ResetReason::ResizeGeneration;
+    if(state.width!=i.outputWidth || state.height!=i.outputHeight || iw!=i.inputWidth || ih!=i.inputHeight) i.Resize(state.width,state.height,iw,ih);
     const auto targetDesc=i.cube->Resource()->GetDesc();
-    if(targetDesc.Width!=state.width || targetDesc.Height!=state.height) Die("render target dimensions");
-    const auto matrices=SceneMatrices(state);
+    if(targetDesc.Width!=iw || targetDesc.Height!=ih) Die("render target dimensions");
+    const auto ordinal=++i.presentationOrdinal;
+    const bool jitter=(i.jitterDiagnostic && (ordinal%120)<30);
+    if(jitter) ++i.jitteredFrames; else ++i.nonJitteredFrames;
+    temporal::TemporalInput input{{state.width,state.height},{iw,ih},i.renderScale,ordinal,reason,jitter};
+    auto frame=temporal::BuildFrame(state,input,i.history);
+    frame.inputColor=i.cube->Resource(); frame.inputDepth=i.activeAux.depth.Get(); frame.inputMotion=i.activeAux.motion.Get(); frame.outputColor=i.activeAux.output.Get();
+    if(frame.reset) ++i.temporalResets;
+    const auto matrices=frame.currentUnjittered;
     Mat4 mvp{}; for(size_t k=0;k<16;++k) mvp.v[k]=static_cast<float>(matrices.mvp[k]);
     i.cube->Render(mvp,!capture.empty(),true);
-    i.Present(); i.Validate();
+    i.Present(frame); i.Validate();
     i.submitted=state.frame; i.resizeGeneration=state.resizeGeneration; i.dropped=dropped;
-    if(!capture.empty()) WritePng(capture,state.width,state.height,i.cube->pixels());
-    const std::string title="FrameBridge Native Mirror | native-dawn | "+i.name+" | received/submitted "+
+    i.history=frame;
+    if(!capture.empty()) WritePng(capture,iw,ih,i.cube->pixels());
+    if(!capture.empty()) { const auto slash=capture.find_last_of("/\\"); std::ofstream meta(capture.substr(0,slash)+"/temporal-"+std::to_string(state.frame)+".json"); meta<<"{\"logical_frame\":"<<state.frame<<",\"previous_logical_frame\":"<<frame.previousLogicalFrame<<",\"presentation_ordinal\":"<<frame.presentationOrdinal<<",\"input_width\":"<<frame.inputExtent.width<<",\"input_height\":"<<frame.inputExtent.height<<",\"output_width\":"<<frame.outputExtent.width<<",\"output_height\":"<<frame.outputExtent.height<<",\"reset\":"<<(frame.reset?"true":"false")<<",\"reset_reason\":"<<static_cast<unsigned>(frame.resetReason)<<",\"jitter_enabled\":"<<(frame.jitterEnabled?"true":"false")<<",\"jitter_pixels\":["<<frame.jitterOffsetPixels[0]<<","<<frame.jitterOffsetPixels[1]<<"],\"motion_convention\":\"previous-to-current render pixels top-left unjittered\",\"motion_scale\":[1,1],\"resources_same_device\":true,\"formats\":{\"input_color\":\"RGBA8Unorm\",\"input_depth\":\"R32Float\",\"input_motion\":\"RG16Float\",\"output_color\":\"RGBA8Unorm\"}}\n"; }
+    const std::string title="FrameBridge Native Mirror | native-dawn | reference-upscale "+std::to_string(i.renderScale)+"x NOT DLSS | "+i.name+" | received/submitted "+
         std::to_string(state.frame)+" | resize "+std::to_string(state.resizeGeneration)+" | dropped "+std::to_string(dropped);
     SetWindowTextA(i.window,title.c_str());
 }
+void Renderer::SetSessionGeneration(std::uint64_t generation) { if(impl_->sessionGeneration!=generation) { impl_->sessionGeneration=generation; impl_->history.reset(); ++impl_->temporalResets; } }
 void Renderer::Legacy(uint64_t frame,uint32_t width,uint32_t height,const std::string& capture) {
     auto& i=*impl_;
     if(i.canonical) Die("legacy renderer mode");
@@ -458,7 +512,7 @@ std::string Renderer::Adapter() const { return impl_->name; }
 std::string Renderer::Telemetry() const {
     const auto& i=*impl_; return "{\"backend\":\"native-dawn\",\"adapter_vendor\":4318,\"adapter_device\":10208,\"luid_low\":"+
     std::to_string(i.luid.LowPart)+",\"luid_high\":"+std::to_string(i.luid.HighPart)+
-    ",\"luid_verified\":true,\"target_cache_capacity\":2,\"target_allocations\":"+std::to_string(i.cube->TargetAllocations())+",\"swapchain_allocations\":"+std::to_string(i.swapAllocations)+",\"dawn_validation_errors\":"+std::to_string(g_uncapturedError?1:0)+
+    ",\"luid_verified\":true,\"render_scale\":"+std::to_string(i.renderScale)+",\"upscaler\":\"reference-upscale NOT DLSS\",\"jitter_diagnostic\":"+(i.jitterDiagnostic?"true":"false")+",\"jittered_frames\":"+std::to_string(i.jitteredFrames)+",\"non_jittered_frames\":"+std::to_string(i.nonJitteredFrames)+",\"input_width\":"+std::to_string(i.inputWidth)+",\"input_height\":"+std::to_string(i.inputHeight)+",\"output_width\":"+std::to_string(i.outputWidth)+",\"output_height\":"+std::to_string(i.outputHeight)+",\"output_allocations\":"+std::to_string(i.outputAllocations)+",\"presentation_ordinal\":"+std::to_string(i.presentationOrdinal)+",\"temporal_resets\":"+std::to_string(i.temporalResets)+",\"target_cache_capacity\":2,\"target_allocations\":"+std::to_string(i.cube->TargetAllocations())+",\"swapchain_allocations\":"+std::to_string(i.swapAllocations)+",\"dawn_validation_errors\":"+std::to_string(g_uncapturedError?1:0)+
     ",\"d3d12_messages\":"+std::to_string(g_d3d12Messages)+",\"dxgi_messages\":"+std::to_string(g_dxgiMessages)+",\"device_lost\":"+(g_badDeviceLost?"true":"false")+"}";
 }
 } // namespace framebridge::render

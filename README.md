@@ -16,6 +16,12 @@ TCW-005R completes the direct C++ receiver with the recovered pinned Dawn/D3D12 
 
 Native rendering is now exercised and browser-to-native visual continuity is accepted by the human supervisor. DLSS, Streamline runtime integration, extension, installer, custom Three.js backend, and Unreal work remain out of scope. Stop for supervisor review after TCW-005; do not begin TCW-006.
 
+TCW-006 is the active temporal-input and replaceable reference-upscaler task. It
+adds native render/input/output resource metadata, deterministic unjittered motion
+vectors, reset/history rules, optional Halton jitter diagnostics and a GPU
+`reference-upscale` path explicitly labeled `NOT DLSS`. Streamline, DLSS and
+TCW-007 remain out of scope until this task passes review.
+
 TCW-004A is a bounded Streamline/Dawn compatibility preflight scaffold. Its current status is
 `BLOCKED_EXTERNAL_DEPENDENCY` because the pinned NVIDIA SDK and NVIDIA application ID are not available locally; no
 Streamline or DLSS runtime was loaded.

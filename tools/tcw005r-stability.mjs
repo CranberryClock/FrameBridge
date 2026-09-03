@@ -40,7 +40,9 @@ try {
     gpu:gpu.length>=2&&gpu.every(x=>x.dawn_validation_errors===0&&x.d3d12_messages===0&&(x.dxgi_messages??0)===0&&!x.device_lost),
     correlation:shutdown.submitted===acknowledged&&shutdown.acknowledged===acknowledged,
     render_target_pool:gpu.at(-1)?.target_cache_capacity===2&&gpu.at(-1)?.target_allocations===2&&gpu.at(-1)?.swapchain_allocations===2,
-    queue:shutdown.max_queued_complete_frames<=2,duration:elapsedSeconds>=duration,cadence:acknowledged/elapsedSeconds>=55};
+    queue:shutdown.max_queued_complete_frames<=2,duration:elapsedSeconds>=duration,cadence:acknowledged/elapsedSeconds>=55,
+    temporal_upscaler:gpu.length>=2&&gpu.every(x=>x.render_scale===0.5&&x.upscaler==='reference-upscale NOT DLSS'&&x.input_width>0&&x.input_height>0&&x.output_width>0&&x.output_height>0&&x.output_allocations<=2),
+    jitter_schedule:gpu.some(x=>x.jittered_frames>0&&x.non_jittered_frames>0)};
   const passed=Object.values(checks).every(Boolean);
   console.log(JSON.stringify({suite:'tcw005r-native-stability',status:passed?'PASS':'FAIL',checks,acceptance:duration>=600&&passed,source_commit:sourceCommit,source_dirty:false,
     start_time:startTime,end_time:endTime,elapsed_seconds:elapsedSeconds,required_seconds:duration,target_hz:60,submitted_frames:shutdown.submitted,
