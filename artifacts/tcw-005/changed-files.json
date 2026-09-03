@@ -101,5 +101,10 @@
     "artifacts/tcw-005/human-supervisor-pass.md",
     "artifacts/tcw-005/manifest.json",
     "artifacts/tcw-005/review-summary.md"
+  ],
+  "tc005_documentation_closeout": [
+    "artifacts/tcw-005/manifest.json",
+    "docs/tcw005-native-mirror.md",
+    "artifacts/tcw-005/human-browser-steps.md"
   ]
 }

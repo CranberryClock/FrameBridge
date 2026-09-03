@@ -11,5 +11,6 @@
   "accepted_tcw001_through004_evidence_unchanged": true,
   "no_binary_dependencies_committed": true,
   "screenshots_manually_inspected": 11,
-  "notes": "Screenshots contain only app windows; session fields are empty. Loopback 127.0.0.1 and ephemeral port are intentionally visible. This is a bounded review, not a claim of comprehensive secret detection."
+  "notes": "Automated token-cleared screenshots are retained; the human test screenshot was intentionally excluded because it displayed a personal session token.",
+  "human_token_screenshot_excluded": true
 }

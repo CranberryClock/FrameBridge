@@ -127,5 +127,6 @@ Short CI builds run codec/session/parity and protocol-only transport tests witho
 requiring NVIDIA hardware. The hardware acceptance run is recorded separately.
 
 See artifacts/tcw-005/manifest.json for measured results and human-browser-steps.md
-for the final simultaneous-window visual review. No TCW-006, DLSS, Streamline,
-overlay, extension, installer or general Three backend is included.
+for the historical human review result, which passed. The local token-bearing
+screenshot was intentionally excluded. No TCW-006, DLSS, Streamline, overlay,
+extension, installer or general Three backend is included.

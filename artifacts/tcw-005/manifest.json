@@ -114,7 +114,6 @@
     }
   ],
   "known_issues": [
-    "Final simultaneous-window visual judgement requires human review.",
     "Vite reports the expected large Three.js bundle advisory; build exits zero.",
     "NVIDIA device 0x27e0 is intentionally required for this machine-specific spike.",
     "A separate native window is used; browser overlay and general Three backend remain outside scope."

@@ -1,10 +1,13 @@
-# TCW-005R human visual review
+# TCW-005R human visual review — historical result
 
 Status: PASS. Human supervisor validated the live Chrome/native mirror.
 Screenshots were not provided because the local test screenshot displayed a
 personal session token. No token-bearing screenshot is included in the repository.
 Automated real-Chrome connection, frame continuity,
 resize acknowledgements and native GPU rendering are recorded separately.
+
+The human supervisor completed this procedure and returned PASS. It is retained
+as a historical record; no new run is required.
 
 From the repository root on this validated machine:
 
@@ -34,12 +37,11 @@ the build instructions in `docs/tcw005-native-mirror.md`.
 6. Close the native window. Confirm the process exits cleanly and the browser cube
    continues. The helper stops the Vite process it started after native exit.
 
-Return two simultaneous-window screenshots (800×450 and 640×360), the pre-disconnect
-and post-reconnect frame/generation values, and a short confirmation of smooth
-motion, continued browser motion while disconnected, and clean native close.
-Include Chrome version and display refresh rate. Capture only the app windows;
-exclude the console containing READY/token and any unrelated desktop content.
-The safe final shutdown JSON may be copied; never copy the READY line or token.
+The original run validated both resize states, disconnect/reconnect continuity,
+smooth motion and clean native close. A screenshot was not returned because the
+local capture displayed a personal session token. Do not capture or publish that
+image. The safe final shutdown JSON may be copied; never copy the READY line or
+token.
 
 Human supervisor result: PASS. Motion was smooth with no stutters, back-and-forth
 motion worked, reconnect continuity was validated, and the final native close was
