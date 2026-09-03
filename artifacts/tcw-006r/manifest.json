@@ -2,7 +2,7 @@
   "task": "TCW-006R",
   "status": "PASS",
   "implementation_commit": "ce3b3222472bbd55a7971e02cc2c7b20183ea425",
-  "evidence_commit": "pending",
+  "evidence_commit": "8575e9ebd3f18faa9dc0bae544a0016cecbc2c70",
   "git_clean_at_validation": true,
   "changed_files": [
     "README.md",
