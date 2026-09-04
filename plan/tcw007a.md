@@ -18,3 +18,19 @@ One fixed-size diagnostic RGBA texture generated or loaded in the browser is
 uploaded once to the native runtime, sampled by Dawn on the existing cube, and
 replaceable by resource revision. The proven return path is reused; no general
 geometry/material protocol or arbitrary asset loading is proposed.
+
+## Known issues at review handoff
+
+- The 65-second live run received and displayed one native image, then native
+  submissions stopped advancing; the browser correctly bounded outstanding
+  scene frames and entered stale-image fallback. Continuous live return is not
+  accepted.
+- Native-to-browser image flow has no independently bounded return queue or
+  explicit send-completion telemetry yet; the 12 FPS timer alone is not the
+  complete flow-control solution.
+- The visible magenta marker is CPU-applied after readback and is not a
+  GPU-rendered frame diagnostic. A changing GPU-coded stripe remains future
+  work.
+- A concise `artifacts/tcw-007a/` evidence bundle and safe recording were not
+  produced because the continuous-live gate was not demonstrated.
+- TCW-006R temporal correctness findings remain unresolved deferred debt.
