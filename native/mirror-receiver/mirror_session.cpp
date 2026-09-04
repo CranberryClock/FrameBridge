@@ -40,7 +40,7 @@ void MirrorSession::Accept(framebridge::protocol::Message message) {
   Require(phase_ != Phase::Closed, "session closed");
   Require(message.objectId == 0, "scene messages require session object ID zero");
   Require(message.sequence > lastSequence_, "non-monotonic sequence");
-  Require(message.type != MessageType::FrameAccepted && message.type != MessageType::Error,
+  Require(message.type != MessageType::FrameAccepted && message.type != MessageType::NativeImage && message.type != MessageType::Error,
           "server-only message");
   Require(message.type != MessageType::CreateBuffer && message.type != MessageType::DestroyResource &&
               message.type != MessageType::Draw,
@@ -74,7 +74,7 @@ void MirrorSession::Accept(framebridge::protocol::Message message) {
     } else if (message.type == MessageType::SetRtxMode) {
       Require(message.payload.size() == 1 && message.payload[0] == 0, "invalid RTX mode");
     } else {
-      Require(message.type == MessageType::Ping || message.type == MessageType::EndSession,
+      Require(message.type == MessageType::Ping || message.type == MessageType::ImageConsumed || message.type == MessageType::EndSession,
               "unsupported native mirror message");
       if (message.type == MessageType::EndSession) {
         Require(!openFrame_, "EndSession with open frame");

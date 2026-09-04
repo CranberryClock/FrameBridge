@@ -57,6 +57,8 @@ class Receiver {
     std::string origin;
     std::unique_ptr<MirrorSession> session;
     std::atomic<bool> active{true};
+    std::atomic<bool> imageInFlight{false};
+    std::atomic<std::uint64_t> lastImageSent{0},lastImageResize{0},obsoleteImage{0};
   };
  public:
   explicit Receiver(Options options) : options_(std::move(options)),
@@ -139,7 +141,7 @@ class Receiver {
         frame=client->session->ProcessOne();
       if(frame) { acknowledgement=client->session->EncodeFrameAccepted(*frame);
 #ifdef FRAMEBRIDGE_HAS_DAWN
-        returnImage=renderer_ && Clock::now()>=nextReturn_;
+        returnImage=renderer_ && Clock::now()>=nextReturn_ && !client->imageInFlight.load();
 #endif
       }
       }
@@ -174,7 +176,7 @@ class Receiver {
           const auto result=client->socket->sendBinary(std::string(acknowledgement.begin(),acknowledgement.end()));
           if(!result.success) throw std::runtime_error("ack send failed");
           ++acknowledged_;
-          if(returnImage) { auto image=client->session->EncodeNativeImage(*frame,++nativeReturnFrame_,nativeImage); const auto sent=client->socket->sendBinary(std::string(image.begin(),image.end())); if(!sent.success) throw std::runtime_error("native image send failed"); nextReturn_=Clock::now()+std::chrono::milliseconds(1000/12); }
+          if(returnImage) { const auto imageId=++nativeReturnFrame_; auto image=client->session->EncodeNativeImage(*frame,imageId,nativeImage); client->lastImageSent=imageId;client->lastImageResize=frame->state.resizeGeneration;client->imageInFlight=true;const auto sent=client->socket->sendBinary(std::string(image.begin(),image.end())); if(!sent.success) throw std::runtime_error("native image send failed");++imagesSent_;if(options_.trace)std::cout<<nlohmann::json({{"event","native_image_queued"},{"frame",frame->state.frame},{"native_image",imageId},{"bytes",image.size()},{"images_sent",imagesSent_}}).dump()<<"\n"<<std::flush; nextReturn_=Clock::now()+std::chrono::milliseconds(1000/12); }
         }
       });
       nextProcess_=Clock::now()+std::chrono::milliseconds(delay_);
@@ -231,7 +233,10 @@ class Receiver {
           if(!message->binary || message->str.size()>framebridge::protocol::kMaxPayload+framebridge::protocol::kHeaderBytes)
             throw std::runtime_error("binary size/type");
           const auto bytes=std::span<const uint8_t>(reinterpret_cast<const uint8_t*>(message->str.data()),message->str.size());
-          const auto decoded=framebridge::protocol::Decode(bytes); c->session->Accept(decoded);
+          const auto decoded=framebridge::protocol::Decode(bytes);
+          if(decoded.type==framebridge::protocol::MessageType::ImageConsumed) { const auto generation=framebridge::protocol::Get64(decoded.payload,0),image=framebridge::protocol::Get64(decoded.payload,8),resize=framebridge::protocol::Get64(decoded.payload,16); if(generation!=c->session->generation())throw std::runtime_error("image consumption session"); if(image==c->obsoleteImage.load()){} else { if(!c->imageInFlight.load()||image!=c->lastImageSent.load()||resize!=c->lastImageResize.load())throw std::runtime_error("image consumption correlation");c->imageInFlight=false;++imagesConsumed_; } }
+          if(decoded.type==framebridge::protocol::MessageType::Resize && c->imageInFlight.load()) { c->obsoleteImage=c->lastImageSent.load();c->imageInFlight=false; }
+          c->session->Accept(decoded);
           maxQueued_=std::max(maxQueued_,c->session->queuedFrames());
           if(decoded.type==framebridge::protocol::MessageType::EndSession) {
             c->active=false; if(controller_.lock()==c) controller_.reset(); closeCode=1000; reason="session ended";
@@ -253,7 +258,7 @@ class Receiver {
   std::mutex mutex_;
   std::map<ix::WebSocket*,std::shared_ptr<Client>> clients_;
   std::weak_ptr<Client> controller_;
-  uint64_t generation_=0,submitted_=0,acknowledged_=0;
+  uint64_t generation_=0,submitted_=0,acknowledged_=0,imagesSent_=0,imagesConsumed_=0;
   bool started_=false;
   Clock::time_point nextProcess_{};
   Clock::time_point startedAt_=Clock::now(),nextMemory_{};

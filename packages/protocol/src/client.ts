@@ -55,6 +55,10 @@ export class MirrorClient {
     requireValid(state && state.resizeGeneration===image.resizeGeneration && state.width===image.width && state.height===image.height,"stale or mismatched native image");
     return image;
   }
+  consume(image:NativeImage):void {
+    requireValid(this.caps && image.sessionGeneration===BigInt(this.caps.sessionGeneration),"consume wrong session");
+    const p=new Uint8Array(24),v=new DataView(p.buffer);v.setBigUint64(0,image.sessionGeneration,true);v.setBigUint64(8,image.nativeFrame,true);v.setBigUint64(16,image.resizeGeneration,true);this.message(MessageType.ImageConsumed,p);
+  }
   disconnect(clean = true):void {
     if (clean && this.caps) this.message(MessageType.EndSession,new Uint8Array());
     this.caps = undefined; this.pending.clear(); this.acceptedState=undefined; this.lastSent = 0n; this.sequence = 0n; this.lastResize = 0n;

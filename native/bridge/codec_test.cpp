@@ -33,7 +33,7 @@ int main(int argc,char** argv) {
       if(uint16_t(decoded.type)!=type||decoded.flags!=flags||decoded.sequence!=seq||decoded.objectId!=id||!std::equal(decoded.payload.begin(),decoded.payload.end(),payload.begin(),payload.end())) throw std::runtime_error("decode parity "+name);
       valid++;
     }
-    if(valid!=12) throw std::runtime_error("supported fixture coverage");
+    if(valid!=13) throw std::runtime_error("supported fixture coverage");
     for(const auto& entry:std::filesystem::directory_iterator(root)) {
       if(entry.path().filename().string().starts_with("malformed-") && entry.path().extension()==".hex") {
         const auto bytes=Read(entry.path()); bool rejected=false;

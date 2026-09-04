@@ -15,8 +15,8 @@ export const MAX_DIMENSION = 8192;
 export const SUPPORTED_FLAGS = 0;
 export const FEATURE = "explicit-mirror";
 const U64_MAX = (1n << 64n) - 1n;
-export enum MessageType { BeginSession = 1, EndSession, Ping, Error, SetRtxMode, CreateBuffer = 16, DestroyResource, BeginFrame = 32, Draw, EndFrame, Resize, FrameAccepted = 48, NativeImage = 49 }
-export const PAYLOAD_SIZES: ReadonlyMap<number, number> = new Map([[1,0],[2,0],[3,0],[4,4],[5,1],[16,8],[17,0],[32,48],[33,16],[34,0],[35,16],[48,40]]);
+export enum MessageType { BeginSession = 1, EndSession, Ping, Error, SetRtxMode, CreateBuffer = 16, DestroyResource, BeginFrame = 32, Draw, EndFrame, Resize, FrameAccepted = 48, NativeImage = 49, ImageConsumed = 50 }
+export const PAYLOAD_SIZES: ReadonlyMap<number, number> = new Map([[1,0],[2,0],[3,0],[4,4],[5,1],[16,8],[17,0],[32,48],[33,16],[34,0],[35,16],[48,40],[50,24]]);
 export type BinaryMessage = Readonly<{ type: MessageType; flags?: number; sequence: bigint; objectId?: bigint; payload: Uint8Array }>;
 export function requireValid(ok: unknown, reason: string): asserts ok { if (!ok) throw new Error(reason); }
 export function checksum(bytes: Uint8Array): number { let h = 0x811c9dc5; for (const b of bytes) h = Math.imul(h ^ b, 0x01000193) >>> 0; return h; }
@@ -96,7 +96,7 @@ export class MirrorSession {
   accept(m: BinaryMessage): void {
     validateMessage(m);
     requireValid(this.phase !== "closed","session ended"); requireValid(m.sequence > this.sequence,"out of order sequence");
-    requireValid(m.type !== MessageType.FrameAccepted && m.type !== MessageType.Error,"server-only message");
+    requireValid(m.type !== MessageType.FrameAccepted && m.type !== MessageType.NativeImage && m.type !== MessageType.Error,"server-only message");
     if (m.type === MessageType.BeginSession) { requireValid(this.phase === "awaiting-begin","duplicate BeginSession"); this.phase = "active"; this.sequence = m.sequence; return; }
     requireValid(this.phase === "active","data before BeginSession");
     if (this.open) requireValid(this.messages + 1 <= MAX_MESSAGES_PER_FRAME,"message quota");
@@ -129,7 +129,7 @@ export class MirrorSession {
         this.queue.push({state:this.open,sequence:m.sequence}); this.lastFrame = this.open.frame; this.open = undefined; this.messages = 0; break;
       case MessageType.EndSession: requireValid(!this.open,"EndSession while frame open"); this.phase = "closed"; this.live.clear(); this.bytes = 0n; this.queue = []; break;
       case MessageType.SetRtxMode: requireValid(m.payload[0] === 0,"invalid RTX-mode value; renderer unavailable"); break;
-      case MessageType.Ping: break;
+      case MessageType.Ping: case MessageType.ImageConsumed: break;
       default: throw new Error("illegal message");
     }
     this.sequence = m.sequence; if (this.open) this.messages++;
