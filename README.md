@@ -32,4 +32,4 @@ after authenticated loopback delivery, while the browser remains authoritative.
 The surface is labeled `Native reference upscale — NOT DLSS.` This is CPU
 readback/copy transport, not zero-copy or scanout. TCW-006R temporal findings
 remain unresolved deferred debt. TCW-007B Recovery is complete and stops at its
-supervisor review gate; TCW-008 remains blocked until separately approved.
+supervisor review gate. TCW-008 is the narrow textured native-return proof: the browser-generated 256x256 RGBA8 texture is mirrored by revision, rendered by Dawn, and returned through the native reference-upscale path. It is not a Three.js backend and is not DLSS; evidence is under `artifacts/tcw-008/` and the work stops at supervisor review.

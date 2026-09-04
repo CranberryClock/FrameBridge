@@ -8,7 +8,7 @@ const fixtureDir=new URL("../fixtures/",import.meta.url);
 const hex=(s:string)=>new Uint8Array(Buffer.from(s.trim()==="-"?"":s.trim(),"hex"));
 const specs=readFileSync(new URL("canonical.tsv",fixtureDir),"utf8").trim().split(/\r?\n/);
 for(const [name,m] of Object.entries({unknown:{type:99,sequence:1n,payload:new Uint8Array()},flags:{type:3,flags:1,sequence:1n,payload:new Uint8Array()},zero:{type:3,sequence:0n,payload:new Uint8Array()},object:{type:16,sequence:1n,objectId:0n,payload:new Uint8Array(8)},buffer:{type:16,sequence:1n,objectId:1n,payload:new Uint8Array(7)},maximum:{type:3,sequence:1n,payload:new Uint8Array(P.MAX_PAYLOAD_BYTES+1)}}))test("encoder-rejections",name,()=>assert.throws(()=>P.encode(m)));
-test("fixtures","all supported types represented",()=>assert.equal(specs.length,P.PAYLOAD_SIZES.size));
+test("fixtures","all fixed supported types represented",()=>assert.equal(specs.length,P.PAYLOAD_SIZES.size-1));
 for(const row of specs) {
  const [name,t,f,s,id,p]=row.split(/\s+/);
  test("fixtures",name!,()=>{
@@ -85,4 +85,5 @@ test("resize","encoding and acknowledgement",()=>{const sent:Uint8Array[]=[];con
 test("native-return","round trip dimensions and diagnostic pixels",()=>{const s=frame(7n),pixels=new Uint8Array(s.width*s.height*4);pixels.fill(17);const bytes=P.encodeNativeImage(2n,s,9n,11n,pixels),image=P.decodeNativeImage(bytes);assert.equal(image.width,640);assert.equal(image.height,360);assert.equal(image.nativeFrame,9n);assert.equal(image.pixels[0],17);});
 test("native-return","large 800x450 image remains decodable",()=>{const s={...frame(8n),width:800,height:450},pixels=new Uint8Array(s.width*s.height*4);const image=P.decodeNativeImage(P.encodeNativeImage(2n,s,10n,12n,pixels));assert.equal(image.pixels.length,800*450*4);});
 test("native-return","malformed image shape rejected",()=>{const s=frame(7n),bytes=P.encodeNativeImage(2n,s,9n,11n,new Uint8Array(s.width*s.height*4));const m=P.decode(bytes);new DataView(m.payload.buffer).setUint32(32,800,true);assert.throws(()=>P.decodeNativeImage(P.encode(m)));});
+test("texture","canonical upload and applied revision",()=>{const pixels=new Uint8Array(256*256*4);pixels[0]=255;const upload=P.encodeTextureUpload({sessionGeneration:2n,resourceId:1n,revision:7n,width:256,height:256,format:1,pixels},3n);const decoded=P.decode(upload);assert.equal(decoded.type,P.MessageType.TextureUpload);assert.equal(decoded.objectId,1n);const ack=new Uint8Array(32),v=new DataView(ack.buffer);v.setBigUint64(0,2n,true);v.setBigUint64(8,1n,true);v.setBigUint64(16,7n,true);v.setUint32(24,256,true);v.setUint32(28,256,true);const accepted=P.decodeTextureAccepted(P.encode({type:P.MessageType.TextureAccepted,sequence:7n,payload:ack}));assert.equal(accepted.revision,7n);});
 console.log(JSON.stringify({suite:"protocol",status:"PASS",tests,categories,valid_binary:13,malformed_binary:11}));

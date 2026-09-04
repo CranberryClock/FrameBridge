@@ -38,19 +38,25 @@ MirrorSession::MirrorSession(std::uint64_t sessionGeneration) : generation_(sess
 
 void MirrorSession::Accept(framebridge::protocol::Message message) {
   Require(phase_ != Phase::Closed, "session closed");
-  Require(message.objectId == 0, "scene messages require session object ID zero");
+  Require(message.objectId == 0 || message.type == MessageType::TextureUpload, "scene messages require session object ID zero");
   Require(message.sequence > lastSequence_, "non-monotonic sequence");
   Require(message.type != MessageType::FrameAccepted && message.type != MessageType::NativeImage && message.type != MessageType::Error,
           "server-only message");
   Require(message.type != MessageType::CreateBuffer && message.type != MessageType::DestroyResource &&
               message.type != MessageType::Draw,
           "reserved message rejected by native mirror");
+  Require(message.type != MessageType::TextureAccepted, "server-only message");
   if (message.type == MessageType::BeginSession) {
     Require(phase_ == Phase::AwaitingBegin, "duplicate BeginSession");
     phase_ = Phase::Active;
   } else {
     Require(phase_ == Phase::Active, "message before BeginSession");
-    if (message.type == MessageType::Resize) {
+    if (message.type == MessageType::TextureUpload) {
+      Require(!openFrame_ && message.payload.size() >= 40, "texture upload state");
+      const auto p=message.payload; TextureUpload t; t.resourceId=framebridge::protocol::Get64(p,8); t.revision=framebridge::protocol::Get64(p,16); t.width=framebridge::protocol::Get32(p,24); t.height=framebridge::protocol::Get32(p,28); t.format=framebridge::protocol::Get32(p,32); const auto bytes=framebridge::protocol::Get32(p,36);
+      Require(framebridge::protocol::Get64(p,0)==generation_ && t.resourceId==message.objectId && t.resourceId==1 && t.revision>textureRevision_ && t.width==256 && t.height==256 && t.format==1 && bytes==256*256*4 && p.size()==40+bytes,"invalid texture upload");
+      Require(!pendingTexture_, "texture upload queue full"); t.pixels.assign(p.begin()+40,p.end()); pendingTexture_=std::move(t);
+    } else if (message.type == MessageType::Resize) {
       Require(!openFrame_, "Resize inside frame");
       Require(message.payload.size() == 16, "invalid Resize payload");
       const auto width = framebridge::protocol::Get32(message.payload, 0);
@@ -102,8 +108,11 @@ std::vector<std::uint8_t> MirrorSession::EncodeFrameAccepted(const CompleteFrame
 }
 std::vector<std::uint8_t> MirrorSession::EncodeNativeImage(const CompleteFrame& frame, std::uint64_t nativeFrame, std::span<const std::uint8_t> rgba) const {
   Require(nativeFrame>0 && rgba.size()==static_cast<std::size_t>(frame.state.width)*frame.state.height*4,"invalid native image");
-  std::vector<std::uint8_t> payload(40+rgba.size()); framebridge::protocol::Put64(payload,0,generation_);framebridge::protocol::Put64(payload,8,frame.state.frame);framebridge::protocol::Put64(payload,16,nativeFrame);framebridge::protocol::Put64(payload,24,frame.state.resizeGeneration);framebridge::protocol::Put32(payload,32,frame.state.width);framebridge::protocol::Put32(payload,36,frame.state.height);std::copy(rgba.begin(),rgba.end(),payload.begin()+40);
+  std::vector<std::uint8_t> payload(48+rgba.size()); framebridge::protocol::Put64(payload,0,generation_);framebridge::protocol::Put64(payload,8,frame.state.frame);framebridge::protocol::Put64(payload,16,nativeFrame);framebridge::protocol::Put64(payload,24,frame.state.resizeGeneration);framebridge::protocol::Put32(payload,32,frame.state.width);framebridge::protocol::Put32(payload,36,frame.state.height);framebridge::protocol::Put64(payload,40,textureRevision_);std::copy(rgba.begin(),rgba.end(),payload.begin()+48);
   return framebridge::protocol::Encode({MessageType::NativeImage,0,frame.endSequence,0,payload});
 }
+
+std::optional<TextureUpload> MirrorSession::TakeTextureUpload() { if(!pendingTexture_) return std::nullopt; auto value=std::move(*pendingTexture_); pendingTexture_.reset(); textureRevision_=value.revision; return value; }
+std::vector<std::uint8_t> MirrorSession::EncodeTextureAccepted(const TextureUpload& texture) const { std::vector<std::uint8_t> p(32); framebridge::protocol::Put64(p,0,generation_);framebridge::protocol::Put64(p,8,texture.resourceId);framebridge::protocol::Put64(p,16,texture.revision);framebridge::protocol::Put32(p,24,texture.width);framebridge::protocol::Put32(p,28,texture.height); return framebridge::protocol::Encode({MessageType::TextureAccepted,0,texture.revision,0,p}); }
 
 }  // namespace framebridge::native_mirror

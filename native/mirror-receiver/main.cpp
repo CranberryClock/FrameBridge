@@ -129,6 +129,8 @@ class Receiver {
     std::optional<CompleteFrame> frame;
     std::uint64_t sessionGeneration=0;
     std::vector<std::uint8_t> acknowledgement;
+    std::vector<std::uint8_t> textureAcknowledgement;
+    std::optional<TextureUpload> textureUpload;
     std::vector<std::uint8_t> nativeImage;
     bool returnImage=false;
     {
@@ -139,6 +141,7 @@ class Receiver {
       client=controller_.lock();
       if(client && client->active && client->session && Clock::now()>=nextProcess_) {
         sessionGeneration=client->session->generation();
+        textureUpload=client->session->TakeTextureUpload();
         frame=client->session->ProcessOne();
       if(frame) { acknowledgement=client->session->EncodeFrameAccepted(*frame);
 #ifdef FRAMEBRIDGE_HAS_DAWN
@@ -151,6 +154,13 @@ class Receiver {
       }
     }
     for(auto& s:expired) s->close(1008,"hello timeout");
+    try {
+#ifdef FRAMEBRIDGE_HAS_DAWN
+      if(textureUpload && renderer_) renderer_->UpdateTexture(textureUpload->pixels);
+#endif
+      if(textureUpload) textureAcknowledgement=client->session->EncodeTextureAccepted(*textureUpload);
+      if(!textureAcknowledgement.empty() && client->active) client->socket->sendBinary(std::string(textureAcknowledgement.begin(),textureAcknowledgement.end()));
+    } catch(...) { client->active=false; client->socket->close(1011,"texture submission failed"); throw; }
     if(!frame) return true;
     try {
 #ifdef FRAMEBRIDGE_HAS_DAWN

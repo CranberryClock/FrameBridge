@@ -22,6 +22,7 @@ struct SceneState {
 };
 
 struct CompleteFrame { SceneState state; std::uint64_t endSequence = 0; std::uint64_t droppedBefore = 0; };
+struct TextureUpload { std::uint64_t resourceId=0, revision=0; std::uint32_t width=0,height=0,format=0; std::vector<std::uint8_t> pixels; };
 
 class MirrorSession {
  public:
@@ -30,6 +31,9 @@ class MirrorSession {
   std::optional<CompleteFrame> ProcessOne();
   std::vector<std::uint8_t> EncodeFrameAccepted(const CompleteFrame& frame) const;
   std::vector<std::uint8_t> EncodeNativeImage(const CompleteFrame& frame, std::uint64_t nativeFrame, std::span<const std::uint8_t> rgba) const;
+  std::optional<TextureUpload> TakeTextureUpload();
+  std::vector<std::uint8_t> EncodeTextureAccepted(const TextureUpload& texture) const;
+  std::uint64_t textureRevision() const { return textureRevision_; }
   std::uint64_t generation() const { return generation_; }
   std::uint64_t droppedFrames() const { return droppedFrames_; }
   std::size_t queuedFrames() const { return queue_.size(); }
@@ -50,6 +54,8 @@ class MirrorSession {
   std::uint64_t droppedFrames_ = 0;
   std::optional<SceneState> openFrame_;
   std::deque<CompleteFrame> queue_;
+  std::optional<TextureUpload> pendingTexture_;
+  std::uint64_t textureRevision_=0;
 };
 
 }  // namespace framebridge::native_mirror

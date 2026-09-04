@@ -15,20 +15,21 @@ export const MAX_DIMENSION = 8192;
 export const SUPPORTED_FLAGS = 0;
 export const FEATURE = "explicit-mirror";
 const U64_MAX = (1n << 64n) - 1n;
-export enum MessageType { BeginSession = 1, EndSession, Ping, Error, SetRtxMode, CreateBuffer = 16, DestroyResource, BeginFrame = 32, Draw, EndFrame, Resize, FrameAccepted = 48, NativeImage = 49, ImageConsumed = 50 }
-export const PAYLOAD_SIZES: ReadonlyMap<number, number> = new Map([[1,0],[2,0],[3,0],[4,4],[5,1],[16,8],[17,0],[32,48],[33,16],[34,0],[35,16],[48,40],[50,24]]);
+export enum MessageType { BeginSession = 1, EndSession, Ping, Error, SetRtxMode, CreateBuffer = 16, DestroyResource, BeginFrame = 32, Draw, EndFrame, Resize, FrameAccepted = 48, NativeImage = 49, ImageConsumed = 50, TextureUpload = 51, TextureAccepted = 52 }
+export const PAYLOAD_SIZES: ReadonlyMap<number, number> = new Map([[1,0],[2,0],[3,0],[4,4],[5,1],[16,8],[17,0],[32,48],[33,16],[34,0],[35,16],[48,40],[50,24],[52,32]]);
 export type BinaryMessage = Readonly<{ type: MessageType; flags?: number; sequence: bigint; objectId?: bigint; payload: Uint8Array }>;
 export function requireValid(ok: unknown, reason: string): asserts ok { if (!ok) throw new Error(reason); }
 export function checksum(bytes: Uint8Array): number { let h = 0x811c9dc5; for (const b of bytes) h = Math.imul(h ^ b, 0x01000193) >>> 0; return h; }
 export function validateMessage(m: BinaryMessage): void {
-  requireValid(PAYLOAD_SIZES.has(m.type) || m.type === MessageType.NativeImage, "unknown type");
+  requireValid(PAYLOAD_SIZES.has(m.type) || m.type === MessageType.NativeImage || m.type === MessageType.TextureUpload, "unknown type");
   requireValid((m.flags ?? 0) === 0, "unsupported flags");
   requireValid(m.sequence > 0n && m.sequence <= U64_MAX, "invalid sequence");
   const id = m.objectId ?? 0n;
   requireValid(id >= 0n && id <= U64_MAX && (![16,17].includes(m.type) || id > 0n), "illegal object id");
   const max = m.type === MessageType.NativeImage ? MAX_NATIVE_IMAGE_BYTES : MAX_PAYLOAD_BYTES;
   requireValid(m.payload.byteLength <= max, "maximum payload");
-  if (m.type === MessageType.NativeImage) requireValid(m.payload.byteLength >= 40, "invalid native image payload");
+  if (m.type === MessageType.NativeImage) requireValid(m.payload.byteLength >= 48, "invalid native image payload");
+  else if (m.type === MessageType.TextureUpload) requireValid(m.payload.byteLength >= 40, "invalid texture upload payload");
   else requireValid(m.payload.byteLength === PAYLOAD_SIZES.get(m.type), "invalid fixed payload");
 }
 export function encode(m: BinaryMessage): Uint8Array {
@@ -87,6 +88,10 @@ export function decodeFrameState(p: Uint8Array): FrameState {
   encodeFrameState(s); requireValid(v.getUint32(44,true) === 0,"frame reserved bytes"); return s;
 }
 export type CompleteFrame = Readonly<{ state:FrameState; sequence:bigint }>;
+export type TextureUpload = Readonly<{sessionGeneration:bigint; resourceId:bigint; revision:bigint; width:number; height:number; format:number; pixels:Uint8Array}>;
+export type TextureAccepted = Readonly<{sessionGeneration:bigint; resourceId:bigint; revision:bigint; width:number; height:number}>;
+export function encodeTextureUpload(x:TextureUpload, sequence:bigint):Uint8Array { requireValid(x.sessionGeneration>0n&&x.resourceId>0n&&x.revision>0n&&x.width===256&&x.height===256&&x.format===1&&x.pixels.length===x.width*x.height*4,"invalid texture upload"); const p=new Uint8Array(40+x.pixels.length),v=new DataView(p.buffer);v.setBigUint64(0,x.sessionGeneration,true);v.setBigUint64(8,x.resourceId,true);v.setBigUint64(16,x.revision,true);v.setUint32(24,x.width,true);v.setUint32(28,x.height,true);v.setUint32(32,x.format,true);v.setUint32(36,x.pixels.length,true);p.set(x.pixels,40);return encode({type:MessageType.TextureUpload,sequence,objectId:x.resourceId,payload:p}); }
+export function decodeTextureAccepted(bytes:Uint8Array):TextureAccepted { const m=decode(bytes);requireValid(m.type===MessageType.TextureAccepted,"unexpected texture acknowledgement");const v=new DataView(m.payload.buffer,m.payload.byteOffset,m.payload.length);return {sessionGeneration:v.getBigUint64(0,true),resourceId:v.getBigUint64(8,true),revision:v.getBigUint64(16,true),width:v.getUint32(24,true),height:v.getUint32(28,true)}; }
 export class MirrorSession {
   private phase: "awaiting-begin"|"active"|"closed" = "awaiting-begin";
   private sequence = 0n; private lastFrame = 0n; private accepted = 0n;
@@ -152,11 +157,11 @@ export function decodeFrameAccepted(bytes:Uint8Array): FrameAccepted {
   const a = {sessionGeneration:v.getBigUint64(0,true),frame:v.getBigUint64(8,true),sequence:v.getBigUint64(16,true),droppedFrames:v.getUint32(24,true),status:v.getUint32(28,true),resizeGeneration:v.getBigUint64(32,true)};
   requireValid(a.sequence === m.sequence && a.status === 0 && a.sessionGeneration > 0n && a.frame > 0n && a.resizeGeneration > 0n,"invalid acknowledgement fields"); return a;
 }
-export type NativeImage = Readonly<{sessionGeneration:bigint; browserFrame:bigint; nativeFrame:bigint; resizeGeneration:bigint; width:number; height:number; pixels:Uint8Array}>;
-export function encodeNativeImage(generation:bigint, state:FrameState, nativeFrame:bigint, sequence:bigint, pixels:Uint8Array):Uint8Array {
+export type NativeImage = Readonly<{sessionGeneration:bigint; browserFrame:bigint; nativeFrame:bigint; resizeGeneration:bigint; width:number; height:number; textureRevision:bigint; pixels:Uint8Array}>;
+export function encodeNativeImage(generation:bigint, state:FrameState, nativeFrame:bigint, sequence:bigint, pixels:Uint8Array, textureRevision=0n):Uint8Array {
   requireValid(nativeFrame > 0n && state.frame > 0n && pixels.length === state.width * state.height * 4,"invalid native image dimensions");
-  const p=new Uint8Array(40+pixels.length),v=new DataView(p.buffer); v.setBigUint64(0,generation,true);v.setBigUint64(8,state.frame,true);v.setBigUint64(16,nativeFrame,true);v.setBigUint64(24,state.resizeGeneration,true);v.setUint32(32,state.width,true);v.setUint32(36,state.height,true);p.set(pixels,40); return encode({type:MessageType.NativeImage,sequence,payload:p});
+  const p=new Uint8Array(48+pixels.length),v=new DataView(p.buffer); v.setBigUint64(0,generation,true);v.setBigUint64(8,state.frame,true);v.setBigUint64(16,nativeFrame,true);v.setBigUint64(24,state.resizeGeneration,true);v.setUint32(32,state.width,true);v.setUint32(36,state.height,true);v.setBigUint64(40,textureRevision,true);p.set(pixels,48); return encode({type:MessageType.NativeImage,sequence,payload:p});
 }
 export function decodeNativeImage(bytes:Uint8Array):NativeImage {
-  const m=decode(bytes); requireValid(m.type===MessageType.NativeImage,"unexpected native image type"); const v=new DataView(m.payload.buffer,m.payload.byteOffset,m.payload.length); const width=v.getUint32(32,true),height=v.getUint32(36,true); requireValid(width>0&&height>0&&width<=MAX_DIMENSION&&height<=MAX_DIMENSION&&m.payload.length===40+width*height*4,"invalid native image shape"); return {sessionGeneration:v.getBigUint64(0,true),browserFrame:v.getBigUint64(8,true),nativeFrame:v.getBigUint64(16,true),resizeGeneration:v.getBigUint64(24,true),width,height,pixels:m.payload.slice(40)};
+  const m=decode(bytes); requireValid(m.type===MessageType.NativeImage,"unexpected native image type"); const v=new DataView(m.payload.buffer,m.payload.byteOffset,m.payload.length); const width=v.getUint32(32,true),height=v.getUint32(36,true); requireValid(width>0&&height>0&&width<=MAX_DIMENSION&&height<=MAX_DIMENSION&&m.payload.length===48+width*height*4,"invalid native image shape"); return {sessionGeneration:v.getBigUint64(0,true),browserFrame:v.getBigUint64(8,true),nativeFrame:v.getBigUint64(16,true),resizeGeneration:v.getBigUint64(24,true),width,height,textureRevision:v.getBigUint64(40,true),pixels:m.payload.slice(48)};
 }

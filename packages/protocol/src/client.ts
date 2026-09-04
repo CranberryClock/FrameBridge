@@ -1,4 +1,4 @@
-import { encode, decodeFrameAccepted, decodeNativeImage, encodeFrameState, encodeResize, MessageType, validateCapabilities, requireValid, type Capabilities, type FrameState, type FrameAccepted, type NativeImage } from "./index.js";
+import { encode, decodeFrameAccepted, decodeNativeImage, decodeTextureAccepted, encodeFrameState, encodeResize, encodeTextureUpload, MessageType, validateCapabilities, requireValid, type Capabilities, type FrameState, type FrameAccepted, type NativeImage, type TextureAccepted } from "./index.js";
 
 // Latest-only browser scheduling. Reconnect resets session-local transmission state only.
 export class MirrorClient {
@@ -6,6 +6,7 @@ export class MirrorClient {
   private sequence = 0n; private lastSent = 0n; private lastResize = 0n;
   private acceptedSequence = 0n; private acceptedFrame = 0n; private dropped = 0;
   private acceptedState:FrameState | undefined;
+  private textureRevision=0n; private textureAccepted=0n;
   private pending = new Map<bigint,FrameState>();
   constructor(private readonly send:(bytes:Uint8Array)=>void) {}
   authenticate(text:string): Capabilities {
@@ -13,11 +14,14 @@ export class MirrorClient {
     const caps = validateCapabilities(JSON.parse(text));
     this.caps = caps; this.sequence = 0n; this.lastSent = 0n; this.lastResize = 0n;
     this.acceptedSequence = 0n; this.acceptedFrame = 0n; this.dropped = 0; this.acceptedState=undefined; this.pending.clear();
+    this.textureRevision = 0n; this.textureAccepted = 0n;
     this.message(MessageType.BeginSession,new Uint8Array());
     return caps;
   }
-  private message(type:MessageType,payload:Uint8Array):bigint {
-    const sequence = ++this.sequence; this.send(encode({type,sequence,payload})); return sequence;
+  uploadTexture(pixels:Uint8Array, revision:bigint):bigint { requireValid(this.caps,"texture before authentication"); requireValid(revision>this.textureRevision,"non-monotonic texture revision"); this.textureRevision=revision; const encoded=encodeTextureUpload({sessionGeneration:BigInt(this.caps.sessionGeneration),resourceId:1n,revision,width:256,height:256,format:1,pixels},this.sequence+1n); return this.message(MessageType.TextureUpload,encoded.slice(36),1n); }
+  acknowledgeTexture(bytes:Uint8Array):TextureAccepted { requireValid(this.caps,"texture acknowledgement before authentication"); const a=decodeTextureAccepted(bytes); requireValid(a.sessionGeneration===BigInt(this.caps.sessionGeneration)&&a.resourceId===1n&&a.revision>=this.textureAccepted&&a.width===256&&a.height===256,"invalid texture acknowledgement"); this.textureAccepted=a.revision; return a; }
+  private message(type:MessageType,payload:Uint8Array,objectId=0n):bigint {
+    const sequence = ++this.sequence; this.send(encode({type,sequence,objectId,payload})); return sequence;
   }
   frame(state:FrameState):bigint | undefined {
     if (!this.caps || state.frame <= this.lastSent) return undefined;
@@ -52,7 +56,7 @@ export class MirrorClient {
     requireValid(this.caps,"image before authentication"); const image=decodeNativeImage(bytes);
     requireValid(image.sessionGeneration===BigInt(this.caps.sessionGeneration),"wrong image session");
     const state=this.acceptedState?.frame===image.browserFrame?this.acceptedState:[...this.pending.values()].find(s=>s.frame===image.browserFrame);
-    requireValid(state && state.resizeGeneration===image.resizeGeneration && state.width===image.width && state.height===image.height,"stale or mismatched native image");
+    requireValid(state && state.resizeGeneration===image.resizeGeneration && state.width===image.width && state.height===image.height && image.textureRevision===this.textureAccepted,"stale or mismatched native image");
     return image;
   }
   consume(image:NativeImage):void {
@@ -61,10 +65,11 @@ export class MirrorClient {
   }
   disconnect(clean = true):void {
     if (clean && this.caps) this.message(MessageType.EndSession,new Uint8Array());
-    this.caps = undefined; this.pending.clear(); this.acceptedState=undefined; this.lastSent = 0n; this.sequence = 0n; this.lastResize = 0n;
+    this.caps = undefined; this.pending.clear(); this.acceptedState=undefined; this.lastSent = 0n; this.sequence = 0n; this.lastResize = 0n; this.textureRevision=0n; this.textureAccepted=0n;
   }
   get authenticated():boolean { return !!this.caps; }
   get outstanding():number { return this.pending.size; }
   get generation():string | undefined { return this.caps?.sessionGeneration; }
+  get acceptedTextureRevision():bigint { return this.textureAccepted; }
 }
 export function logicalFrameAt(elapsedMs:number):bigint { return BigInt(Math.max(1,Math.floor(elapsedMs*60/1000))); }
