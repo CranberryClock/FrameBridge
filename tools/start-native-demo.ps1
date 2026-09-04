@@ -4,8 +4,8 @@ $root=Split-Path $PSScriptRoot -Parent
 $config=Join-Path $root '.local/tcw005r-tools.json'
 if (!$Chrome -and (Test-Path -LiteralPath $config)) { $Chrome=(Get-Content -Raw $config | ConvertFrom-Json).chrome }
 if (!(Test-Path -LiteralPath $Chrome)) { throw 'Pass -Chrome <installed Chrome executable>.' }
-$exe=Join-Path $root 'build/tcw005r/framebridge-native-mirror.exe'
-if (!(Test-Path -LiteralPath $exe)) { throw 'Build TCW-005R first; see docs/tcw005-native-mirror.md.' }
+$exe=Join-Path $root 'build/tcw008/framebridge-native-mirror.exe'
+if (!(Test-Path -LiteralPath $exe)) { throw 'Build the current native demo first; see docs/tcw009-dlss-closeout.md.' }
 $node=(Get-Command node).Source
 $vite=Start-Process -FilePath $node -ArgumentList 'apps/demo-web/node_modules/vite/bin/vite.js apps/demo-web --host 127.0.0.1 --port 5173 --strictPort' -WorkingDirectory $root -WindowStyle Hidden -PassThru
 try {
