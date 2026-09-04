@@ -53,8 +53,9 @@ rejects("complete queue oldest drop",s=>{for(let i=1n;i<=4n;i++){s.send(M.BeginF
 rejects("reject before mutation",s=>{const old=s.value.lastAcceptedSequence;assert.throws(()=>s.send(M.CreateBuffer,buffer(0n),1n));assert.equal(s.value.lastAcceptedSequence,old);assert.equal(s.value.declaredResourceBytes,0);});
 const caps=readFileSync(new URL("capabilities.json",fixtureDir),"utf8");
 test("json","shared hello and capabilities",()=>{const hello=JSON.parse(readFileSync(new URL("hello.json",fixtureDir),"utf8"));P.authenticate(hello,hello.token,hello.origin,hello.origin);assert.equal(P.validateCapabilities(JSON.parse(caps)).sessionGeneration,"2");});
-test("capabilities","native Dawn backend accepted",()=>{const value=JSON.parse(caps);value.backend="native-dawn";assert.equal(P.validateCapabilities(value).backend,"native-dawn");});
+test("capabilities","native Dawn metadata accepted",()=>{const value=JSON.parse(caps);value.backend="native-dawn";value.nativeMode="reference-upscale";value.renderScale=.5;const validated=P.validateCapabilities(value);assert.equal(validated.backend,"native-dawn");assert.equal(validated.nativeMode,"reference-upscale");assert.equal(validated.renderScale,.5);});
 test("capabilities","unknown backend rejected",()=>{const value=JSON.parse(caps);value.backend="untrusted-backend";assert.throws(()=>P.validateCapabilities(value));});
+test("capabilities","native metadata rejects missing, unknown, and invalid scale",()=>{for(const mutation of [(c:any)=>delete c.nativeMode,(c:any)=>c.nativeMode="fake-dlss",(c:any)=>c.renderScale=0,(c:any)=>c.renderScale=2]){const value=JSON.parse(caps);value.backend="native-dawn";value.nativeMode="reference-upscale";value.renderScale=.5;mutation(value);assert.throws(()=>P.validateCapabilities(value));}});
 for(const hz of [60,120,144])test("scheduling",String(hz)+" Hz",()=>{
  const sends:Uint8Array[]=[];const c=new MirrorClient(b=>sends.push(b));c.authenticate(caps);
  const session=new P.MirrorSession();
@@ -80,7 +81,7 @@ for(const kind of ["wrong generation","unknown sequence","wrong frame","resize m
  if(kind==="status"){const m=P.decode(p);new DataView(m.payload.buffer).setUint32(28,1,true);assert.throws(()=>c.acknowledge(P.encode(m)));return;}
  assert.throws(()=>c.acknowledge(p));
 });
-for(const key of ["kind","version","sessionId","buildId","backend","features","byteOrder","sessionGeneration"])test("capabilities",key,()=>{const c=JSON.parse(caps);c[key]=null;assert.throws(()=>P.validateCapabilities(c));});
+for(const key of ["kind","version","sessionId","buildId","backend","features","byteOrder","sessionGeneration","nativeMode"])test("capabilities",key,()=>{const c=JSON.parse(caps);c[key]=null;assert.throws(()=>P.validateCapabilities(c));});
 test("resize","encoding and acknowledgement",()=>{const sent:Uint8Array[]=[];const c=new MirrorClient(b=>sent.push(b));c.authenticate(caps);const s={...frame(10n),width:800,height:450,resizeGeneration:5n};const seq=c.frame(s)!;assert.deepEqual(P.decodeResize(P.decode(sent[1]!).payload),{width:800,height:450,resizeGeneration:5n});assert.equal(c.acknowledge(P.encodeFrameAccepted(2n,s,seq,0)).ack.resizeGeneration,5n);});
 test("native-return","round trip dimensions and diagnostic pixels",()=>{const s=frame(7n),pixels=new Uint8Array(s.width*s.height*4);pixels.fill(17);const bytes=P.encodeNativeImage(2n,s,9n,11n,pixels),image=P.decodeNativeImage(bytes);assert.equal(image.width,640);assert.equal(image.height,360);assert.equal(image.nativeFrame,9n);assert.equal(image.pixels[0],17);});
 test("native-return","large 800x450 image remains decodable",()=>{const s={...frame(8n),width:800,height:450},pixels=new Uint8Array(s.width*s.height*4);const image=P.decodeNativeImage(P.encodeNativeImage(2n,s,10n,12n,pixels));assert.equal(image.pixels.length,800*450*4);});

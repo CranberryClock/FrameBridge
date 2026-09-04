@@ -213,6 +213,18 @@ class Receiver {
   }
  private:
   const char* Backend() const { return options_.protocolOnly?"test-harness":"native-dawn"; }
+  nlohmann::json NativeMode() const {
+#ifdef FRAMEBRIDGE_HAS_DAWN
+    if(renderer_) return renderer_->UpscalerMode();
+#endif
+    return "unavailable";
+  }
+  nlohmann::json RenderScale() const {
+#ifdef FRAMEBRIDGE_HAS_DAWN
+    if(renderer_) return renderer_->RenderScale();
+#endif
+    return nullptr;
+  }
   void Handle(const ClientPtr& socket,const ix::WebSocketMessagePtr& message) {
     std::string response, reason;
     uint16_t closeCode=0;
@@ -246,7 +258,8 @@ class Receiver {
           c->session=std::make_unique<MirrorSession>(++generation_); controller_=c;
           response=nlohmann::json({{"kind","capabilities"},{"version",0},{"sessionId","native-mirror"},
             {"sessionGeneration",std::to_string(generation_)},{"buildId","framebridge-tcw005r"},
-            {"backend",Backend()},{"features",{"explicit-mirror"}},{"byteOrder","little"}}).dump();
+            {"backend",Backend()},{"features",{"explicit-mirror"}},{"byteOrder","little"},
+            {"nativeMode",NativeMode()},{"renderScale",RenderScale()}}).dump();
         } else {
           if(!message->binary || message->str.size()>framebridge::protocol::kMaxPayload+framebridge::protocol::kHeaderBytes)
             throw std::runtime_error("binary size/type");

@@ -577,6 +577,8 @@ void Renderer::Legacy(uint64_t frame,uint32_t width,uint32_t height,const std::s
 }
 void Renderer::Validate() { impl_->Validate(); }
 std::string Renderer::Adapter() const { return impl_->name; }
+std::string Renderer::UpscalerMode() const { return "reference-upscale"; }
+float Renderer::RenderScale() const { return impl_->renderScale; }
 std::string Renderer::Telemetry() const {
     const auto& i=*impl_; return "{\"backend\":\"native-dawn\",\"adapter_vendor\":4318,\"adapter_device\":10208,\"luid_low\":"+
     std::to_string(i.luid.LowPart)+",\"luid_high\":"+std::to_string(i.luid.HighPart)+

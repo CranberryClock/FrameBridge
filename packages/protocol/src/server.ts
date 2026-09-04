@@ -31,7 +31,7 @@ export class BridgeServer {
             if (binary || bytes.length > MAX_HELLO_BYTES || this.controller) throw new Error("hello rejected");
             authenticate(JSON.parse(bytes.toString()),this.token,this.allowedOrigin,request.headers.origin ?? "");
             clearTimeout(timeout); this.controller = socket; generation = ++this.generation; session = new MirrorSession(randomUUID());
-            socket.send(JSON.stringify({kind:"capabilities",version:VERSION,sessionId:session.sessionId,sessionGeneration:String(generation),buildId:"framebridge-tcw004",backend:"test-harness",features:[FEATURE],byteOrder:"little"})); return;
+            socket.send(JSON.stringify({kind:"capabilities",version:VERSION,sessionId:session.sessionId,sessionGeneration:String(generation),buildId:"framebridge-tcw004",backend:"test-harness",features:[FEATURE],byteOrder:"little",nativeMode:"unavailable",renderScale:null})); return;
           }
           if (!binary) throw new Error("post-auth text");
           const m = decode(new Uint8Array(bytes)); session.accept(m);

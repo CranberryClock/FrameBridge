@@ -50,7 +50,8 @@ export function decode(bytes: Uint8Array): BinaryMessage {
   validateMessage(m); requireValid(checksum(m.payload) === v.getUint32(32,true),"checksum mismatch"); return m;
 }
 export type Hello = { kind:"hello"; version:0; token:string; origin:string; three:{version:string;commit:string}; buildId:string; requestedCapabilities:string[]; byteOrder:"little" };
-export type Capabilities = { kind:"capabilities"; version:0; sessionId:string; sessionGeneration:string; buildId:string; backend:"test-harness"|"native-dawn"; features:string[]; byteOrder:"little" };
+export type NativeMode = "unavailable"|"reference-upscale"|"dlss-super-resolution";
+export type Capabilities = { kind:"capabilities"; version:0; sessionId:string; sessionGeneration:string; buildId:string; backend:"test-harness"|"native-dawn"; features:string[]; byteOrder:"little"; nativeMode:NativeMode; renderScale:number|null };
 function record(x: unknown): Record<string, unknown> { requireValid(typeof x === "object" && x !== null && !Array.isArray(x),"invalid object"); return x as Record<string,unknown>; }
 function nonempty(x: unknown): x is string { return typeof x === "string" && x.length > 0 && x.length <= 256; }
 export function validateCapabilities(value: unknown): Capabilities {
@@ -58,6 +59,8 @@ export function validateCapabilities(value: unknown): Capabilities {
   requireValid(c.kind === "capabilities" && c.version === VERSION && nonempty(c.sessionId) && nonempty(c.buildId),"invalid capabilities");
   requireValid((c.backend === "test-harness" || c.backend === "native-dawn") && c.byteOrder === "little" && Array.isArray(c.features) && c.features.every(x => typeof x === "string") && c.features.includes(FEATURE),"unsupported capabilities");
   requireValid(typeof c.sessionGeneration === "string" && /^[1-9][0-9]{0,19}$/.test(c.sessionGeneration) && BigInt(c.sessionGeneration) <= U64_MAX,"invalid session generation");
+  if (c.backend === "test-harness") requireValid(c.nativeMode === "unavailable" && c.renderScale === null,"invalid test-harness native metadata");
+  else requireValid((c.nativeMode === "reference-upscale" || c.nativeMode === "dlss-super-resolution") && typeof c.renderScale === "number" && Number.isFinite(c.renderScale) && c.renderScale > 0 && c.renderScale <= 1,"invalid native runtime metadata");
   return c as Capabilities;
 }
 export function authenticate(value: unknown, token: string, origin: string, headerOrigin: string): void {

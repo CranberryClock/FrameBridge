@@ -21,6 +21,8 @@ class Renderer {
   void Legacy(std::uint64_t frame, std::uint32_t width, std::uint32_t height, const std::string& capture = {});
   void Validate();
   std::string Adapter() const;
+  std::string UpscalerMode() const;
+  float RenderScale() const;
   std::string Telemetry() const;
  private:
   struct Impl;
