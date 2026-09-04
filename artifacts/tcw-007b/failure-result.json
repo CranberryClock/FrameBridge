@@ -1,0 +1,35 @@
+{
+  "status": "BLOCKED_CONTINUOUS_RETURN",
+  "reviewed_baseline": "9a86b46c838faa092996bba6bb5ee822d18b8527",
+  "implementation_commit": "971d25990ef2c10f959d422f874dff46505efa35",
+  "mode": "full_native_output_readback_and_browser_return",
+  "url_mode": "ordinary_live_url",
+  "duration_seconds": 10,
+  "browser": {
+    "logical_frame": 631,
+    "last_sent_frame": 90,
+    "accepted_frame": 26,
+    "outstanding_scene_frames": 64,
+    "images_received": 1,
+    "canvas_submissions": 1,
+    "returned_fps_after_timeout": 0,
+    "stale_fallback": true,
+    "protocol_error": false
+  },
+  "native": {
+    "process_alive_at_timeout": true,
+    "submitted_frames": 3,
+    "acknowledged_frames": 3,
+    "first_image_bytes": 921676,
+    "images_queued": 1,
+    "image_consumed_messages_observed": 0,
+    "stderr_empty": true,
+    "last_completed_operation": "native_image_queued"
+  },
+  "automated_validation": {
+    "typescript_protocol_tests": 80,
+    "typescript_loopback_tests": 15,
+    "native_ctest_passed": 7,
+    "native_ctest_total": 7
+  }
+}
