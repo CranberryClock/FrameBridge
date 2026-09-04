@@ -4,6 +4,7 @@
 #include <string>
 #include <cstdint>
 #include "temporal_frame.h"
+#include <vector>
 
 namespace framebridge::render {
 class Renderer {
@@ -13,7 +14,7 @@ class Renderer {
   Renderer(const Renderer&) = delete;
   Renderer& operator=(const Renderer&) = delete;
   bool Pump();
-  void Submit(const SceneState& state, std::uint64_t dropped, const std::string& capture = {});
+  void Submit(const SceneState& state, std::uint64_t dropped, const std::string& capture = {}, std::vector<std::uint8_t>* output = nullptr);
   void SetSessionGeneration(std::uint64_t generation);
   void Legacy(std::uint64_t frame, std::uint32_t width, std::uint32_t height, const std::string& capture = {});
   void Validate();

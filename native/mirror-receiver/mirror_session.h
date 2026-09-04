@@ -6,6 +6,7 @@
 #include <deque>
 #include <optional>
 #include <string>
+#include <span>
 
 namespace framebridge::native_mirror {
 
@@ -28,6 +29,7 @@ class MirrorSession {
   void Accept(framebridge::protocol::Message message);
   std::optional<CompleteFrame> ProcessOne();
   std::vector<std::uint8_t> EncodeFrameAccepted(const CompleteFrame& frame) const;
+  std::vector<std::uint8_t> EncodeNativeImage(const CompleteFrame& frame, std::uint64_t nativeFrame, std::span<const std::uint8_t> rgba) const;
   std::uint64_t generation() const { return generation_; }
   std::uint64_t droppedFrames() const { return droppedFrames_; }
   std::size_t queuedFrames() const { return queue_.size(); }

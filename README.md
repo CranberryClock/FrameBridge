@@ -25,3 +25,10 @@ TCW-007 remain out of scope until this task passes review.
 TCW-004A is a bounded Streamline/Dawn compatibility preflight scaffold. Its current status is
 `BLOCKED_EXTERNAL_DEPENDENCY` because the pinned NVIDIA SDK and NVIDIA application ID are not available locally; no
 Streamline or DLSS runtime was loaded.
+
+TCW-007 is the active native-return task. The native Dawn/D3D12 reference-upscale
+output is read back as bounded RGBA8 diagnostic data and displayed in the browser
+after authenticated loopback delivery, while the browser remains authoritative.
+The surface is labeled `Native reference upscale — NOT DLSS.` This is CPU
+readback/copy transport, not zero-copy or scanout, and the work stops at the
+TCW-007 supervisor review gate.

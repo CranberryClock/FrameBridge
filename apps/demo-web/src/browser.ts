@@ -1,8 +1,9 @@
 import * as THREE from "three";
 import {WebGPURenderer} from "three/webgpu";
-import {MirrorClient,logicalFrameAt,canonicalState,type ResizeState,MAX_DIMENSION} from "@framebridge/protocol";
+import {MirrorClient,logicalFrameAt,canonicalState,decode,type ResizeState,MAX_DIMENSION,MessageType} from "@framebridge/protocol";
 function element<T extends HTMLElement>(id:string):T {const value=document.getElementById(id);if(!value)throw new Error("missing "+id);return value as T;}
-const canvas=element<HTMLCanvasElement>("cube"),button=element<HTMLButtonElement>("mirror"),tokenInput=element<HTMLInputElement>("token"),portInput=element<HTMLInputElement>("port");
+const canvas=element<HTMLCanvasElement>("cube"),nativeCanvas=element<HTMLCanvasElement>("native-return"),button=element<HTMLButtonElement>("mirror"),tokenInput=element<HTMLInputElement>("token"),portInput=element<HTMLInputElement>("port");
+const nativeContext=nativeCanvas.getContext("2d");
 const put=(id:string,value:unknown)=>{element(id).textContent=String(value);};
 let socket:WebSocket|undefined,mirror:MirrorClient|undefined;
 let viewport:ResizeState={width:640,height:360,resizeGeneration:1n};
@@ -22,6 +23,7 @@ function disconnect(){
  const ws=socket;try{mirror?.disconnect(ws?.readyState===WebSocket.OPEN);}catch{/* teardown must preserve the simulation */}
  ws?.close(1000,"developer disconnect");socket=undefined;mirror=undefined;
  put("connection","disconnected");put("authentication","not authenticated");put("outstanding",0);button.textContent="Connect mirror";
+ nativeCanvas.style.display="none";canvas.style.visibility="visible";put("native-status","OFF — browser fallback");
 }
 function connect(){
  clearProtocolError();
@@ -34,12 +36,13 @@ function connect(){
  ws.onmessage=event=>{if(socket!==ws)return;
   try{
    if(typeof event.data==="string"){const caps=client.authenticate(event.data);clearProtocolError();tokenInput.value="";put("generation",caps.sessionGeneration);put("backend",caps.backend);put("authentication","authenticated");put("connection","connected");sendFrame();return;}
-   const {ack}=client.acknowledge(new Uint8Array(event.data as ArrayBuffer));
-   put("accepted",ack.frame);put("accepted-resize",ack.resizeGeneration);put("dropped",ack.droppedFrames);put("outstanding",client.outstanding);
+   const bytes=new Uint8Array(event.data as ArrayBuffer); const type=decode(bytes).type;
+   if(type===MessageType.NativeImage){const image=client.image(bytes); if(!nativeContext)throw new Error("native canvas unavailable"); nativeCanvas.width=image.width;nativeCanvas.height=image.height;nativeContext.putImageData(new ImageData(new Uint8ClampedArray(image.pixels),image.width,image.height),0,0);nativeCanvas.style.display="block";canvas.style.visibility="hidden";put("native-status","ON — browser displaying native pixels");put("native-frame",image.nativeFrame);put("native-fps","live");}
+   else {const {ack}=client.acknowledge(bytes);put("accepted",ack.frame);put("accepted-resize",ack.resizeGeneration);put("dropped",ack.droppedFrames);put("outstanding",client.outstanding);}
   }catch{fail("invalid capabilities or uncorrelated acknowledgement");}
  };
  ws.onerror=()=>{if(socket===ws)fail("loopback connection error");};
- ws.onclose=()=>{client.disconnect(false);if(socket!==ws)return;socket=undefined;mirror=undefined;put("authentication","not authenticated");put("connection",protocolError?"protocol-error":"disconnected");put("outstanding",0);button.textContent="Connect mirror";};
+ ws.onclose=()=>{client.disconnect(false);if(socket!==ws)return;socket=undefined;mirror=undefined;nativeCanvas.style.display="none";canvas.style.visibility="visible";put("native-status","OFF — browser fallback");put("authentication","not authenticated");put("connection",protocolError?"protocol-error":"disconnected");put("outstanding",0);button.textContent="Connect mirror";};
 }
 button.onclick=()=>socket?disconnect():connect();
 for(const [id,width,height] of [["size640",640,360],["size800",800,450]] as const)element(id).onclick=()=>{canvas.style.width=width+"px";canvas.style.height=height+"px";};

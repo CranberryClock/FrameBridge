@@ -4,7 +4,8 @@ export const VERSION = 0;
 export const HEADER_BYTES = 36;
 export const MAX_HELLO_BYTES = 8192;
 export const MAX_PAYLOAD_BYTES = 1024 * 1024;
-export const MAX_WEBSOCKET_BYTES = HEADER_BYTES + MAX_PAYLOAD_BYTES;
+export const MAX_NATIVE_IMAGE_BYTES = 2 * 1024 * 1024;
+export const MAX_WEBSOCKET_BYTES = HEADER_BYTES + MAX_NATIVE_IMAGE_BYTES;
 export const MAX_LIVE_RESOURCES = 256;
 export const MAX_DECLARED_RESOURCE_BYTES = 64 * 1024 * 1024;
 export const MAX_DRAWS_PER_FRAME = 4096;
@@ -14,19 +15,21 @@ export const MAX_DIMENSION = 8192;
 export const SUPPORTED_FLAGS = 0;
 export const FEATURE = "explicit-mirror";
 const U64_MAX = (1n << 64n) - 1n;
-export enum MessageType { BeginSession = 1, EndSession, Ping, Error, SetRtxMode, CreateBuffer = 16, DestroyResource, BeginFrame = 32, Draw, EndFrame, Resize, FrameAccepted = 48 }
+export enum MessageType { BeginSession = 1, EndSession, Ping, Error, SetRtxMode, CreateBuffer = 16, DestroyResource, BeginFrame = 32, Draw, EndFrame, Resize, FrameAccepted = 48, NativeImage = 49 }
 export const PAYLOAD_SIZES: ReadonlyMap<number, number> = new Map([[1,0],[2,0],[3,0],[4,4],[5,1],[16,8],[17,0],[32,48],[33,16],[34,0],[35,16],[48,40]]);
 export type BinaryMessage = Readonly<{ type: MessageType; flags?: number; sequence: bigint; objectId?: bigint; payload: Uint8Array }>;
 export function requireValid(ok: unknown, reason: string): asserts ok { if (!ok) throw new Error(reason); }
 export function checksum(bytes: Uint8Array): number { let h = 0x811c9dc5; for (const b of bytes) h = Math.imul(h ^ b, 0x01000193) >>> 0; return h; }
 export function validateMessage(m: BinaryMessage): void {
-  requireValid(PAYLOAD_SIZES.has(m.type), "unknown type");
+  requireValid(PAYLOAD_SIZES.has(m.type) || m.type === MessageType.NativeImage, "unknown type");
   requireValid((m.flags ?? 0) === 0, "unsupported flags");
   requireValid(m.sequence > 0n && m.sequence <= U64_MAX, "invalid sequence");
   const id = m.objectId ?? 0n;
   requireValid(id >= 0n && id <= U64_MAX && (![16,17].includes(m.type) || id > 0n), "illegal object id");
-  requireValid(m.payload.byteLength <= MAX_PAYLOAD_BYTES, "maximum payload");
-  requireValid(m.payload.byteLength === PAYLOAD_SIZES.get(m.type), "invalid fixed payload");
+  const max = m.type === MessageType.NativeImage ? MAX_NATIVE_IMAGE_BYTES : MAX_PAYLOAD_BYTES;
+  requireValid(m.payload.byteLength <= max, "maximum payload");
+  if (m.type === MessageType.NativeImage) requireValid(m.payload.byteLength >= 40, "invalid native image payload");
+  else requireValid(m.payload.byteLength === PAYLOAD_SIZES.get(m.type), "invalid fixed payload");
 }
 export function encode(m: BinaryMessage): Uint8Array {
   validateMessage(m);
@@ -147,4 +150,12 @@ export function decodeFrameAccepted(bytes:Uint8Array): FrameAccepted {
   const v = new DataView(m.payload.buffer,m.payload.byteOffset,m.payload.length);
   const a = {sessionGeneration:v.getBigUint64(0,true),frame:v.getBigUint64(8,true),sequence:v.getBigUint64(16,true),droppedFrames:v.getUint32(24,true),status:v.getUint32(28,true),resizeGeneration:v.getBigUint64(32,true)};
   requireValid(a.sequence === m.sequence && a.status === 0 && a.sessionGeneration > 0n && a.frame > 0n && a.resizeGeneration > 0n,"invalid acknowledgement fields"); return a;
+}
+export type NativeImage = Readonly<{sessionGeneration:bigint; browserFrame:bigint; nativeFrame:bigint; resizeGeneration:bigint; width:number; height:number; pixels:Uint8Array}>;
+export function encodeNativeImage(generation:bigint, state:FrameState, nativeFrame:bigint, sequence:bigint, pixels:Uint8Array):Uint8Array {
+  requireValid(nativeFrame > 0n && state.frame > 0n && pixels.length === state.width * state.height * 4,"invalid native image dimensions");
+  const p=new Uint8Array(40+pixels.length),v=new DataView(p.buffer); v.setBigUint64(0,generation,true);v.setBigUint64(8,state.frame,true);v.setBigUint64(16,nativeFrame,true);v.setBigUint64(24,state.resizeGeneration,true);v.setUint32(32,state.width,true);v.setUint32(36,state.height,true);p.set(pixels,40); return encode({type:MessageType.NativeImage,sequence,payload:p});
+}
+export function decodeNativeImage(bytes:Uint8Array):NativeImage {
+  const m=decode(bytes); requireValid(m.type===MessageType.NativeImage,"unexpected native image type"); const v=new DataView(m.payload.buffer,m.payload.byteOffset,m.payload.length); const width=v.getUint32(32,true),height=v.getUint32(36,true); requireValid(width>0&&height>0&&width<=MAX_DIMENSION&&height<=MAX_DIMENSION&&m.payload.length===40+width*height*4,"invalid native image shape"); return {sessionGeneration:v.getBigUint64(0,true),browserFrame:v.getBigUint64(8,true),nativeFrame:v.getBigUint64(16,true),resizeGeneration:v.getBigUint64(24,true),width,height,pixels:m.payload.slice(40)};
 }

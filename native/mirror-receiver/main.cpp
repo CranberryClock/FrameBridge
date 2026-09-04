@@ -126,6 +126,8 @@ class Receiver {
     std::optional<CompleteFrame> frame;
     std::uint64_t sessionGeneration=0;
     std::vector<std::uint8_t> acknowledgement;
+    std::vector<std::uint8_t> nativeImage;
+    bool returnImage=false;
     {
       std::lock_guard lock(mutex_);
       for(auto& [_,c]:clients_) if(!c->session && c->active && Clock::now()>c->deadline) {
@@ -135,7 +137,11 @@ class Receiver {
       if(client && client->active && client->session && Clock::now()>=nextProcess_) {
         sessionGeneration=client->session->generation();
         frame=client->session->ProcessOne();
-        if(frame) acknowledgement=client->session->EncodeFrameAccepted(*frame);
+      if(frame) { acknowledgement=client->session->EncodeFrameAccepted(*frame);
+#ifdef FRAMEBRIDGE_HAS_DAWN
+        returnImage=renderer_ && Clock::now()>=nextReturn_;
+#endif
+      }
       }
     }
     for(auto& s:expired) s->close(1008,"hello timeout");
@@ -151,7 +157,7 @@ class Receiver {
           std::string capture;
           if(!options_.capture.empty() && (state.frame==60 || state.frame==120 || state.frame==180))
             capture=options_.capture+"/native-"+std::to_string(state.frame)+".png";
-          renderer_->Submit(state,drops,capture);
+          renderer_->Submit(state,drops,capture,returnImage?&nativeImage:nullptr);
         }
 #else
         (void)state; (void)drops;
@@ -168,6 +174,7 @@ class Receiver {
           const auto result=client->socket->sendBinary(std::string(acknowledgement.begin(),acknowledgement.end()));
           if(!result.success) throw std::runtime_error("ack send failed");
           ++acknowledged_;
+          if(returnImage) { auto image=client->session->EncodeNativeImage(*frame,++nativeReturnFrame_,nativeImage); const auto sent=client->socket->sendBinary(std::string(image.begin(),image.end())); if(!sent.success) throw std::runtime_error("native image send failed"); nextReturn_=Clock::now()+std::chrono::milliseconds(1000/12); }
         }
       });
       nextProcess_=Clock::now()+std::chrono::milliseconds(delay_);
@@ -251,6 +258,8 @@ class Receiver {
   Clock::time_point nextProcess_{};
   Clock::time_point startedAt_=Clock::now(),nextMemory_{};
   size_t maxQueued_=0;
+  std::uint64_t nativeReturnFrame_=0;
+  Clock::time_point nextReturn_{};
 #ifdef FRAMEBRIDGE_HAS_DAWN
   std::unique_ptr<framebridge::render::Renderer> renderer_;
 #endif

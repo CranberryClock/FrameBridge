@@ -100,5 +100,10 @@ std::vector<std::uint8_t> MirrorSession::EncodeFrameAccepted(const CompleteFrame
   framebridge::protocol::Put64(payload, 32, frame.state.resizeGeneration);
   return framebridge::protocol::Encode({MessageType::FrameAccepted, 0, frame.endSequence, 0, payload});
 }
+std::vector<std::uint8_t> MirrorSession::EncodeNativeImage(const CompleteFrame& frame, std::uint64_t nativeFrame, std::span<const std::uint8_t> rgba) const {
+  Require(nativeFrame>0 && rgba.size()==static_cast<std::size_t>(frame.state.width)*frame.state.height*4,"invalid native image");
+  std::vector<std::uint8_t> payload(40+rgba.size()); framebridge::protocol::Put64(payload,0,generation_);framebridge::protocol::Put64(payload,8,frame.state.frame);framebridge::protocol::Put64(payload,16,nativeFrame);framebridge::protocol::Put64(payload,24,frame.state.resizeGeneration);framebridge::protocol::Put32(payload,32,frame.state.width);framebridge::protocol::Put32(payload,36,frame.state.height);std::copy(rgba.begin(),rgba.end(),payload.begin()+40);
+  return framebridge::protocol::Encode({MessageType::NativeImage,0,frame.endSequence,0,payload});
+}
 
 }  // namespace framebridge::native_mirror

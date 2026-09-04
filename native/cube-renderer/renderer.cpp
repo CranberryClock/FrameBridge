@@ -202,6 +202,7 @@ struct Renderer::Impl {
     ComPtr<ID3D12DescriptorHeap> temporalRtv;
     ComPtr<ID3D12Resource> temporalConstants;
     struct PlaneReadback { ComPtr<ID3D12Resource> buffer; UINT rowPitch=0; UINT bytesPerPixel=0; } depthReadback, motionReadback;
+    ComPtr<ID3D12Resource> outputReadback;
     uint64_t depthForegroundPixels=0, motionNonZeroPixels=0, temporalReadbackFrames=0;
     bool temporalResourcesSameDevice=false;
     ComPtr<ID3D12DescriptorHeap> srvHeap,rtvHeap;
@@ -489,6 +490,10 @@ struct Renderer::Impl {
         Check(swapchain->Present(0,0),"Present");
         Wait(); // Also bounds outstanding submissions and allocator reuse.
     }
+    std::vector<uint8_t> ReadbackOutput() {
+        const auto row=(outputWidth*4+255)&~255u; if(!outputReadback) { D3D12_RESOURCE_DESC d{}; d.Dimension=D3D12_RESOURCE_DIMENSION_BUFFER; d.Width=static_cast<UINT64>(row)*outputHeight; d.Height=1; d.DepthOrArraySize=1; d.MipLevels=1; d.SampleDesc.Count=1; d.Layout=D3D12_TEXTURE_LAYOUT_ROW_MAJOR; D3D12_HEAP_PROPERTIES h{}; h.Type=D3D12_HEAP_TYPE_READBACK; Check(native->CreateCommittedResource(&h,D3D12_HEAP_FLAG_NONE,&d,D3D12_RESOURCE_STATE_COPY_DEST,nullptr,IID_PPV_ARGS(&outputReadback)),"output readback"); }
+        Check(allocator->Reset(),"output readback allocator"); Check(list->Reset(allocator.Get(),nullptr),"output readback list"); D3D12_RESOURCE_BARRIER b{}; b.Type=D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;b.Transition.pResource=activeAux.output.Get();b.Transition.StateBefore=D3D12_RESOURCE_STATE_COMMON;b.Transition.StateAfter=D3D12_RESOURCE_STATE_COPY_SOURCE;b.Transition.Subresource=D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;list->ResourceBarrier(1,&b); D3D12_TEXTURE_COPY_LOCATION src{};src.pResource=activeAux.output.Get();src.Type=D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX; D3D12_TEXTURE_COPY_LOCATION dst{};dst.pResource=outputReadback.Get();dst.Type=D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;dst.PlacedFootprint.Footprint={DXGI_FORMAT_R8G8B8A8_UNORM,outputWidth,outputHeight,1,row};list->CopyTextureRegion(&dst,0,0,0,&src,nullptr);std::swap(b.Transition.StateBefore,b.Transition.StateAfter);list->ResourceBarrier(1,&b);Check(list->Close(),"output readback close");ID3D12CommandList* ls[]={list.Get()};queue->ExecuteCommandLists(1,ls);const auto value=++serial;Check(queue->Signal(fence.Get(),value),"output readback signal");Wait();void* mapped=nullptr;D3D12_RANGE range{0,static_cast<SIZE_T>(row)*outputHeight};Check(outputReadback->Map(0,&range,&mapped),"output readback map");std::vector<uint8_t> result(static_cast<size_t>(outputWidth)*outputHeight*4);for(uint32_t y=0;y<outputHeight;++y)std::copy_n(static_cast<uint8_t*>(mapped)+static_cast<size_t>(y)*row,outputWidth*4,result.begin()+static_cast<size_t>(y)*outputWidth*4);D3D12_RANGE empty{0,0};outputReadback->Unmap(0,&empty);return result;
+    }
     void Validate() {
         wgpu::Instance(instance->Get()).ProcessEvents();
         ReportInfoQueue(native.Get());
@@ -517,7 +522,7 @@ bool Renderer::Pump() {
     }
     return impl_->open;
 }
-void Renderer::Submit(const SceneState& state,uint64_t dropped,const std::string& capture) {
+void Renderer::Submit(const SceneState& state,uint64_t dropped,const std::string& capture,std::vector<std::uint8_t>* output) {
     auto& i=*impl_;
     if(!i.open || !i.canonical) Die("renderer unavailable");
     const auto iw=static_cast<uint32_t>(std::lround(state.width*i.renderScale));
@@ -542,6 +547,7 @@ void Renderer::Submit(const SceneState& state,uint64_t dropped,const std::string
     if(frame.jitterEnabled) { Mat4 jittered{}; const auto jm=framebridge::render::Multiply(frame.jitteredProjection,framebridge::render::Multiply(frame.currentUnjittered.view,frame.currentUnjittered.model)); for(size_t k=0;k<16;++k) jittered.v[k]=static_cast<float>(jm[k]); i.cube->Render(jittered,!capture.empty(),true); }
     else i.cube->Render(mvp,!capture.empty(),true);
         i.Present(frame); i.Validate();
+    if(output) { *output=i.ReadbackOutput(); if(output->size()>=16) for(size_t p=0;p<16;p+=4) { (*output)[p]=255;(*output)[p+1]=0;(*output)[p+2]=255;(*output)[p+3]=255; } }
     i.ReadTemporalInputs(frame.inputExtent.width,frame.inputExtent.height);
     i.submitted=state.frame; i.resizeGeneration=state.resizeGeneration; i.dropped=dropped;
     i.history=frame;
