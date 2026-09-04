@@ -18,7 +18,7 @@ let renderer:WebGPURenderer|undefined,camera:THREE.PerspectiveCamera|undefined;
 function current(){return {...canonicalState(frame,viewport),cameraZ:cameraDistance};}
 function fail(message:string){protocolError=message;put("error",message);put("connection","protocol-error");socket?.close(1002,"protocol validation");}
 function clearProtocolError(){protocolError="";put("error","");}
-function viewportUI(){put("dimensions",viewport.width+" × "+viewport.height);put("resize",viewport.resizeGeneration);}
+function viewportUI(){put("dimensions",viewport.width+" × "+viewport.height);put("resize",viewport.resizeGeneration);put("native-input",Math.max(1,Math.round(viewport.width*.5))+" × "+Math.max(1,Math.round(viewport.height*.5)));put("native-output",viewport.width+" × "+viewport.height);put("native-scale","2.0× input → output");}
 function sendFrame(){if(socket?.readyState!==WebSocket.OPEN||!mirror?.authenticated)return;
  try{const seq=mirror.frame(current());if(seq!==undefined){sentAt.set(frame,performance.now());while(sentAt.size>128)sentAt.delete(sentAt.keys().next().value!);put("sent",frame);put("outstanding",mirror.outstanding);}}catch{fail("outbound protocol or backpressure failure");}}
 function disconnect(){
