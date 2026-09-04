@@ -2,7 +2,7 @@
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>The Cube Works — FrameBridge</title>
 <style>body{font:16px system-ui;background:#111827;color:#e5e7eb;margin:24px}main{max-width:1100px}label,button{margin-right:12px}button,input{font:inherit;padding:6px}#cube-wrap{position:relative;width:640px;height:360px;margin-top:16px;border:1px solid #475569}#cube,#native-return{position:absolute;inset:0;width:100%;height:100%}#native-return{display:none}dl{display:grid;grid-template-columns:repeat(4,minmax(160px,1fr));gap:8px}dt{color:#94a3b8}dd{margin:0}#error{color:#fca5a5}</style></head><body><main>
 <h1>The Cube Works</h1><p id="mode">MIRROR SPIKE — NOT THREE BACKEND</p><p id="renderer">Initializing browser WebGPU fallback</p>
-<p>Host: 127.0.0.1</p><label>Ephemeral port <input id="port" inputmode="numeric" size="6"></label><label>Session token <input id="token" type="password" autocomplete="off" size="18"></label><button id="mirror">Connect mirror</button>
+<p>Host: 127.0.0.1</p><label>Ephemeral port <input id="port" inputmode="numeric" size="6"></label><label>Session token <input id="token" type="password" autocomplete="off" size="18"></label><button id="mirror">Connect mirror</button><label>Camera distance <input id="camera" type="range" min="2" max="5" step="0.1" value="3"></label><span id="camera-value">3.0</span>
 <dl>
 <div><dt>Connection</dt><dd id="connection">disconnected</dd></div><div><dt>Authentication</dt><dd id="authentication">not authenticated</dd></div>
 <div><dt>Backend</dt><dd id="backend">—</dd></div><div><dt>Session generation</dt><dd id="generation">—</dd></div>
@@ -10,7 +10,7 @@
 <div><dt>Bridge accepted logical frame</dt><dd id="accepted">—</dd></div><div><dt>Dropped complete frames</dt><dd id="dropped">0</dd></div>
 <div><dt>Canvas dimensions</dt><dd id="dimensions">640 × 360</dd></div><div><dt>Current resize generation</dt><dd id="resize">1</dd></div>
 <div><dt>Acknowledged resize generation</dt><dd id="accepted-resize">—</dd></div><div><dt>Outstanding frames</dt><dd id="outstanding">0</dd></div>
-<div><dt>Native return</dt><dd id="native-status">OFF — browser fallback</dd></div><div><dt>Native frame</dt><dd id="native-frame">—</dd></div><div><dt>Returned FPS</dt><dd id="native-fps">—</dd></div>
+<div><dt>Native return</dt><dd id="native-status">OFF — browser fallback</dd></div><div><dt>Images received</dt><dd id="native-received">0</dd></div><div><dt>Images displayed</dt><dd id="native-displayed">0</dd></div><div><dt>Returned FPS</dt><dd id="native-fps">—</dd></div><div><dt>Returned browser frame</dt><dd id="native-browser-frame">—</dd></div><div><dt>Native frame</dt><dd id="native-frame">—</dd></div><div><dt>Last image age</dt><dd id="native-age">—</dd></div><div><dt>Return status</dt><dd id="native-stale">waiting</dd></div>
 </dl><p>Last protocol error: <span id="error">—</span></p>
 <button id="size640">640 × 360</button><button id="size800">800 × 450</button>
-<p>Native reference upscale — NOT DLSS.</p><div id="cube-wrap"><canvas id="cube" width="640" height="360"></canvas><canvas id="native-return" width="640" height="360"></canvas></div></main><script type="module" src="/src/browser.ts"></script></body></html>
+<p>Native reference upscale — NOT DLSS. <span id="mode-detail">LIVE return</span></p><div id="cube-wrap"><canvas id="cube" width="640" height="360"></canvas><canvas id="native-return" width="640" height="360"></canvas></div></main><script type="module" src="/src/browser.ts"></script></body></html>

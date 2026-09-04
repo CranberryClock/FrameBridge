@@ -2,10 +2,10 @@ import * as THREE from "three";
 import {WebGPURenderer} from "three/webgpu";
 import {MirrorClient,logicalFrameAt,canonicalState,decode,type ResizeState,MAX_DIMENSION,MessageType} from "@framebridge/protocol";
 function element<T extends HTMLElement>(id:string):T {const value=document.getElementById(id);if(!value)throw new Error("missing "+id);return value as T;}
-const canvas=element<HTMLCanvasElement>("cube"),nativeCanvas=element<HTMLCanvasElement>("native-return"),button=element<HTMLButtonElement>("mirror"),tokenInput=element<HTMLInputElement>("token"),portInput=element<HTMLInputElement>("port");
+const canvas=element<HTMLCanvasElement>("cube"),nativeCanvas=element<HTMLCanvasElement>("native-return"),wrapper=element<HTMLDivElement>("cube-wrap"),button=element<HTMLButtonElement>("mirror"),tokenInput=element<HTMLInputElement>("token"),portInput=element<HTMLInputElement>("port"),cameraInput=element<HTMLInputElement>("camera");
 const nativeContext=nativeCanvas.getContext("2d");
 const put=(id:string,value:unknown)=>{element(id).textContent=String(value);};
-let socket:WebSocket|undefined,mirror:MirrorClient|undefined;
+let socket:WebSocket|undefined,mirror:MirrorClient|undefined;let cameraDistance=3;let received=0,displayed=0;const imageTimes:number[]=[];const sentAt=new Map<bigint,number>();let lastImageAt=0;
 let viewport:ResizeState={width:640,height:360,resizeGeneration:1n};
 const start=performance.now();let frame=1n;let protocolError="";
 // Explicit deterministic capture mode; normal browser-authoritative simulation is unchanged.
@@ -13,17 +13,17 @@ const parityValue=new URLSearchParams(location.search).get("parity");
 const parityFrame=parityValue&&["60","120","180"].includes(parityValue)?BigInt(parityValue):undefined;
 if(parityFrame)put("mode","MIRROR SPIKE — NOT THREE BACKEND | PARITY CAPTURE: frame "+parityFrame);
 let renderer:WebGPURenderer|undefined,camera:THREE.PerspectiveCamera|undefined;
-function current(){return canonicalState(frame,viewport);}
+function current(){return {...canonicalState(frame,viewport),cameraZ:cameraDistance};}
 function fail(message:string){protocolError=message;put("error",message);put("connection","protocol-error");socket?.close(1002,"protocol validation");}
 function clearProtocolError(){protocolError="";put("error","");}
 function viewportUI(){put("dimensions",viewport.width+" × "+viewport.height);put("resize",viewport.resizeGeneration);}
 function sendFrame(){if(socket?.readyState!==WebSocket.OPEN||!mirror?.authenticated)return;
- try{const seq=mirror.frame(current());if(seq!==undefined){put("sent",frame);put("outstanding",mirror.outstanding);}}catch{fail("outbound protocol or backpressure failure");}}
+ try{const seq=mirror.frame(current());if(seq!==undefined){sentAt.set(frame,performance.now());while(sentAt.size>128)sentAt.delete(sentAt.keys().next().value!);put("sent",frame);put("outstanding",mirror.outstanding);}}catch{fail("outbound protocol or backpressure failure");}}
 function disconnect(){
  const ws=socket;try{mirror?.disconnect(ws?.readyState===WebSocket.OPEN);}catch{/* teardown must preserve the simulation */}
  ws?.close(1000,"developer disconnect");socket=undefined;mirror=undefined;
  put("connection","disconnected");put("authentication","not authenticated");put("outstanding",0);button.textContent="Connect mirror";
- nativeCanvas.style.display="none";canvas.style.visibility="visible";put("native-status","OFF — browser fallback");
+ nativeCanvas.style.display="none";canvas.style.visibility="visible";put("native-status","OFF — browser fallback");put("native-stale","fallback");
 }
 function connect(){
  clearProtocolError();
@@ -37,15 +37,16 @@ function connect(){
   try{
    if(typeof event.data==="string"){const caps=client.authenticate(event.data);clearProtocolError();tokenInput.value="";put("generation",caps.sessionGeneration);put("backend",caps.backend);put("authentication","authenticated");put("connection","connected");sendFrame();return;}
    const bytes=new Uint8Array(event.data as ArrayBuffer); const type=decode(bytes).type;
-   if(type===MessageType.NativeImage){const image=client.image(bytes); if(!nativeContext)throw new Error("native canvas unavailable"); nativeCanvas.width=image.width;nativeCanvas.height=image.height;nativeContext.putImageData(new ImageData(new Uint8ClampedArray(image.pixels),image.width,image.height),0,0);nativeCanvas.style.display="block";canvas.style.visibility="hidden";put("native-status","ON — browser displaying native pixels");put("native-frame",image.nativeFrame);put("native-fps","live");}
+   if(type===MessageType.NativeImage){const image=client.image(bytes);if(!nativeContext)throw new Error("native canvas unavailable");const now=performance.now();nativeCanvas.width=image.width;nativeCanvas.height=image.height;nativeContext.putImageData(new ImageData(new Uint8ClampedArray(image.pixels),image.width,image.height),0,0);nativeCanvas.style.display="block";canvas.style.visibility="hidden";received++;displayed++;lastImageAt=now;imageTimes.push(now);while(imageTimes[0]!<now-1000)imageTimes.shift();put("native-status","ON — browser displaying native pixels");put("native-received",received);put("native-displayed",displayed);put("native-browser-frame",image.browserFrame);put("native-frame",image.nativeFrame);put("native-age",Math.max(0,now-(sentAt.get(image.browserFrame)??now)).toFixed(1)+" ms");put("native-fps",imageTimes.length.toFixed(1));put("native-stale","fresh");}
    else {const {ack}=client.acknowledge(bytes);put("accepted",ack.frame);put("accepted-resize",ack.resizeGeneration);put("dropped",ack.droppedFrames);put("outstanding",client.outstanding);}
   }catch{fail("invalid capabilities or uncorrelated acknowledgement");}
  };
  ws.onerror=()=>{if(socket===ws)fail("loopback connection error");};
- ws.onclose=()=>{client.disconnect(false);if(socket!==ws)return;socket=undefined;mirror=undefined;nativeCanvas.style.display="none";canvas.style.visibility="visible";put("native-status","OFF — browser fallback");put("authentication","not authenticated");put("connection",protocolError?"protocol-error":"disconnected");put("outstanding",0);button.textContent="Connect mirror";};
+ ws.onclose=()=>{client.disconnect(false);if(socket!==ws)return;socket=undefined;mirror=undefined;nativeCanvas.style.display="none";canvas.style.visibility="visible";put("native-status","OFF — browser fallback");put("native-stale","fallback");put("authentication","not authenticated");put("connection",protocolError?"protocol-error":"disconnected");put("outstanding",0);button.textContent="Connect mirror";};
 }
 button.onclick=()=>socket?disconnect():connect();
-for(const [id,width,height] of [["size640",640,360],["size800",800,450]] as const)element(id).onclick=()=>{canvas.style.width=width+"px";canvas.style.height=height+"px";};
+cameraInput.oninput=()=>{cameraDistance=Number(cameraInput.value);put("camera-value",cameraDistance.toFixed(1));};
+for(const [id,width,height] of [["size640",640,360],["size800",800,450]] as const)element(id).onclick=()=>{wrapper.style.width=width+"px";wrapper.style.height=height+"px";canvas.style.width=width+"px";canvas.style.height=height+"px";nativeCanvas.style.width=width+"px";nativeCanvas.style.height=height+"px";};
 new ResizeObserver(entries=>{
  const rect=entries[0]?.contentRect;if(!rect)return;
  const width=Math.round(rect.width),height=Math.round(rect.height);
@@ -67,4 +68,5 @@ async function main(){
   put("browser-frame",frame);sendFrame();renderer!.render(scene,camera!);requestAnimationFrame(animate);}
  requestAnimationFrame(animate);
 }
+setInterval(()=>{if(lastImageAt&&performance.now()-lastImageAt>2500&&nativeCanvas.style.display!=="none"){nativeCanvas.style.display="none";canvas.style.visibility="visible";put("native-status","STALE — browser fallback");put("native-stale","stale");}},500);
 void main().catch(()=>{put("renderer","WebGPU initialization failed");});
