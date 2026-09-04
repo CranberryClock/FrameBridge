@@ -1,0 +1,10 @@
+git status --short                                      # exit 0; clean after implementation commit
+cmake -S . -B build/tcw008 -G Ninja -DCMAKE_BUILD_TYPE=Release -DDAWN_ROOT=D:/Dev/Tools/FrameBridge/dawn-34b1fca4  # exit 0
+cmake --build build/tcw008 --config Release             # exit 0
+ctest --test-dir build/tcw008 --output-on-failure       # exit 0; 7/7 passed
+corepack pnpm --filter @framebridge/protocol build      # exit 0
+corepack pnpm --filter @framebridge/protocol test       # exit 0; protocol 82, loopback 15
+corepack pnpm --filter @framebridge/demo-web build      # exit 0
+node tools/tcw007b-isolation.mjs build/tcw008/framebridge-native-mirror.exe disabled 320   # exit 0; 30/30 ACK, no return
+node tools/tcw007b-isolation.mjs build/tcw008/framebridge-native-mirror.exe discard 640    # exit 0; 30/30 ACK, readback path
+Live Chrome/native test: texture revisions 1 and 2, 800x450 resize, disconnect/reconnect   # observed pass

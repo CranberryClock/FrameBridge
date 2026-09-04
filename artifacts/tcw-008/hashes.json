@@ -1,0 +1,14 @@
+{
+  "implementation_commit": "5059ae275c4358bf6039dd358b0ec547da50dbb3",
+  "source_hashes": {
+    "apps/demo-web/src/browser.ts": "6cd6aa8c3e2a2554bc5a177936bb2ab7e6152bc28ca0820e4726dea554fffd77",
+    "native/bridge/codec.hpp": "ca8c89116cd0473c0d2fcadde74323185c5234df9bf77cc277708f4b56cc9781",
+    "native/cube-renderer/renderer.cpp": "bd4ae4a3e541fd12f77448015b95931efb7cf209d0ded9643b811ca86601559e",
+    "native/mirror-receiver/main.cpp": "33e3cf179d2363c6bb67a869add2d6a318fc5fbb71a2ba2fa02b586811d392c2",
+    "native/mirror-receiver/mirror_session.cpp": "c0084ec71e7eb8b05ca42d911b36316f0c4fbba64052402491618b76f333a129",
+    "packages/protocol/src/index.ts": "0f94c615b917fe0d1c4eeeaf92f2babbe5586198009eb90f36a0696bab52a2ec",
+    "packages/protocol/src/client.ts": "eea640fff3d8d892c259359fc378fc8ca52fa3d002ad539a88cf76dfc3078124",
+    "third_party/ixwebsocket-limits.cmake": "52d90e712aae6c106b412405c8cf9279508b3fbf55f6b951a56fba11c1a72b00"
+  },
+  "evidence_hashes": {"changed-files.json":"3bd959d23b111711f0fd22a6e0cb510e3f6de16f3c2f0b6b0a6844c3fb6fd234","commands.txt":"d4e9e06cb9567407261c903f3ff60e7ce4196ad84e55ffbd7d38f01963c3f8d1","human-browser.json":"4f9cec47d6405ec9e8eadd77d397404f8047a1009a26505bee45c1328db60011","manifest.json":"447873d988d7b828175272c7b049c9fabdbdcdb4878ac36ab6c4ee86360c0266"}
+}

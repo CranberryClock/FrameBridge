@@ -1,0 +1,23 @@
+{
+  "task": "TCW-008",
+  "status": "SUPERVISOR_REVIEW",
+  "implementation_commit": "5059ae275c4358bf6039dd358b0ec547da50dbb3",
+  "git_clean_after_implementation": true,
+  "scope": "browser-authoritative 256x256 RGBA8 texture mirrored to native Dawn and returned through native reference upscale; NOT DLSS",
+  "gates": {
+    "TCW-BUILD-001": "PASS",
+    "TCW-PROTO-001": "PASS",
+    "TCW-PROTO-002": "PASS",
+    "TCW-PROTO-003": "PASS narrow scene and texture mirror",
+    "TCW-CONT-001": "PASS live browser/native frame and resize continuity",
+    "TCW-008-texture-revision": "PASS",
+    "TCW-008-real-soak": "NOT_RUN; prior accepted TCW-004 soak retained; no repeated long soak run",
+    "full-browser-to-native-visual-continuity": "PENDING_SUPERVISOR_REVIEW"
+  },
+  "adapter": {"vendor": "NVIDIA", "device_id": "0x27e0", "luid_verified": true},
+  "transport_patch": {"upstream_source_sha256_normalized_lf": "4083bbf2c121ae767a22a4626dfd20b000392979e13dc43ab8fbbbe76238506a", "generated_patched_source_sha256": "f922904df16703f1ef2aa8df7f89e3817835643a4a534721f2b16d6c8cbfdade", "submodule_pristine": true},
+  "dependencies": {"dawn_commit": "34b1fca4d6c3d7025a2231d82b4fc719ca57fd71", "three_version": "0.185.0", "pnpm": "10.14.0", "node": "22.18.0", "msvc": "19.44.35228.0", "windows_sdk": "10.0.26100"},
+  "live_browser_result": "human-browser.json",
+  "evidence_is_redacted": true,
+  "secrets_or_tokens_committed": false
+}

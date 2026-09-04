@@ -1,0 +1,4 @@
+{
+  "implementation_commit": "5059ae275c4358bf6039dd358b0ec547da50dbb3",
+  "files": ["README.md","apps/demo-web/index.html","apps/demo-web/src/browser.ts","native/bridge/codec.hpp","native/cube-renderer/renderer.cpp","native/cube-renderer/renderer.h","native/mirror-receiver/main.cpp","native/mirror-receiver/mirror_session.cpp","native/mirror-receiver/mirror_session.h","native/mirror-receiver/mirror_session_test.cpp","packages/protocol/src/client.ts","packages/protocol/src/index.ts","packages/protocol/src/protocol.test.ts","plan/tcw008.md","third_party/ixwebsocket-limits.cmake","tools/tcw007b-isolation.mjs"]
+}

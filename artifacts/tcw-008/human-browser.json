@@ -1,0 +1,10 @@
+{
+  "status": "PASS",
+  "backend": "native-dawn",
+  "token": "REDACTED_NOT_RECORDED",
+  "initial": {"session_generation": 1, "texture_revision_applied": 1, "browser_frame": 5462, "accepted_frame": 5462, "native_images_displayed": 32, "native_return": "ON", "protocol_error": null},
+  "texture_replacement": {"revision": 2, "applied": true, "native_return_remained_live": true},
+  "resize": {"requested": "800x450", "current_generation": 2, "acknowledged_generation": 2, "native_return": "ON"},
+  "disconnect_reconnect": {"pre_disconnect_browser_frame": 6230, "pre_disconnect_generation": 1, "browser_continued_while_disconnected": true, "post_reconnect_browser_frame": 6452, "post_reconnect_generation": 2, "texture_revision_after_reconnect": 2, "native_return": "ON", "protocol_error": null},
+  "notes": ["Browser remained authoritative and continued rendering during disconnect.", "Native returned pixels were displayed by the browser; no native scene regeneration was used.", "This is a narrow textured mirror proof, not a Three.js backend or DLSS." ]
+}
