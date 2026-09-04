@@ -21,7 +21,10 @@ export class MirrorClient {
   }
   frame(state:FrameState):bigint | undefined {
     if (!this.caps || state.frame <= this.lastSent) return undefined;
-    requireValid(this.pending.size < 1024,"outstanding frame quota");
+    // The native renderer may be slower than the browser cadence. Keep a
+    // bounded client window and skip this sample; the next animation tick
+    // carries the current browser-authoritative state.
+    if (this.pending.size >= 64) return undefined;
     if (state.resizeGeneration !== this.lastResize) {
       this.message(MessageType.Resize,encodeResize(state)); this.lastResize = state.resizeGeneration;
     }
