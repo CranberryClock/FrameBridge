@@ -1,46 +1,86 @@
-# FrameBridge
+# FrameBridge — The Cube Works
 
-FrameBridge is a Windows research system. The Cube Works is its first pinned Three.js showcase, retaining the ordinary browser WebGPU cube.
+An open research prototype exploring whether a Three.js/WebGPU webpage can hand rendering work to an explicitly installed native Dawn/D3D12 process and receive the resulting pixels back in the browser.
 
-TCW-001 through TCW-003 are complete. TCW-004 is **MIRROR SPIKE — NOT THREE BACKEND**. Its Node loopback endpoint is test/developer infrastructure. The browser owns simulation and scene state.
+**The cube works. The product path does not.**
 
-The accepted TCW-004 rework adds explicit binary session lifecycle, correlated frame/resize acknowledgements, independent TS/C++ fixtures, protocol rejection checks and delayed-processor backpressure tests. CreateBuffer and Draw remain unused reserved spike messages; the active contract is scene state, viewport/Resize, and lifecycle. The original create/update/draw/destroy fragmentation formulation is superseded by the narrow human mirror gate. TCW-BUILD-001, TCW-PROTO-001/002/003/004 and TCW-CONT-001 pass. The 240 Hz human result plus deterministic 120/144 Hz tests superseded the physical 120/144 Hz check. The accepted 1,800-second run retains its original source attribution. See the [accepted evidence manifest](artifacts/tcw-004/manifest.json) and [protocol contract](docs/tcw004-protocol.md).
+This repository documents a working browser-to-native rendering experiment. It is not a production renderer, browser plug-in, sandbox escape, or working DLSS integration*. (yet)
 
-Local validation: `node tools/tcw004-validate.mjs` records exact commands, output, and exit codes, including executing the C++ test. Run in a clean checkout to prove frozen installation.
+## What was proven
 
-Run repeated diagnostics with `$env:TCW004_DURATION_SECONDS='60'; node tools/tcw004-soak.mjs`. Commit stable implementation before acceptance, then run with duration 1800. Every run writes a unique directory under artifacts/tcw-004/runs with source/runtime hashes, timestamps, measured acceptance checks, memory samples, and process exit code. Current gate decisions belong in the evidence manifest; accepted historical evidence is not rewritten by TCW-005R.
+The prototype demonstrated this round trip on Windows with Chrome, WebGPU, Dawn, D3D12, and an NVIDIA RTX system:
 
-TCW-004's accepted scope is browser/mirror continuity, not native visual rendering.
+```text
+Three.js/WebGPU scene → authenticated loopback bridge → native Dawn/D3D12
+→ reference upscale → RGBA8 pixel return → browser canvas
+```
 
-TCW-005R completes the direct C++ receiver with the recovered pinned Dawn/D3D12 renderer and a separate Win32 comparison window. The browser's canonical solid cyan cube state drives native rendering; acknowledgements follow successful GPU submission/presentation. Node is only the development asset server or test client, never a frame proxy. Clean Release builds, direct real-Chrome integration, matrix/corner parity, reconnect/resize tests and the 600-second native-rendered stability run are recorded in the [TCW-005 evidence manifest](artifacts/tcw-005/manifest.json). Automated and human supervisor status is `PASS`. The supervisor validated smooth motion, back-and-forth motion, reconnect continuity and clean close; the personal-token screenshot was intentionally not published. See [native mirror notes](docs/tcw005-native-mirror.md) and the [human procedure](artifacts/tcw-005/human-browser-steps.md).
+The browser remained authoritative for scene state, camera, animation, and texture data. A textured cube was rendered natively and returned to the page. Resize, reconnect, frame pacing, backpressure, and texture revision behavior were exercised.
 
-Native rendering is now exercised and browser-to-native visual continuity is accepted by the human supervisor. DLSS, Streamline runtime integration, extension, installer, custom Three.js backend, and Unreal work remain out of scope.
+The native output currently travels through readback and transport. This makes the path observable, but introduces substantial latency and is not evidence of a useful performance improvement.
 
-TCW-006 is historical temporal-input and replaceable reference-upscaler work. Its
-adds native render/input/output resources, GPU-written depth and motion readbacks,
-deterministic unjittered motion vectors, reset/history rules, optional Halton jitter diagnostics and a GPU
-`reference-upscale` path explicitly labeled `NOT DLSS`. Streamline, DLSS and
-TCW-007 remain out of scope until this task passes review.
+## What was not proven
 
-TCW-004A is a bounded Streamline/Dawn compatibility preflight scaffold. Its current status is
-`BLOCKED_EXTERNAL_DEPENDENCY` because the pinned NVIDIA SDK and NVIDIA application ID are not available locally; no
-Streamline or DLSS runtime was loaded.
+DLSS Super Resolution was **not** integrated in this release build or evaluated on this main branch. The final feasibility task was closed because the required external NVIDIA prerequisites were unavailable for this experiment: Streamline/DLSS SDK, approved application ID, governed runtime download, license/redistribution path, and a loaded Streamline runtime.
 
-TCW-007B Recovery completes the native-return experiment's one-image stall recovery. The native Dawn/D3D12 reference-upscale
-output is read back as bounded RGBA8 diagnostic data and displayed in the browser
-after authenticated loopback delivery, while the browser remains authoritative.
-The surface is labeled `Native reference upscale — NOT DLSS.` This is CPU
-readback/copy transport, not zero-copy or scanout. TCW-006R temporal findings
-remain unresolved deferred debt. TCW-007B Recovery is complete and stops at its
-supervisor review gate. TCW-008 is the narrow textured native-return proof: the browser-generated 256x256 RGBA8 texture is mirrored by revision, rendered by Dawn, and returned through the native reference-upscale path. It is not a Three.js backend and is not DLSS; evidence is under `artifacts/tcw-008/` and the work stops at supervisor review.
+No NVIDIA binaries, secrets, or private SDK paths are included. 
+Do not describe this demo as “DLSS in Three.js.” 
+Describe it as a native Dawn bridge with a vendor-independent reference upscale.
 
-TCW-009 closes the bounded DLSS feasibility attempt as outcome **B — blocked by
-specific external prerequisites**. Streamline 2.12 headers/runtime binaries and
-an NVIDIA-provided NGX application ID are not configured on the validated
-machine, so no Streamline module was loaded and no DLSS evaluation was claimed.
-The latest reference path remains usable and now reports its active mode and
-render scale to the browser instead of relying on hardcoded UI text. Its fresh
-10-second baseline returned about 11 FPS at 320x180 to 640x360 and did not
-demonstrate acceleration or image-quality benefit. See the
-[TCW-009 closeout](docs/tcw009-dlss-closeout.md) and
-[sanitized evidence](artifacts/tcw-009/manifest.json).
+The native frame must be derived from the pinned Three.js renderer/backend lifecycle—not from a separately hand-authored look-alike cube.
+
+The experiment is closed at the research boundary. See the [TCW-009 closeout](https://github.com/CranberryClock/FrameBridge/commit/76dd0e593bdc28d9e2d0b3f7fd7a3c1f1ea9608f).
+
+| Area | Status |
+| --- | --- |
+| Browser Three.js/WebGPU scene | Demonstrated |
+| Authenticated loopback bridge | Demonstrated |
+| Native Dawn/D3D12 rendering | Demonstrated |
+| Native texture sampling | Demonstrated |
+| Native output returned to browser | Demonstrated |
+| Reference upscale | Demonstrated |
+| Genuine NVIDIA DLSS | Blocked by external prerequisites | No Vendor approval
+| Zero-copy browser presentation | Not implemented |
+| Production performance | Not claimed |
+
+## Roles
+
+- **Supervisor (CranberryClock/Gizmo/ChatGPT):** owns architecture, scope, gates, and review decisions.
+- **Human driver (CranberryClock):** operates the Windows/RTX machine, grants SDK licenses, runs hardware tests, captures visual evidence, and chooses product direction.
+- **Engineer (Codex/CranberryClock):** implements one approved task at a time, tests it, and returns an evidence bundle.
+
+## Getting started
+
+This is primarily a reproducible engineering handoff and evidence archive. The original prototype was validated on Windows 11 x64, Chrome/WebGPU, an NVIDIA RTX GPU, Visual Studio/C++ build tools, and D3D12-capable drivers.
+
+1. Read [`AGENTS.md`](AGENTS.md).
+2. Read [`docs/00_PROJECT_CHARTER.md`](docs/00_PROJECT_CHARTER.md) and [`docs/02_ARCHITECTURE.md`](docs/02_ARCHITECTURE.md).
+3. Read [`docs/11_VIABILITY_REVIEW.md`](docs/11_VIABILITY_REVIEW.md).
+4. Review completed task artifacts and commit history before attempting a rebuild.
+
+Exact commands and environment details are retained in the task evidence bundles. The original workflow was gated: one task at a time, with evidence and human hardware verification and clean up before commits.
+
+## Security model
+
+The native component is an explicitly installed executable. The browser does not gain arbitrary native execution or filesystem access. The runtime listens on loopback and requires an authenticated session. Never expose it beyond loopback, accept arbitrary commands, or commit credentials/vendor SDK material.
+
+This is a sidecar experiment, not a browser security bypass.
+
+## Scope decisions
+
+The project intentionally excludes Unreal Engine, Unity, arbitrary Three.js compatibility, Frame Generation, ray tracing, Ray Reconstruction, AMD/Intel backends, Linux/macOS support, and a public installer. Those are separate projects, not unfinished promises here. This is PoC it can work.
+
+## Contributing
+
+Include your OS, browser, GPU, driver, commit, exact commands, logs/screenshots, path classification, and measured latency/FPS. Do not commit proprietary SDK files, credentials, generated build trees, or private machine paths. Discuss protocol or scope changes before implementing them.
+
+## License and third-party software
+
+Check the repository and dependency licenses before redistributing a build. NVIDIA Streamline/DLSS materials are not included and remain subject to NVIDIA’s terms.
+
+## Conclusion
+
+The experiment answered its core question: a webpage can remain the source of truth while an installed native renderer performs GPU work and returns an image to the page. It also exposed the practical limits—vendor integration, security, presentation, transport overhead, and performance. 
+
+The bridge is real; making it worth installing is a different problem.
+
