@@ -1,0 +1,22 @@
+{
+  "browser": "Chrome for Testing local browser",
+  "url": "http://127.0.0.1:5173/",
+  "token_recorded": false,
+  "connected": true,
+  "authenticated": true,
+  "backend": "native-dawn",
+  "session_generation": 1,
+  "final_browser_logical_frame": 18012,
+  "final_last_sent_frame": 18012,
+  "final_bridge_accepted_frame": 18010,
+  "native_return": "ON — browser displaying native pixels",
+  "images_received": 3013,
+  "images_displayed": 3013,
+  "returned_fps": 11.0,
+  "current_resize_generation": 3,
+  "acknowledged_resize_generation": 3,
+  "observed_elapsed": "more than 60 seconds of continuous browser observation; final sample remained authenticated and fresh",
+  "resize_acknowledgements": ["800x450", "640x360"],
+  "last_protocol_error": null,
+  "human_observation": "continuous native return remained visible while the browser-authoritative cube continued rendering"
+}

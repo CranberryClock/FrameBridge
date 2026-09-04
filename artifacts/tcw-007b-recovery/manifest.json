@@ -1,0 +1,40 @@
+{
+  "task": "TCW-007B Recovery",
+  "status": "SUPERVISOR_REVIEW",
+  "implementation_commit": "7aead7a625f17838969a69487307427db27bbfa9",
+  "scope": "continuous authenticated native reference-upscale image return",
+  "transport_fix": "top-level build-tree IXWebSocket patch disables server blocking sends and yields after one flush write",
+  "browser_decoder_fix": "native-image size limit is selected before ordinary-payload limit",
+  "secret_policy": "tokens and launch logs are excluded",
+  "results": {
+    "A_disabled": {"acknowledgements": 30, "submissions": 30, "images": 0, "exit_code": 0},
+    "B_readback_discard": {"acknowledgements": 30, "submissions": 30, "readback_bytes_per_frame": 921600, "images": 0, "exit_code": 0},
+    "C_synthetic_512": {"acknowledgements": 30, "images": 30, "consumed": 30, "exit_code": 0},
+    "C_synthetic_640": {"acknowledgements": 30, "images": 29, "consumed": 29, "exit_code": 0},
+    "D_full_640": {"acknowledgements": 30, "images": 29, "consumed": 29, "exit_code": 0}
+  },
+  "browser_live": {
+    "initial_dimensions": "640x360",
+    "resize_sequence": ["800x450 acknowledged", "640x360 acknowledged"],
+    "initial_session_generation": 1,
+    "final_session_generation": 1,
+    "final_browser_logical_frame": 18012,
+    "final_accepted_frame": 18010,
+    "final_images_received": 3013,
+    "final_images_displayed": 3013,
+    "final_returned_fps": 11.0,
+    "current_resize_generation": 3,
+    "acknowledged_resize_generation": 3,
+    "observed_elapsed": "more than 60 seconds",
+    "native_return": "ON — browser displaying native pixels",
+    "protocol_error": "none",
+    "continuity": "browser frame advanced while connected and native return remained live through both resize changes"
+  },
+  "gates": {
+    "transport_stall_recovery": "PASS",
+    "native_image_return": "PASS",
+    "browser_resize_return": "PASS",
+    "browser_disconnect_reconnect": "PASS from live browser run before final resize run",
+    "TCW-008": "NOT STARTED"
+  }
+}

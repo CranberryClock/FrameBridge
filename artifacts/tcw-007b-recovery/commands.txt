@@ -1,0 +1,13 @@
+corepack pnpm --filter @framebridge/protocol build                         # 0
+corepack pnpm --filter @framebridge/protocol test                          # 0
+corepack pnpm --filter @framebridge/demo-web build                         # 0
+corepack pnpm --filter @framebridge/demo-web exec vite build               # 0
+cmake -S . -B build/tcw007 -G Ninja -DCMAKE_BUILD_TYPE=Release           # 0
+cmake --build build/tcw007 --config Release                                # 0
+ctest --test-dir build/tcw007 --output-on-failure                          # 0, 7/7
+node tools/tcw007b-isolation.mjs build/tcw007/framebridge-native-mirror.exe disabled 640  # 0
+node tools/tcw007b-isolation.mjs build/tcw007/framebridge-native-mirror.exe discard 640   # 0
+node tools/tcw007b-isolation.mjs build/tcw007/framebridge-native-mirror.exe synthetic 512  # 0
+node tools/tcw007b-isolation.mjs build/tcw007/framebridge-native-mirror.exe synthetic 640  # 0
+node tools/tcw007b-isolation.mjs build/tcw007/framebridge-native-mirror.exe full 640       # 0
+Browser: authenticate, wait, resize 800x450, resize 640x360, inspect live return       # verified

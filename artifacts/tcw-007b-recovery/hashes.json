@@ -1,0 +1,11 @@
+{
+  "implementation_commit": "7aead7a625f17838969a69487307427db27bbfa9",
+  "sha256": {
+    "apps/demo-web/src/browser.ts": "81561bbc6dfa5b7e8ccee9ed5e9af6a03bc45b7fce8774641ce584e281f18993",
+    "packages/protocol/src/index.ts": "d8045f91efe495098851010c9d0c9bbaad91aa86174be172443bff50e2839cae",
+    "native/mirror-receiver/main.cpp": "a499f196a67174365c87407ab97bd42a43224ebb17eddc9a50464b33d33488fb",
+    "third_party/ixwebsocket-limits.cmake": "38dab1323db0f782ccfc214f9eb9c3b08e8a2b874d17d9c9cf9995e9e1a3419c",
+    "tools/tcw007b-isolation.mjs": "51e3095ce562e4b12c6a79c2d6407fecde3440d4bda0992c4d6693d966f78c6c",
+    "build/tcw007/framebridge-native-mirror.exe": "44912d38f1dbf5411b075ca2005e52f78a718d598f4c377ccd9a63e4046224e5"
+  }
+}
