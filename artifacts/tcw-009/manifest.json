@@ -1,0 +1,25 @@
+{
+  "task": "TCW-009",
+  "status": "BLOCKED_EXTERNAL_DEPENDENCY",
+  "outcome_classification": "B",
+  "implementation_commit": "694c82b444cf9c6ff1bfe0f5812a8d6ca07c56eb",
+  "launcher_commit": "beb95e9454a9d0d317e71c433ba601aeb1fc913c",
+  "objective_results": {
+    "browser_dawn_genuine_dlss_webpage": "NOT_PROVED_EXTERNAL_PREREQUISITES_MISSING",
+    "complete_path_benefit": "NOT_DEMONSTRATED",
+    "reference_path_preserved": "PASS",
+    "native_reported_mode_and_dimensions": "PASS"
+  },
+  "prerequisites": {
+    "official_streamline_version_reviewed": "2.12.0",
+    "sdk_root_configured": false,
+    "application_id_configured": false,
+    "governed_download_performed": false,
+    "license_accepted_by_agent": false,
+    "streamline_loaded": false,
+    "dlss_evaluated": false
+  },
+  "evidence": ["reference-baseline.json", "preflight-result.json", "validation.json", "environment.json", "commands.txt", "hashes.json"],
+  "secrets_or_private_paths_committed": false,
+  "temporary_processes_left_running": false
+}

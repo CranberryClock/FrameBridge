@@ -1,0 +1,20 @@
+{
+  "implementation_commit": "694c82b444cf9c6ff1bfe0f5812a8d6ca07c56eb",
+  "results": [
+    {"name": "frozen_install", "exit_code": 0, "result": "pnpm 10.14.0 install complete"},
+    {"name": "protocol_build", "exit_code": 0},
+    {"name": "protocol_tests", "exit_code": 0, "tests": 84},
+    {"name": "loopback_tests", "exit_code": 0, "tests": 15},
+    {"name": "demo_web_build", "exit_code": 0},
+    {"name": "native_build", "exit_code": 0},
+    {"name": "native_ctest", "exit_code": 0, "tests": 7},
+    {"name": "reference_baseline", "exit_code": 0, "duration_seconds": 10},
+    {"name": "streamline_preflight", "exit_code": 3, "expected_exit_code": 3, "status": "BLOCKED_EXTERNAL_DEPENDENCY"}
+  ],
+  "non_results": [
+    {"command": "pnpm.cmd install/build/test", "reason": "machine pnpm 11.19.0 ignored the repository packageManager pin and rejected the esbuild build policy; rerun through Corepack pnpm 10.14.0 passed", "exit_code": 1, "counted": false},
+    {"command": "corepack.cmd pnpm install --frozen-lockfile", "reason": "first non-CI invocation requested interactive modules-directory confirmation; the explicit CI rerun completed", "counted": false},
+    {"command": "cmake --build build/tcw008 --config Release", "reason": "cmake was not on PATH; PowerShell did not launch a process and a stale LASTEXITCODE was printed, so that value is invalid", "counted": false},
+    {"command": "full-path cmake --build build/tcw008 --config Release", "reason": "MSVC/Windows SDK environment had not been imported; compile failed before source validation", "exit_code": 1, "counted": false}
+  ]
+}

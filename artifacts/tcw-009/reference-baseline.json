@@ -1,0 +1,23 @@
+{
+  "suite": "tcw009-reference-baseline",
+  "status": "PASS",
+  "duration_seconds": 10,
+  "chrome_version": "152.0.7977.75",
+  "backend": "native-dawn",
+  "native_mode": "reference-upscale — NOT DLSS",
+  "native_input": "320 × 180",
+  "native_output": "640 × 360",
+  "native_scale": "2.0× input → output · reference-upscale",
+  "returned_fps": {"minimum": 6, "median": 11, "maximum": 11},
+  "frame_age_ms": {"minimum": 10.5, "median": 21.5, "maximum": 37.6},
+  "images_received": 107,
+  "images_displayed": 107,
+  "browser_frame": 651,
+  "returned_browser_frame": 646,
+  "dropped_complete_frames": 9,
+  "outstanding_frames": 1,
+  "half_second_intervals_without_new_image": 0,
+  "return_status": "fresh",
+  "protocol_error": null,
+  "page_errors": []
+}

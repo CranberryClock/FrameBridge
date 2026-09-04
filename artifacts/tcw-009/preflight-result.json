@@ -1,0 +1,10 @@
+{
+  "status": "BLOCKED_EXTERNAL_DEPENDENCY",
+  "architecture_classification": "BLOCKED_EXTERNAL_DEPENDENCY",
+  "reason": "NVIDIA application ID is missing",
+  "sdk_root": "",
+  "application_id_present": false,
+  "executed_checks": ["configuration-read", "application-id-presence", "sdk-root-presence"],
+  "planned_checks": ["full-path-signature-validation", "secure-load", "dawn-d3d12-device-extraction", "com-iunknown-identity", "slInit-manual-hooking", "slSetD3DDevice", "feature-requirements-and-support", "slShutdown-cleanup"],
+  "warnings": ["The application ID value was not logged or persisted"]
+}

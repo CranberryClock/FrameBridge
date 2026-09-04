@@ -1,0 +1,16 @@
+{
+  "build/tcw008/framebridge-native-mirror.exe": "333486533790b14cb9aa5d595e7fb00fa0a1a30375988a390128d7d9592307c7",
+  "build/tcw008/framebridge-streamline-dawn-preflight.exe": "59cc72a9b8bf8f295ebddf0ee59f50942cca26ef4ef035a881f4c5560d71f717",
+  "apps/demo-web/src/browser.ts": "603f55cf2224cdc755dcf758822185b273ce9549009829dc2f4e24fa72135ebb",
+  "packages/protocol/src/index.ts": "00d09cf5d6bba7a770550fbb5e732f36e489cdf4072cb4c1601c613078160d03",
+  "native/mirror-receiver/main.cpp": "756bbd7617d294c2313f62274867698e5d0c3a15d900114eb9b1d93e269dc2b8",
+  "native/cube-renderer/renderer.cpp": "4398d790e58d1d17e740081c97caefffc78e23d306f915380c8689289ec91888",
+  "tools/start-native-demo.ps1": "e06202582f7e7a2ec49f74fb1782fda776458c84d9a081422de57a7e8f6e1f94",
+  "artifacts/tcw-009/reference-baseline.json": "6f425474abf27afd4cbc19477e1d469238771b25b0557af965d3e2578eeb7f4f",
+  "artifacts/tcw-009/preflight-result.json": "9b364fbf1afdc6a91cac35f4de766d058d7541f2c32858f735902e1600ef9931",
+  "artifacts/tcw-009/environment.json": "c1a5bbfdeecf827bd9cc88c032880b65177fef4dbfec393b491b239a9d4b518b",
+  "artifacts/tcw-009/validation.json": "0bc813590eca42aa0a133a8fbcfe1c099eb233a2a827582c168f0c400331edcb",
+  "artifacts/tcw-009/commands.txt": "95d8a943e7ffe0946e71e8f46984f3a75f30df796aacdde46b78f11b81eea5c0",
+  "docs/tcw009-dlss-closeout.md": "964dc4ba47346233495c585ab71db4a1e286855bd0b61b1e7a06045af7ceb523",
+  "plan/tcw009.md": "4bef2af70c9f7770bea14e021abb9c8411a50da7a1f4c63ad64f4d5ef0750ce0"
+}

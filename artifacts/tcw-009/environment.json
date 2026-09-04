@@ -1,0 +1,12 @@
+{
+  "node": "v22.18.0",
+  "pnpm": "10.14.0",
+  "cmake": "3.31.6-msvc6",
+  "msvc_toolset": "14.44.35207",
+  "windows_sdk": "10.0.26100.0",
+  "gpu": "NVIDIA GeForce RTX 4080 Laptop GPU",
+  "driver": "591.86",
+  "streamline_sdk_root_configured": false,
+  "nvidia_application_id_configured": false,
+  "private_values_recorded": false
+}

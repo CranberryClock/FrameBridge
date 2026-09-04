@@ -1,0 +1,13 @@
+corepack.cmd pnpm install --frozen-lockfile
+corepack.cmd pnpm --filter @framebridge/protocol build
+corepack.cmd pnpm --filter @framebridge/protocol test
+corepack.cmd pnpm --filter @framebridge/demo-web build
+. .\tools\msvc-env.ps1
+& 'C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe' --build build/tcw008 --config Release
+& 'C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\ctest.exe' --test-dir build/tcw008 --output-on-failure
+$cfg=Get-Content -Raw .local/tcw005r-tools.json | ConvertFrom-Json
+$env:FRAMEBRIDGE_CHROME=$cfg.chrome
+node tools/tcw009-baseline.mjs build/tcw008/framebridge-native-mirror.exe
+& .\build\tcw008\framebridge-streamline-dawn-preflight.exe
+
+No application ID, session token, or private SDK path is present in these commands.

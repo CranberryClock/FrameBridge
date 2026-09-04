@@ -33,3 +33,14 @@ The surface is labeled `Native reference upscale — NOT DLSS.` This is CPU
 readback/copy transport, not zero-copy or scanout. TCW-006R temporal findings
 remain unresolved deferred debt. TCW-007B Recovery is complete and stops at its
 supervisor review gate. TCW-008 is the narrow textured native-return proof: the browser-generated 256x256 RGBA8 texture is mirrored by revision, rendered by Dawn, and returned through the native reference-upscale path. It is not a Three.js backend and is not DLSS; evidence is under `artifacts/tcw-008/` and the work stops at supervisor review.
+
+TCW-009 closes the bounded DLSS feasibility attempt as outcome **B — blocked by
+specific external prerequisites**. Streamline 2.12 headers/runtime binaries and
+an NVIDIA-provided NGX application ID are not configured on the validated
+machine, so no Streamline module was loaded and no DLSS evaluation was claimed.
+The latest reference path remains usable and now reports its active mode and
+render scale to the browser instead of relying on hardcoded UI text. Its fresh
+10-second baseline returned about 11 FPS at 320x180 to 640x360 and did not
+demonstrate acceleration or image-quality benefit. See the
+[TCW-009 closeout](docs/tcw009-dlss-closeout.md) and
+[sanitized evidence](artifacts/tcw-009/manifest.json).
