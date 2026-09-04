@@ -48,7 +48,7 @@ std::string MakeToken() {
 }
 struct Options {
   bool protocolOnly=false, failInit=false, failRender=false, trace=false;
-  std::string capture;
+  std::string capture,returnMode="full";
 };
 class Receiver {
   struct Client {
@@ -64,6 +64,7 @@ class Receiver {
   explicit Receiver(Options options) : options_(std::move(options)),
       origin_(Environment("FRAMEBRIDGE_ALLOWED_ORIGIN","http://127.0.0.1:5173")),
       token_(MakeToken()), server_(ix::getFreePort(),"127.0.0.1",4,4,3) {
+    if(options_.returnMode!="full"&&options_.returnMode!="disabled"&&options_.returnMode!="discard"&&options_.returnMode!="synthetic") throw std::runtime_error("invalid return mode");
     if(options_.failInit) throw std::runtime_error("controlled renderer initialization failure");
     if(!options_.protocolOnly) {
 #ifdef FRAMEBRIDGE_HAS_DAWN
@@ -141,7 +142,10 @@ class Receiver {
         frame=client->session->ProcessOne();
       if(frame) { acknowledgement=client->session->EncodeFrameAccepted(*frame);
 #ifdef FRAMEBRIDGE_HAS_DAWN
-        returnImage=renderer_ && Clock::now()>=nextReturn_ && !client->imageInFlight.load();
+        returnImage=options_.returnMode!="disabled" && Clock::now()>=nextReturn_ && !client->imageInFlight.load();
+#ifdef FRAMEBRIDGE_HAS_DAWN
+        if(options_.returnMode!="synthetic") returnImage=renderer_ && returnImage;
+#endif
 #endif
       }
       }
@@ -154,16 +158,20 @@ class Receiver {
 #endif
       SubmitThenAcknowledge(*frame,[&](const SceneState& state,uint64_t drops) {
         if(options_.failRender) throw std::runtime_error("controlled render failure");
+        if(options_.trace) std::cout<<nlohmann::json({{"event","render_begin"},{"frame",state.frame},{"mode",options_.returnMode}}).dump()<<"\n"<<std::flush;
 #ifdef FRAMEBRIDGE_HAS_DAWN
         if(renderer_) {
           std::string capture;
           if(!options_.capture.empty() && (state.frame==60 || state.frame==120 || state.frame==180))
             capture=options_.capture+"/native-"+std::to_string(state.frame)+".png";
-          renderer_->Submit(state,drops,capture,returnImage?&nativeImage:nullptr);
+          const bool captureReturn=returnImage&&(options_.returnMode=="full"||options_.returnMode=="discard");
+          renderer_->Submit(state,drops,capture,captureReturn?&nativeImage:nullptr);
         }
 #else
         (void)state; (void)drops;
 #endif
+        if(returnImage&&options_.returnMode=="synthetic") nativeImage.assign(static_cast<size_t>(state.width)*state.height*4,0x5a);
+        if(options_.trace) std::cout<<nlohmann::json({{"event","render_complete"},{"frame",state.frame},{"readback",returnImage&&(options_.returnMode=="full"||options_.returnMode=="discard")},{"pixels",nativeImage.size()}}).dump()<<"\n"<<std::flush;
         ++submitted_;
         if(options_.trace) {
           std::cout<<nlohmann::json({{"event","submitted"},{"frame",state.frame},{"simulationTime",state.simulationTime},
@@ -176,7 +184,7 @@ class Receiver {
           const auto result=client->socket->sendBinary(std::string(acknowledgement.begin(),acknowledgement.end()));
           if(!result.success) throw std::runtime_error("ack send failed");
           ++acknowledged_;
-          if(returnImage) { const auto imageId=++nativeReturnFrame_; auto image=client->session->EncodeNativeImage(*frame,imageId,nativeImage); client->lastImageSent=imageId;client->lastImageResize=frame->state.resizeGeneration;client->imageInFlight=true;const auto sent=client->socket->sendBinary(std::string(image.begin(),image.end())); if(!sent.success) throw std::runtime_error("native image send failed");++imagesSent_;if(options_.trace)std::cout<<nlohmann::json({{"event","native_image_queued"},{"frame",frame->state.frame},{"native_image",imageId},{"bytes",image.size()},{"images_sent",imagesSent_}}).dump()<<"\n"<<std::flush; nextReturn_=Clock::now()+std::chrono::milliseconds(1000/12); }
+          if(returnImage && (options_.returnMode=="full"||options_.returnMode=="synthetic")) { const auto imageId=++nativeReturnFrame_; auto image=client->session->EncodeNativeImage(*frame,imageId,nativeImage); client->lastImageSent=imageId;client->lastImageResize=frame->state.resizeGeneration;client->imageInFlight=true;if(options_.trace)std::cout<<nlohmann::json({{"event","native_image_send_begin"},{"frame",frame->state.frame},{"native_image",imageId},{"bytes",image.size()}}).dump()<<"\n"<<std::flush;const auto sent=client->socket->sendBinary(std::string(image.begin(),image.end())); if(!sent.success) throw std::runtime_error("native image send failed");++imagesSent_;if(options_.trace)std::cout<<nlohmann::json({{"event","native_image_send_complete"},{"frame",frame->state.frame},{"native_image",imageId},{"images_sent",imagesSent_}}).dump()<<"\n"<<std::flush; nextReturn_=Clock::now()+std::chrono::milliseconds(1000/12); }
         }
       });
       nextProcess_=Clock::now()+std::chrono::milliseconds(delay_);
@@ -288,6 +296,7 @@ int main(int argc,char** argv) {
       else if(a=="--test-init-failure") options.failInit=true;
       else if(a=="--test-render-failure") options.failRender=true;
       else if(a=="--trace") options.trace=true;
+      else if(a=="--return-mode" && i+1<argc) options.returnMode=argv[++i];
       else if(a=="--capture-dir" && i+1<argc) options.capture=argv[++i];
       else throw std::runtime_error("unknown argument");
     }

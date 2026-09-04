@@ -43,8 +43,9 @@ export function decode(bytes: Uint8Array): BinaryMessage {
   requireValid(bytes.length >= HEADER_BYTES,"truncated header");
   const v = new DataView(bytes.buffer,bytes.byteOffset,bytes.byteLength), n = v.getUint32(12,true);
   requireValid(v.getUint32(0,true) === MAGIC,"wrong magic"); requireValid(v.getUint16(4,true) === VERSION,"wrong version");
-  requireValid(n <= MAX_PAYLOAD_BYTES && n + HEADER_BYTES === bytes.length,"invalid payload length");
-  const m = { type: v.getUint16(6,true) as MessageType, flags:v.getUint32(8,true), sequence:v.getBigUint64(16,true), objectId:v.getBigUint64(24,true), payload:bytes.slice(HEADER_BYTES) };
+  const type = v.getUint16(6,true) as MessageType;
+  requireValid(n <= (type === MessageType.NativeImage ? MAX_NATIVE_IMAGE_BYTES : MAX_PAYLOAD_BYTES) && n + HEADER_BYTES === bytes.length,"invalid payload length");
+  const m = { type, flags:v.getUint32(8,true), sequence:v.getBigUint64(16,true), objectId:v.getBigUint64(24,true), payload:bytes.slice(HEADER_BYTES) };
   validateMessage(m); requireValid(checksum(m.payload) === v.getUint32(32,true),"checksum mismatch"); return m;
 }
 export type Hello = { kind:"hello"; version:0; token:string; origin:string; three:{version:string;commit:string}; buildId:string; requestedCapabilities:string[]; byteOrder:"little" };

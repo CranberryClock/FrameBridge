@@ -1,24 +1,16 @@
-# TCW-007B diagnosis handoff
+# TCW-007B Recovery diagnosis
 
-The ordinary live URL reproduced the one-image stall. Dawn rendering,
-reference upscale, output readback, image serialization, FrameAccepted send,
-and the first 921,676-byte native-image enqueue all completed. The browser
-received and submitted that image to its canvas and attempted authenticated
-`ImageConsumed` feedback. The native process remained alive, but no later
-inbound scene or consumption message was dispatched and only three native
-frames were submitted.
+The one-image stall was reproduced before the recovery patch. The original 921,676-byte native image was serialized and sent, but subsequent inbound `ImageConsumed` and scene messages stopped being dispatched. A/B/C isolation separated the cause from the renderer:
 
-This locates the current blocker after the first large IXWebSocket server send
-and before subsequent inbound callback dispatch. It does not establish whether
-the pinned library is blocked in socket flushing, polling, or callback progress;
-a native thread stack or the remaining explicit A/B/C isolation modes is still
-needed before changing libraries or architecture.
+- A disabled return: native Dawn rendering and presentation completed 30 frames with 30 acknowledgements and no images.
+- B readback-discard: native Dawn rendering, reference upscale, GPU synchronization and 921,600-byte output readback completed 30 frames with no images.
+- C synthetic return: 128x72 and 320x180 completed all 30 images; 512x288 and 640x360 reproduced the large-message stall.
+- D full return: the same stall occurred with actual GPU readback, proving it was not a readback-only fault.
 
-Implemented in this attempt: versioned `ImageConsumed` message, exact shared
-fixture, per-session one-image credit, duplicate/correlation checks, obsolete
-resize credit retirement, FPS decay, and unknown timing display. These controls
-pass automated tests but do not fix the underlying dispatch stall.
+The demonstrated transport correction is applied through the existing top-level `third_party/ixwebsocket-limits.cmake` build-tree patch. It keeps the pinned IXWebSocket gitlink unchanged, disables server-side blocking sends, and yields after one flush write. The rebuilt 512x288 synthetic case completed 30/30 images; the rebuilt 640x360 synthetic and full cases completed 30/30 acknowledgements and 29/30 images in the bounded shutdown harness with no client or process error. The final live browser run continuously displayed native pixels, including 800x450 and return to 640x360, with no protocol error.
 
-Not run and therefore not claimed: render-only mode A, readback-discard mode B,
-synthetic-send mode C, 60-second successful run, resize/reconnect recovery, or
-visual acceptance. No token, private path, or environment value is retained.
+The TypeScript decoder had a second independent defect: it applied the 1 MiB ordinary-payload ceiling before recognizing `NativeImage`. It now selects the native-image ceiling from the message type, and a regression test covers a valid 800x450 image.
+
+The return channel remains one-image-credit at a time. The browser sends `ImageConsumed` after display; stale image credit is retired on resize. FrameAccepted acknowledgements remain independent of image return, and the browser remains authoritative for simulation and scene state.
+
+No tokens, private paths, browser logs, or personal screenshots are included in committed evidence. TCW-008 and DLSS/Streamline work remain out of scope.

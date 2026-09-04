@@ -26,9 +26,10 @@ TCW-004A is a bounded Streamline/Dawn compatibility preflight scaffold. Its curr
 `BLOCKED_EXTERNAL_DEPENDENCY` because the pinned NVIDIA SDK and NVIDIA application ID are not available locally; no
 Streamline or DLSS runtime was loaded.
 
-TCW-007 is the active native-return experiment. The native Dawn/D3D12 reference-upscale
+TCW-007B Recovery completes the native-return experiment's one-image stall recovery. The native Dawn/D3D12 reference-upscale
 output is read back as bounded RGBA8 diagnostic data and displayed in the browser
 after authenticated loopback delivery, while the browser remains authoritative.
 The surface is labeled `Native reference upscale — NOT DLSS.` This is CPU
 readback/copy transport, not zero-copy or scanout. TCW-006R temporal findings
-remain unresolved deferred debt. Work stops at the TCW-007A supervisor review gate.
+remain unresolved deferred debt. TCW-007B Recovery is complete and stops at its
+supervisor review gate; TCW-008 remains blocked until separately approved.
